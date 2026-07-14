@@ -17,13 +17,12 @@ metadata:
 
 Follow explicit user constraints and higher-priority instructions. If the user narrows scope, forbids tools, requests chat-only output, or changes this workflow, adapt and briefly record meaningful deviations.
 
-## Mandatory resource gate
+## Mandatory steps
 
-Complete these reads with the file-reading tool; citing, remembering, or merely noticing the files does not count.
+Read and use these resources:
 
 1. **Before drafting any plan, load [`assets/implementation-plan-template.md`](assets/implementation-plan-template.md).** Copy and adapt its structure. Every non-conditional section is mandatory; omit only blocks the template explicitly marks conditional. Do not substitute a remembered or invented format.
 2. **Before independent review or finalization, load [`references/plan-quality-checklist.md`](references/plan-quality-checklist.md).** Complete it against the draft and repeat it after material revisions.
-3. If the task matches a category in [`references/specialized-plan-checks.md`](references/specialized-plan-checks.md), load that file before selecting the strategy and apply only the matching checks. It covers audits, defect proofs, structural refactors, external/binary APIs, transactions, migrations, background work, test cleanup, toolchains, process cleanup, object storage, and release evidence.
 
 If a mandatory resource cannot be loaded, planning is blocked; do not fabricate its contents. Chat-only plans still use the template even though files are not saved or rendered.
 
