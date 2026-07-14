@@ -1,9 +1,5 @@
 # Maxed Apps Agent Skills
 
-Reusable agent skills published by [Maxed Apps](https://github.com/maxedapps).
-
-[![skills.sh](https://skills.sh/b/maxedapps/agent-skills)](https://skills.sh/maxedapps/agent-skills)
-
 ## Available skills
 
 - `create-plan` — create researched, implementation-ready plans.
@@ -43,6 +39,32 @@ npx skills add maxedapps/agent-skills \
 ```
 
 Review each skill and its compatibility requirements before use. Some skills integrate with other skills or external tooling such as Herdr.
+
+## What each skill does
+
+### `create-plan`
+
+Researches a requested change and turns the findings into a concrete, implementation-ready Markdown plan. It records decisions, affected files, risks, validation steps, and review checkpoints without implementing the change.
+
+### `implement-plan`
+
+Executes an existing Markdown plan through tracked Analyze → Plan → Implement → Verify loops. It maintains a detailed progress tracker, delegates implementation work through `use-subagents`, validates each task, and reconciles the final result against the original plan.
+
+### `improve-skills`
+
+Refines Agent Skills using evidence from real interactions. It favors small, reusable corrections to routing, instructions, resource references, scripts, or safety guidance instead of speculative rewrites.
+
+### `code-review`
+
+Performs an adversarial but evidence-bound review of a codebase or change. It checks correctness, security, test quality, maintainability, typing, performance, and unnecessary complexity, then produces Markdown and HTML reports.
+
+### `review-plan-implementation`
+
+Compares an implemented change with its source plan, acceptance criteria, and implied requirements. It verifies claims against code, tests, configuration, documentation, and Git evidence and reports missing, partial, or incorrect work.
+
+### `use-subagents`
+
+Runs bounded worker, reviewer, research, or validation tasks in visible Herdr-managed panes. It defines strict isolation, permissions, handoff, verification, and cleanup rules and requires Herdr 0.7.3 or newer.
 
 ## Structure
 
