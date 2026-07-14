@@ -1,58 +1,42 @@
-# Fetch Content Reference
+# Content and repository retrieval guidance
 
-Use this reference before fetching GitHub repos, PDFs, multiple URLs, or retrieving truncated fetched/search content.
+Read this before retrieving multiple sources, repositories, PDFs, or truncated result content.
 
-## Standard pages and docs
+## Choose the available capability
 
-```typescript
-fetch_content({ url: "https://example.com/article" })
-fetch_content({ urls: ["https://docs.example.com/guide", "https://example.com/changelog"] })
-```
+Tool names and schemas vary. Inspect the runtime and choose the available capability for direct URL extraction, repository access, document parsing, stored-result retrieval, or browser-backed fallback. Prefer the narrowest tool that can obtain the required evidence.
 
-Use for official docs, blog posts, changelogs, announcements, issue/PR pages that render as normal web pages, PDFs, and other directly fetchable source material.
+## Standard pages and documentation
 
-## GitHub repositories
+- Retrieve the user-provided URL directly before searching for summaries of it.
+- For several sources, fetch only the selected answer-critical pages rather than every search result.
+- Preserve source URLs and note publication/update dates or versions when material.
+- If extraction omits important content, try the tool's full-content/stored-result mode, an alternate extractor, repository access, or browser automation.
 
-```typescript
-fetch_content({ url: "https://github.com/owner/repo" })
-fetch_content({ url: "https://github.com/owner/repo/tree/main/packages/core" })
-fetch_content({ url: "https://github.com/owner/repo/blob/main/README.md" })
-```
+## Source repositories
 
-Important behavior:
+- Use repository-aware retrieval or a local clone when implementation details matter.
+- After retrieval, inspect relevant source, tests, examples, docs, release tags, and history with normal file/search tools.
+- Check for an existing local clone before creating another; update it safely when freshness matters.
+- Do not force a full clone of a very large repository unless targeted API/file access is insufficient.
+- Cite stable source links or commit identifiers when explaining implementation details.
 
-- Repository URLs are fetched as repository content, not just scraped HTML.
-- Root repo URLs are cloned locally when feasible.
-- After cloning, inspect returned files with `read`, `grep`, `find`, and `bash`.
-- Large repos may fall back to an API view; use `forceClone: true` only when the full clone is truly needed.
+## PDFs and documents
 
-## PDFs
+- Use text extraction when the question concerns prose or searchable facts.
+- Use document search to locate known phrases and page positions.
+- Use page screenshots when charts, tables, diagrams, signatures, or layout affect the answer.
+- Keep visual inspection to the smallest relevant page range unless broader coverage is requested.
 
-```typescript
-fetch_content({ url: "https://example.com/report.pdf" })
-```
+## Truncated or blocked content
 
-Use this when the user needs content from a PDF and extracted text is enough. Use browser/document tools instead when visual layout matters.
+- Retrieve the stored/full result when the tool supports it.
+- Narrow retrieval to one result, URL, page range, file, or repository path.
+- For JavaScript-heavy or blocked pages, try another extraction path or browser automation.
+- Record inaccessible sources and avoid claiming details that were visible only in a search snippet.
 
-## Retrieving stored/truncated content
+## Safety
 
-Use `get_search_content` when `web_search` or `fetch_content` output is truncated or when stored full content is needed.
-
-```typescript
-get_search_content({ responseId: "abc123", queryIndex: 0 })
-get_search_content({ responseId: "abc123", query: "official docs for React Server Components caching" })
-get_search_content({ responseId: "abc123", urlIndex: 0 })
-get_search_content({ responseId: "abc123", url: "https://docs.example.com/guide" })
-```
-
-Reach for this when:
-
-- `fetch_content` says content was truncated.
-- `web_search` found useful sources and you need the stored full result set.
-- You need one specific URL/query from a larger batch.
-
-## Failure recovery
-
-- Result content is truncated → use `get_search_content`.
-- Page is JS-heavy or blocks normal scraping → still try `fetch_content`; the extension has fallbacks.
-- GitHub repo is too large → accept the API view or retry with `forceClone: true` only when necessary.
+- Do not retrieve or persist secrets, private session state, or unnecessary sensitive content.
+- Treat repository scripts and downloaded artifacts as untrusted; reading does not require executing them.
+- For private sources, use only user-authorized access and avoid copying sensitive content into durable research notes.

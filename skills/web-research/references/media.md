@@ -1,38 +1,28 @@
-# Media Research Reference
+# Media research guidance
 
-Use this reference before YouTube/local video analysis or frame extraction.
+Read this before analyzing video/audio or extracting visual frames.
 
-## Video rule
+## Focus the analysis
 
-For YouTube and local video, always pass the user's specific question via `prompt`. This focuses transcript and visual analysis on the actual task.
+Use an available media-capable retrieval or analysis tool. Always pass the user's specific question or instruction so transcript and visual analysis focus on the relevant subject instead of producing only a generic summary.
 
-```typescript
-fetch_content({
-  url: "https://youtube.com/watch?v=abc",
-  prompt: "What tools does the speaker recommend for debugging build failures?"
-})
-```
+Record the media URL/file, relevant timestamps, and whether evidence came from transcript, audio, frames, or inference.
 
-```typescript
-fetch_content({
-  url: "/path/to/recording.mp4",
-  prompt: "What error message appears on screen before the app crashes?"
-})
-```
+## Visual evidence
 
-## Visual frames
+Use timestamped frames when:
 
-Use `timestamp` and/or `frames` when visual evidence matters, the transcript is insufficient, or the user asks about something shown on screen.
+- the answer depends on something shown rather than spoken
+- the transcript is missing or ambiguous
+- the user asks about an object, screen, slide, gesture, or visual transition
+- exact wording, UI state, or layout needs confirmation
 
-```typescript
-fetch_content({ url: "https://youtube.com/watch?v=abc", timestamp: "23:41" })
-fetch_content({ url: "https://youtube.com/watch?v=abc", timestamp: "23:41-25:00", frames: 4 })
-```
+Use a timestamp range with several evenly spaced frames when the approximate segment is known but the exact moment is not. Sample the whole video only when no narrower location is available.
 
-Use a timestamp range when you know the approximate area but not the exact moment.
+## Sufficiency and failure recovery
 
-## Failure recovery
-
-- Video answer is vague → rerun with a sharper `prompt`.
-- Visual details matter → use `timestamp` / `frames` for visual confirmation.
-- Exact moment unknown → use a timestamp range with multiple frames.
+- Vague answer: rerun with a sharper question and narrower segment.
+- Transcript/visual conflict: report the conflict and inspect the relevant frames.
+- Exact moment unknown: search transcript cues, then inspect a bounded timestamp range.
+- Tool cannot access the media: look for an official transcript, captions, show notes, or another authorized source and state the limitation.
+- Do not infer unseen visual details from transcript text alone.

@@ -45,7 +45,7 @@ Before launching any worker or subagent, read and apply the `use-subagents` skil
 
 ## Core rules
 
-- Before requesting reviews, read and apply the `agent-reviewer` skill.
+- Run milestone and final reviewers as fresh-context, read-only subagents through `use-subagents`. Use the user's requested reviewer when safely available; otherwise use that workflow's default reviewer. Ask for independent critique rather than approval, capture the handoff, and reuse the same reviewer session for follow-up on that milestone when possible.
 - Document plan deviations before or immediately after making them.
 - Before each task loop, define verification, meaningful test coverage, and any human checkpoint.
 - Add or update tests when they protect acceptance criteria, user-visible behavior, regressions, integration boundaries, failure paths, edge cases, or security/data invariants. Avoid implementation-detail, duplicate, over-mocked, or count-only tests; document why strong automated coverage is impractical when applicable.
@@ -86,7 +86,7 @@ Operational rules:
 - Do not advance past required workers/reviewers still running. Continue independent work, then use the runtime wait/status mechanism and incorporate results.
 - Do not overlap writers in one worktree. Do not edit overlapping code while a step review is running.
 - If context/time limits force a stop, checkpoint exact non-terminal rows and the restart point; report a partial handoff, not completion.
-- For uncertain third-party behavior, read `code-research`; for current external evidence, read `web-research`. Delegate separable research/reconnaissance where useful.
+- For uncertain third-party behavior or current external evidence, read `web-research` and require current, version-specific sources. Delegate separable research/reconnaissance where useful.
 - After two failures for the same cause, request independent direction and ask the user if the blocker remains.
 
 ### 4. Review milestones

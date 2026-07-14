@@ -2,8 +2,6 @@
 
 ## Available skills
 
-- `agent-reviewer` — coordinate independent, multi-round AI reviews in Herdr.
-- `code-research` — research current, version-specific library and API behavior before coding.
 - `code-review` — perform adversarial, evidence-bound code reviews and produce an HTML report.
 - `create-plan` — create researched, implementation-ready plans.
 - `implement-plan` — execute existing Markdown implementation plans with active tracking and verification.
@@ -47,24 +45,14 @@ Review each skill and its compatibility requirements before use. Some skills int
 
 - **Bun is optional.** Only `create-plan` and `code-review` attempt to use Bun, and only for rich Markdown-to-HTML rendering. If Bun is unavailable, their Node.js renderers warn and produce escaped plain-text HTML instead. No skill fails solely because Bun is missing.
 - **Node.js 18+ is required** when `create-plan` or `code-review` renders HTML.
-- **Herdr 0.7.3+ is required** by `use-subagents` and `agent-reviewer`. `implement-plan` delegates through `use-subagents`, so its full workflow also requires Herdr.
+- **Herdr 0.7.3+ is required** by `use-subagents`. `create-plan` uses it for independent review, and `implement-plan` uses it for workers and reviewers.
 - **`agent-browser` remains external.** Install it from [skills.sh](https://www.skills.sh/vercel-labs/agent-browser/agent-browser) when browser interaction or UI verification is needed:
 
   ```sh
   npx skills add vercel-labs/agent-browser@agent-browser
   ```
 
-- **`mcporter-mcp` is optional.** `code-research` needs it only when research uses MCP tools such as Context7 or DeepWiki.
-
 ## What each skill does
-
-### `agent-reviewer`
-
-Coordinates independent reviewer agents through `use-subagents`. It defines reviewer selection, unbiased read-only prompts, evidence requirements, timeouts, multi-round follow-up, and how feedback is resolved.
-
-### `code-research`
-
-Investigates current, version-specific library, framework, SDK, and API behavior before implementation. It prioritizes official documentation and source code and records evidence, conflicts, and implementation implications.
 
 ### `code-review`
 
@@ -92,7 +80,7 @@ Runs bounded worker, reviewer, research, or validation tasks in visible Herdr-ma
 
 ### `web-research`
 
-Researches current web information using source-backed search and targeted content fetching. It favors primary sources, records durable research notes, checks conflicting evidence, and continues until material questions are answered.
+Researches current web and external technical information with whatever search, retrieval, repository, document, media, and browser capabilities are available. It also covers version-specific library, framework, SDK, and API research, favoring official documentation and source code while recording evidence, conflicts, and implementation implications.
 
 ## Structure
 

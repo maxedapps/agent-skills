@@ -39,10 +39,10 @@ If a mandatory resource cannot be loaded, planning is blocked; do not fabricate 
 - Put pitfalls, edge cases, unsafe shortcuts, compatibility boundaries, partial-failure behavior, and recovery where they affect implementation.
 - Make checks and review guidance mandatory: exact commands/manual checks, expected signals, review focus, required evidence, exit conditions, and reruns after fixes. End with observable Definition of Done criteria.
 - Ask the user only when material scope, behavior, security, data, migration, compatibility, or irreversible decisions cannot be inferred safely. Otherwise choose a reasonable reversible default, label it, explain why briefly, and name a fallback.
-- Research third-party contracts rather than relying on memory. Read `code-research` for dependency/API questions and `web-research` for current docs, URLs, repositories, or source-backed evidence.
+- Research third-party contracts rather than relying on memory. Read `web-research` for current, version-specific dependency/API/framework evidence, official docs, source repositories, release history, URLs, and other external sources.
 - Do not defer code planning merely because credentials, environment IDs, or live resources are unavailable. Pin the documented contract, plan fail-closed configuration and fake-provider tests, and isolate real provisioning/verification as an operator step.
-- Consider read-only subagents for genuinely separable research or codebase scouting. Before delegating, read `use-subagents`. Keep delegation mechanics out of the final plan unless ownership or safe parallelism changes execution.
-- Review the draft independently before finalizing. Read `agent-reviewer` before requesting review.
+- Consider read-only subagents for genuinely separable research, codebase scouting, or independent review. Before delegating, read `use-subagents`. Keep delegation mechanics out of the final plan unless ownership or safe parallelism changes execution.
+- Review the draft independently before finalizing. Use a fresh-context, read-only reviewer through `use-subagents`; ask for independent critique rather than approval.
 - Do not prescribe branches, pushes, PRs, or merges unless the user asks.
 
 ## Workflow
@@ -75,9 +75,9 @@ Before drafting, load `assets/implementation-plan-template.md`, then copy and ad
 
 Before review, load `references/plan-quality-checklist.md` and complete every applicable check.
 
-Read `agent-reviewer`, then request a fresh-context, read-only critique through `use-subagents` unless the user chose another supported reviewer. Provide the request, draft, progress path, source artifacts, decisions, constraints, known risks, and relevant code pointers. Ask for missing requirements/files, unsafe assumptions, weak rationale, incomplete snippets/checks/review guidance, false green checkpoints, and unnecessary repetition.
+Request a fresh-context, read-only critique through `use-subagents`. Use the user's requested reviewer when safely available; otherwise use the default reviewer supported by that workflow. Ask the reviewer to judge independently rather than confirm the draft. Provide the request, draft, progress path, source artifacts, decisions, constraints, known risks, and relevant code pointers. Ask for missing requirements/files, unsafe assumptions, weak rationale, incomplete snippets/checks/review guidance, false green checkpoints, and unnecessary repetition.
 
-Evaluate feedback critically, record accepted/rejected details in `.progress`, revise without copying the transcript into the plan, rerun the quality checklist, and request follow-up after material changes. If independent review is unavailable, record that limitation and perform a separate self-review pass.
+Evaluate feedback critically, record accepted/rejected details in `.progress`, revise without copying the transcript into the plan, rerun the quality checklist, and follow up in the same reviewer session after material changes when possible. If independent review is unavailable, record that limitation and perform a separate self-review pass.
 
 ### 5. Save, render, and open
 
