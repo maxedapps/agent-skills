@@ -1,0 +1,31 @@
+# OS and editor files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Secrets and local configuration
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Generated and runtime state
+node_modules/
+dist/
+build/
+coverage/
+outputs/
+artifacts/
+.cache/
+.sessions/
+.progress/
+.subagents/
+*.log
