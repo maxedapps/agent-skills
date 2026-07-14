@@ -1,7 +1,12 @@
 ---
 name: create-plan
 description: Creates thoroughly researched, implementation-ready plans that are complete but distilled, structured into adaptive numbered phases, and explicit about decisions, files, pitfalls, checks, and review. Use when the user asks to "create a plan", "make a plan", "implementation plan", "plan this feature", "plan the change", or similar planning work before coding. Do not use to implement the plan or for quick conceptual answers that need no implementation handoff.
-compatibility: Requires normal project file access and Node.js 18+ for the plan HTML renderer. For best results, network/web access is available for current research and a reviewer mechanism is supported by the `use-subagents` skill.
+compatibility: >-
+  Requires normal project file access and Node.js 18+ for the plan HTML renderer.
+  Bun is optional: it enables rich Markdown rendering; without it, the renderer
+  warns and produces escaped plain-text HTML instead of failing. For best
+  results, network/web access is available for current research and a reviewer
+  mechanism is supported by the `use-subagents` skill.
 metadata:
   short-description: Create researched, implementation-ready plans
 ---
@@ -86,4 +91,5 @@ Evaluate feedback critically, record accepted/rejected details in `.progress`, r
    ```
 
 4. If `--open` was omitted, rerun with it.
-5. Share the Markdown, HTML, and planning-memory paths. Mention only blockers, important assumptions, review limitations, or meaningful workflow deviations; do not paste the full plan unless asked.
+5. If the renderer warns that Bun is unavailable but exits successfully, accept the escaped plain-text HTML fallback; do not treat missing Bun as a blocked plan. Rich Markdown HTML requires Bun.
+6. Share the Markdown, HTML, and planning-memory paths. Mention only blockers, important assumptions, review limitations, or meaningful workflow deviations; do not paste the full plan unless asked.

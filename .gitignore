@@ -26,6 +26,8 @@ outputs/
 artifacts/
 .cache/
 .sessions/
+.plans/
 .progress/
+.reviews/
 .subagents/
 *.log

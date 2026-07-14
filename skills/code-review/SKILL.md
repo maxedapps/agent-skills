@@ -1,7 +1,11 @@
 ---
 name: code-review
 description: Performs adversarial, evidence-bound code reviews for bugs, regressions, security, high-value tests, performance, typing, maintainability, and unnecessary complexity, then saves and opens an HTML report by default. Use when the user asks for code review, PR/local-change review, bug/security/performance/maintainability analysis, cleanup/refactoring opportunities, or whether code can be improved. If the target is a Markdown plan/tracker/design doc, use review-plan-implementation semantics. For underspecified review requests, default to the entire current codebase and all review dimensions. Do not use for implementing changes unless asked.
-compatibility: Requires normal project file access and Node.js 18+ for the review HTML renderer. For best results, Bun is available for Markdown-to-HTML rendering and a local browser/open command is available for opening the generated report.
+compatibility: >-
+  Requires normal project file access and Node.js 18+ for the review HTML renderer.
+  Bun is optional: it enables rich Markdown rendering; without it, the renderer
+  warns and produces escaped plain-text HTML instead of failing. A local
+  browser/open command is recommended for opening the generated report.
 metadata:
   short-description: Adversarial code review for real bugs, risks, tests, and unnecessary complexity
 ---
@@ -76,6 +80,7 @@ For detailed review heuristics by dimension, read `references/review-dimensions.
     - Before rendering, run `node scripts/render-review-html.mjs --help` from this skill directory or use the equivalent absolute script path.
     - Use this skill's bundled renderer script, not generic preview tools, for the default workflow.
     - Include `--open`, for example: `node /absolute/path/to/code-review/scripts/render-review-html.mjs .reviews/<review-slug>.md --out .reviews/<review-slug>.html --open`.
+    - If Bun is unavailable but the renderer exits successfully, accept the escaped plain-text HTML fallback and record the warning only when it materially affects review usability; missing Bun alone does not block the review.
     - If rendering or opening is impossible, record why in `.progress` and include the skipped check in the final response.
 11. Respond concisely with the top findings, Markdown report path, HTML report path, progress path, and skipped checks.
 
