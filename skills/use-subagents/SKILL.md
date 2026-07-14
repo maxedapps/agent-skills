@@ -1,6 +1,6 @@
 ---
 name: use-subagents
-description: Delegates bounded work to independent subagents exclusively in visible Herdr-managed terminal panes. Use when fresh context, specialization, review, research, validation, or safe parallelism materially improves a task. Requires the parent to run inside Herdr; do not use headless subprocesses, runtime-native hidden agents, or concurrent writers in one worktree.
+description: Delegates bounded work to independent subagents exclusively in visible Herdr-managed terminal panes. Use when fresh context, specialization, review, research, validation, or safe parallelism materially improves a task. Do not use for headless delegation or concurrent writers in one worktree.
 compatibility: Requires Herdr 0.7.3+ with a running compatible server, HERDR_ENV=1, and an installed interactive agent executable (Pi by default).
 metadata:
   short-description: Run and coordinate subagents exclusively in visible Herdr panes
@@ -60,7 +60,7 @@ Require Herdr `0.7.3+` and matching compatible client/server versions. Use `HERD
 
 Generate one collision-resistant owning task ID, then one child assignment ID per role/task (for example role + task slug + timestamp/random suffix). IDs may contain letters, numbers, `.`, `_`, or `-` and must begin and end alphanumerically. Before creating artifacts or launching a child, require that no `.subagents/<id>.*` artifact, matching `.subagents/pi-sessions/*_<id>.jsonl` session, or live Herdr agent with that child ID exists. Never reuse a child ID for a fresh assignment, and never reuse a task ID while its dedicated tab or metadata remains live.
 
-Then, at the target repository root, create `.subagents/` and `.subagents/pi-sessions/`, protect communication files with restrictive permissions where supported, and ensure `.subagents/` is locally ignored without modifying the user's tracked ignore policy. Create:
+Then, at the target repository root, create `.subagents/` and `.subagents/pi-sessions/`, and ensure `.subagents/` is locally ignored without modifying the user's tracked ignore policy. Create:
 
 - `.subagents/<id>.prompt.md` — parent assignment
 - `.subagents/<id>.system.md` — tool, safety, no-recursion, and stopping constraints

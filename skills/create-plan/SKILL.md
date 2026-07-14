@@ -2,11 +2,13 @@
 name: create-plan
 description: Creates thoroughly researched, implementation-ready plans that are complete but distilled, structured into adaptive numbered phases, and explicit about decisions, files, pitfalls, checks, and review. Use when the user asks to "create a plan", "make a plan", "implementation plan", "plan this feature", "plan the change", or similar planning work before coding. Do not use to implement the plan or for quick conceptual answers that need no implementation handoff.
 compatibility: >-
-  Requires normal project file access and Node.js 18+ for the plan HTML renderer.
-  Bun is optional: it enables rich Markdown rendering; without it, the renderer
-  warns and produces escaped plain-text HTML instead of failing. For best
-  results, network/web access is available for current research and a reviewer
-  mechanism is supported by the `use-subagents` skill.
+  Requires project file access. Saving and rendering plans requires write access
+  and Node.js 18+; Bun is optional and enables rich Markdown rendering. Current
+  external research requires suitable search/retrieval access. Independent
+  subagent review requires the `use-subagents` prerequisites: Herdr 0.7.3+ with
+  a running compatible server, HERDR_ENV=1, and an interactive agent. If those
+  review prerequisites are unavailable, the workflow permits a documented
+  self-review instead.
 metadata:
   short-description: Create researched, implementation-ready plans
 ---

@@ -35,7 +35,7 @@ Do not use `Done` as a substitute for verification. Do not mark a parent phase c
 
 ## Subagent and execution strategy
 
-For multi-step or broad plans, assign bounded implementation tasks/milestones to workers by default. Sequential workers are expected for dependent work; parallel workers require independent tasks and isolated worktrees or explicit non-overlapping write lanes. A scout/reviewer does not replace a worker. If the parent implements, record one concrete exception: genuinely trivial task, unavailable worker, unsafe handoff, immediate tightly coupled coordination, or explicit user request. Do not repeatedly use “trivial” to keep a broad plan in the parent.
+For multi-step or broad plans, assign bounded implementation tasks/milestones to workers by default. Sequential workers are expected for dependent work. Concurrent writers require independent tasks and one isolated worktree per writer; writers sharing a worktree must run sequentially even when their files do not overlap. A scout/reviewer does not replace a worker. If the parent implements, record one concrete exception: genuinely trivial task, unavailable worker, unsafe handoff, immediate tightly coupled coordination, or explicit user request. Do not repeatedly use “trivial” to keep a broad plan in the parent.
 
 Use `.subagents/<id>.handoff.md` for worker-to-parent communication; the parent applies its evidence to this tracker. Keep this tracker parent/single-writer when workers run in parallel or could resume concurrently. Task-owned source, tests, plans, and evidence remain at their required project paths rather than moving into `.subagents/`.
 

@@ -1,6 +1,11 @@
 ---
 name: implement-plan
 description: Implements existing Markdown plans exhaustively with a mandatory loaded tracker, worker-first task delegation, Analyze → Plan → Implement → Verify loops, active validation, and independent reviews. Use when the user asks to implement, execute, carry out, or continue an existing plan. Do not use for creating a plan from scratch or only reviewing a plan.
+compatibility: >-
+  Requires project write access and the `use-subagents` prerequisites: Herdr
+  0.7.3+ with a running compatible server, HERDR_ENV=1, and an installed
+  interactive agent executable. Browser-visible tasks additionally require an
+  available browser automation capability for manual verification.
 metadata:
   short-description: Implement plans with a mandatory tracker and worker task loops
 ---
@@ -35,7 +40,7 @@ On resumed work, reload the template, reread the full plan, and reconcile the tr
 ## Worker and context contract
 
 - For multi-step or broad plans, the parent primarily orchestrates. Assign each bounded implementation task or milestone to a worker by default; scouts, researchers, validators, and reviewers do not satisfy this implementation requirement.
-- Dependencies do not prevent delegation: use sequential workers and checkpoint between them. Use parallel workers only for independent tasks in isolated worktrees or explicit non-overlapping write lanes.
+- Dependencies do not prevent delegation: use sequential workers and checkpoint between them. Concurrent writers are allowed only for independent tasks with one isolated worktree per writer. Writers sharing a worktree must run sequentially even when their files do not overlap.
 - Use one fresh Herdr pane and fresh agent session per task or milestone. Give it plan/tracker paths, assigned task IDs, relevant files, scope, acceptance criteria, and verification expectations; persist essential context in project artifacts instead of forking parent context.
 - Close each worker with a structured communication handoff under `.subagents/`, then have the parent record the resulting evidence in the owning plan tracker. Keep the tracker single-writer when workers run in parallel or could resume concurrently. At milestone boundaries, carry forward files and evidence—not accumulated worker transcripts or one long implementation session.
 - Parent implementation is an exception requiring a concrete tracker reason: genuinely trivial work, unavailable worker, unsafe handoff, immediate tightly coupled coordination, or explicit user request. Do not repeatedly label rows “trivial” to retain a broad plan in the parent.

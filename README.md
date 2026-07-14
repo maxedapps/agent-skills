@@ -2,7 +2,6 @@
 
 ## Available skills
 
-- `code-review` — perform adversarial, evidence-bound code reviews and produce an HTML report.
 - `create-plan` — create researched, implementation-ready plans.
 - `implement-plan` — execute existing Markdown implementation plans with active tracking and verification.
 - `improve-skills` — improve Agent Skills from evidence gathered during real interactions.
@@ -36,16 +35,16 @@ Install multiple selected skills:
 npx skills add maxedapps/agent-skills \
   --skill create-plan \
   --skill implement-plan \
-  --skill code-review
+  --skill review-plan-implementation
 ```
 
 Review each skill and its compatibility requirements before use. Some skills integrate with other skills or external tooling such as Herdr.
 
 ## Runtime and related skills
 
-- **Bun is optional.** Only `create-plan` and `code-review` attempt to use Bun, and only for rich Markdown-to-HTML rendering. If Bun is unavailable, their Node.js renderers warn and produce escaped plain-text HTML instead. No skill fails solely because Bun is missing.
-- **Node.js 18+ is required** when `create-plan` or `code-review` renders HTML.
-- **Herdr 0.7.3+ is required** by `use-subagents`. `create-plan` uses it for independent review, and `implement-plan` uses it for workers and reviewers.
+- **Bun is optional.** Only `create-plan` attempts to use Bun, and only for rich Markdown-to-HTML rendering. If Bun is unavailable, its Node.js renderer warns and produces escaped plain-text HTML instead. No skill fails solely because Bun is missing.
+- **Node.js 18+ is required** when `create-plan` renders HTML.
+- **Herdr 0.7.3+ with `HERDR_ENV=1`, a running compatible server, and an interactive agent is required** by `use-subagents` and `implement-plan`. `create-plan` requires these prerequisites for independent subagent review but permits documented self-review when they are unavailable. `review-plan-implementation` requires them when a large plan or multiple subsystems need delegated review.
 - **`agent-browser` remains external.** Install it from [skills.sh](https://www.skills.sh/vercel-labs/agent-browser/agent-browser) when browser interaction or UI verification is needed:
 
   ```sh
@@ -53,10 +52,6 @@ Review each skill and its compatibility requirements before use. Some skills int
   ```
 
 ## What each skill does
-
-### `code-review`
-
-Performs an adversarial but evidence-bound review of a codebase or change. It checks correctness, security, test quality, maintainability, typing, performance, and unnecessary complexity, then produces Markdown and HTML reports.
 
 ### `create-plan`
 

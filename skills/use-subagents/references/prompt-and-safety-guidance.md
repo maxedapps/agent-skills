@@ -77,9 +77,9 @@ Never include secrets in prompts, CLI arguments, terminal input, scrollback, ses
 
 ## Write isolation
 
-- A writer gets one explicit, non-overlapping lane.
+- A writer gets one explicit lane. File non-overlap does not make same-worktree concurrency safe.
 - Do not edit that lane in the parent while the child runs.
-- Never run concurrent writers in one worktree.
+- Never run concurrent writers in one worktree; give every concurrent writer its own isolated worktree.
 - Before creation, run `herdr worktree --help`; use `herdr worktree create` for each genuinely parallel writer, with a distinct branch and returned workspace.
 - For shared-worktree sequential writers, wait for one writer to complete, capture/review its handoff and diff, then start the next.
 - Forbid repo-wide formatters, codemods, installs, generators, and broad write-capable commands in concurrent lanes unless each writer has an isolated worktree.

@@ -1,6 +1,12 @@
 ---
 name: review-plan-implementation
-description: Reviews implemented Markdown plans against their goals, checklist items, acceptance criteria, implied requirements, and test evidence. Use when the user provides a plan/tracker/design doc and asks whether the implementation is complete, correct, safe, well-tested, and faithful to the plan, including prompts like “this plan was implemented; evaluate the plan and implementation” or “review implementation of .plans/foo.md”. Do not use for ordinary code review without a plan target; use code-review instead.
+description: Reviews implemented Markdown plans against their goals, checklist items, acceptance criteria, implied requirements, and test evidence. Use when the user provides a plan/tracker/design doc and asks whether the implementation is complete, correct, safe, well-tested, and faithful to the plan, including prompts like “this plan was implemented; evaluate the plan and implementation” or “review implementation of .plans/foo.md”. Do not use for ordinary code review without a plan target.
+compatibility: >-
+  Requires project and repository read access. Large-plan or multi-subsystem
+  delegation requires the `use-subagents` prerequisites: Herdr 0.7.3+ with a
+  running compatible server, HERDR_ENV=1, and an installed interactive agent
+  executable. Browser-visible implementation review additionally requires an
+  available browser automation capability.
 metadata:
   short-description: Review an implementation against its plan
 ---
