@@ -52,7 +52,6 @@ If a mandatory resource cannot be loaded, planning is blocked; do not fabricate 
 - Create or reuse `.progress/<plan-slug>.md` with the goal, scope, constraints, decision status, source artifacts, and open questions unless writes are forbidden; then use the template's non-persisted planning-memory value and keep essential support in the plan.
 - Inspect relevant source, tests, config, docs, existing patterns, `.plans`, `.progress`, and `.reviews`. For API/schema/protocol/CLI changes, search the whole workspace for callers, generated clients, scripts, docs, and downstream consumers.
 - Record detailed findings, risks, unknowns, likely validation, and chat-only provenance in planning memory.
-- Load and apply `references/specialized-plan-checks.md` now when a matching category exists.
 
 ### 2. Resolve questions and research
 
