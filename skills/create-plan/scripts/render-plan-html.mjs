@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { dirname, resolve } from 'node:path'
+import { randomBytes } from 'node:crypto'
+import { mkdir, readFile, realpath, writeFile } from 'node:fs/promises'
+import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path'
 
 function usage() {
   console.log(`Render a Markdown implementation plan to self-contained HTML with a hard-coded copy button.
@@ -56,11 +57,15 @@ try {
 const renderedBody = renderMarkdown(markdown)
 const title = escapeHtml(markdown.match(/^#\s+(.+)$/m)?.[1]?.trim() || 'Implementation plan')
 const generatedAt = escapeHtml(new Date().toISOString())
-const sourcePath = escapeHtml(inputPath)
+const sourcePath = escapeHtml(displaySourcePath(
+  await realpath(inputPath),
+  await realpath(process.cwd()),
+))
 const copySource = jsonForScript(markdown)
+const nonce = randomBytes(18).toString('base64url')
 
 await mkdir(dirname(outputPath), { recursive: true })
-await writeFile(outputPath, buildHtml({ title, generatedAt, sourcePath, renderedBody, copySource }), 'utf8')
+await writeFile(outputPath, buildHtml({ title, generatedAt, sourcePath, renderedBody, copySource, nonce }), 'utf8')
 
 if (shouldOpen) openHtml(outputPath)
 console.log(outputPath)
@@ -68,7 +73,12 @@ console.log(outputPath)
 function renderMarkdown(markdown) {
   const script = `
 const input = await new Response(Bun.stdin.stream()).text();
-process.stdout.write(Bun.markdown.html(input, { headings: { ids: true } }));
+process.stdout.write(Bun.markdown.html(input, {
+  headings: { ids: true },
+  noHtmlBlocks: true,
+  noHtmlSpans: true,
+  tagFilter: true,
+}));
 `
   const result = spawnSync('bun', ['--eval', script], {
     input: markdown,
@@ -83,12 +93,13 @@ process.stdout.write(Bun.markdown.html(input, { headings: { ids: true } }));
   return `<pre><code>${escapeHtml(markdown)}</code></pre>`
 }
 
-function buildHtml({ title, generatedAt, sourcePath, renderedBody, copySource }) {
+function buildHtml({ title, generatedAt, sourcePath, renderedBody, copySource, nonce }) {
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; connect-src 'none'; font-src 'none'; frame-src 'none'; frame-ancestors 'none'; img-src 'none'; manifest-src 'none'; media-src 'none'; object-src 'none'; script-src 'nonce-${nonce}'; script-src-attr 'none'; style-src 'unsafe-inline'; form-action 'none'; worker-src 'none'">
 <title>${title}</title>
 <style>
 :root { color-scheme: light dark; }
@@ -141,7 +152,7 @@ input[type="checkbox"] { margin-right: 0.45rem; }
 <div class="header-meta">Source: ${sourcePath}<br>Rendered: ${generatedAt}</div>
 ${renderedBody}
 </main>
-<script>
+<script nonce="${nonce}">
 (() => {
   const source = ${copySource};
   const button = document.querySelector('[data-copy-response]');
@@ -196,8 +207,19 @@ function openHtml(path) {
   if (result.error) throw new Error(`Rendered HTML, but failed to open it: ${result.error.message}`)
 }
 
+function displaySourcePath(path, cwd) {
+  const fromCwd = relative(cwd, path)
+  const outsideCwd = fromCwd === '..' || fromCwd.startsWith(`..${sep}`) || isAbsolute(fromCwd)
+  return outsideCwd ? basename(path) : fromCwd
+}
+
 function jsonForScript(value) {
-  return JSON.stringify(value).replaceAll('<', '\\u003c')
+  return JSON.stringify(value)
+    .replaceAll('&', '\\u0026')
+    .replaceAll('<', '\\u003c')
+    .replaceAll('>', '\\u003e')
+    .replaceAll('\u2028', '\\u2028')
+    .replaceAll('\u2029', '\\u2029')
 }
 
 function escapeHtml(value) {

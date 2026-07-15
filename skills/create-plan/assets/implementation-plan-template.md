@@ -60,18 +60,23 @@ If an exact path is genuinely unknown, provide the narrow search pattern and req
 
 **Review checkpoint**
 
-- Review [high-risk behavior/files] against [decision, invariant, or source finding].
-- Evidence: [diff, focused tests, logs/screenshots, migration output, or report].
-- Exit when [material findings resolved and named checks rerun].
+- **Focus:** [completed task IDs, high-risk behavior/files, callers, and integration boundaries].
+- **Baseline:** [this phase's requirements, decisions, invariants, acceptance criteria, and approved deviations]. When implementation exists, request a **bounded plan-backed code review** of this scope. Treat it as embedded only when the owning implementation workflow requests the checkpoint; a direct request remains standalone.
+- **Evidence:** [plan/tracker paths, changed files/diff, focused tests and results, logs/screenshots/migration output, skipped checks with reasons, constraints, deviations, and known risks].
+- **Exit and rerun:** resolve or explicitly disposition every material finding, convert accepted work into tracked tasks, rerun [named checks] after fixes, and repeat the same-assignment review when material changes warrant it. Prefer safely available independent review when worthwhile; otherwise record the independence limitation and perform a separate checklist-driven direct review.
+- If an owning workflow already requires a milestone review with the same scope, baseline, evidence, and exit conditions, satisfy both with one review and one finding-resolution loop; do not request a duplicate reviewer merely because both the plan and workflow contain a checkpoint.
 
-<!-- Repeat only for meaningful dependency, migration/rollout, delivery, or independently verifiable boundaries. -->
+<!-- Repeat only for meaningful dependency, migration/rollout, delivery, or independently verifiable boundaries. Not every phase is automatically a major review milestone. -->
 
 ## Final validation and review
 
 - Run `[authoritative repository gate]` — expect [result].
 - Run applicable browser/manual, migration, security, performance, cleanup, and no-drift checks; name any justified skip and its confidence impact.
-- Request an independent implementation review focused on [highest-risk decisions and pitfalls], providing this plan, the implementation tracker/progress artifact when present (otherwise the annotated plan), changed files/diff, validation evidence, skipped checks, and known constraints.
-- Convert material findings into tracked work, fix them, rerun affected checks, and obtain follow-up review until no material concern remains or a human decision blocks completion.
+- **Focus:** the complete implementation, all changed files and required integration boundaries, highest-risk decisions, and all applicable code-review dimensions.
+- **Baseline:** this full plan, its sources and acceptance criteria, the implementation tracker/progress evidence, and documented approvals/deviations. Request a **full plan-backed code review**. Treat it as embedded only when the owning implementation workflow requests the final checkpoint; otherwise it is standalone.
+- **Evidence:** provide this plan, tracker/progress artifact when present (otherwise the annotated plan), changed files/diff, callers, tests and validation results, skipped checks, constraints, deviations, and known risks.
+- **Exit and rerun:** evaluate every finding, record acceptance or rejection rationale, convert accepted material findings into tracked work, fix them, rerun affected and final gates, and repeat same-assignment follow-up until no material concern remains or a human decision blocks completion.
+- Prefer safely available independent review when worthwhile; otherwise record the independence limitation and perform a separate checklist-driven direct review. If this final checkpoint aligns with an owning workflow's final review in scope, baseline, evidence, and exit conditions, run it once and use the same resolved evidence for both requirements.
 
 ## Definition of Done
 
@@ -79,4 +84,4 @@ If an exact path is genuinely unknown, provide the narrow search pattern and req
 - [Every requirement, source finding, and approved decision is implemented or explicitly approved as deferred.]
 - [Required automated and manual checks pass with retained evidence.]
 - [Documentation, migration/rollout/recovery, generated artifacts, and downstream consumers are complete where applicable.]
-- [Independent review is resolved; remaining blockers or operator steps are explicit.]
+- [Applicable milestone and final reviews are resolved through independent review when safely available and worthwhile, or a recorded checklist-driven direct review; remaining blockers or operator steps are explicit.]

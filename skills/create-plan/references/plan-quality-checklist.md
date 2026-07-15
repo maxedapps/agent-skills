@@ -1,6 +1,6 @@
 # Plan Quality Checklist
 
-Complete this checklist before independent draft review and repeat it after material revisions.
+Complete this checklist before draft review and repeat it after material revisions. Draft-plan critique stays local to plan creation; it does not require implementation evidence or route through implementation code review.
 
 ## Handoff completeness
 
@@ -32,9 +32,20 @@ Complete this checklist before independent draft review and repeat it after mate
 - Planned commands exist, use the correct working directory, and distinguish focused checks from authoritative repository gates.
 - Tests cover meaningful happy paths, failures, edge cases, regressions, and invariants; defect fixes include fail-before proof when practical.
 - UI work includes real-browser guidance; migrations, external services, destructive work, background processes, and rollout include applicable operator, cleanup, rollback, or recovery checks.
-- Review checkpoints state focus, required evidence, exit conditions, and checks to rerun after fixes.
-- Final independent implementation review receives the plan, tracker/progress artifact when present (otherwise the annotated plan), diff/files, evidence, skipped checks, risks, and constraints; material findings cannot be silently ignored.
+- Every review checkpoint states its **focus**, authoritative **baseline**, required **evidence**, and **exit/rerun requirements**, including exact checks to repeat after fixes.
+- When implementation exists, phase checkpoints request bounded plan-backed code review and final checkpoints request full plan-backed code review; invocation is embedded only when an owning workflow requests that checkpoint.
+- A plan-authored checkpoint and an owning implementation workflow checkpoint are one review when scope, baseline, evidence, and exit conditions align; the plan does not create duplicate per-task or per-document reviews.
+- Review payloads include the plan/tracker paths, task IDs and acceptance criteria, changed files/diff and callers, validation evidence, skipped checks, deviations, constraints, integration boundaries, and known risks.
+- Independent review is preferred only when safely available and worthwhile. Otherwise the plan requires a recorded separate checklist-driven direct review with its independence limitation; plan completion never blocks solely on delegation.
+- Material findings are evaluated rather than accepted blindly, with acceptance/rejection rationale, tracked fixes, affected validation reruns, and same-assignment follow-up after material changes.
 - Definition of Done is observable and reconciles all requirements, validation, documentation, downstream work, review findings, blockers, and operator steps.
+
+## Draft review evidence
+
+- Before finalization, the complete request, draft, planning memory or equivalent support, sources, decisions, constraints/non-goals, risks, assumptions, unresolved questions, and relevant code pointers are available to the review pass.
+- The review asks for independent judgment rather than approval and looks for missing requirements/files, unsafe assumptions, weak rationale, false-green checks, and unnecessary complexity or repetition.
+- A safely available, worthwhile independent reviewer uses fresh read-only context; same-assignment follow-up is requested after material revisions when practical.
+- If independent review is unavailable or not worthwhile, the limitation and separate checklist-driven direct-review findings are recorded. In either path, material concerns are resolved, reasonedly rejected, or exposed as human decisions.
 
 ## Compression
 

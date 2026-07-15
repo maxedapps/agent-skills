@@ -1,6 +1,6 @@
 # Implementation Progress
 
-> **Mandatory use:** the `implement-plan` agent must load this file with the file-reading tool before any project source edit or implementation-worker launch. Copy/adapt it into the plan when possible; otherwise use a retained Markdown tracker. Preserve the task inventory, status semantics, worker/execution strategy, loop journal, deviations, evidence, and reconciliation gates.
+> **Mandatory use:** the `implement-plan` agent must load this file with the file-reading tool before any project source edit or delegated implementation launch. Copy/adapt it into the plan when possible; otherwise use a retained Markdown tracker. Preserve the task inventory, status semantics, execution/delegation strategy, loop journal, deviations, evidence, review resolution, and reconciliation gates.
 
 - **Template loaded from:** `implement-plan/assets/progress-tracker-template.md`
 - **Plan:** `<path>`
@@ -21,7 +21,7 @@ Create this inventory from the full plan before implementation. Give every indep
 
 | ID | Original plan reference / requirement | Dependencies | Status | Owner | Verification | Evidence / notes |
 |---|---|---|---|---|---|---|
-| T01 | `<section + exact requirement>` | — | Pending | `Worker W1` | `<planned check>` | |
+| T01 | `<section + exact requirement>` | — | Pending | `Parent / Delegated W1` | `<planned check>` | `<may reference milestone/final review ID>` |
 
 Allowed task-row statuses:
 
@@ -33,26 +33,46 @@ Allowed task-row statuses:
 
 Do not use `Done` as a substitute for verification. Do not mark a parent phase complete while any child row remains `Pending`, `In progress`, or `Blocked`.
 
-## Worker and execution strategy
+## Execution and delegation strategy
 
-For multi-step or broad plans, assign bounded implementation tasks/milestones to workers by default through the backend selected by `use-subagents`. Sequential workers are expected for dependent work. Concurrent writers require independent tasks and one isolated worktree per writer; writers sharing a worktree must run sequentially even when their files do not overlap. A scout/reviewer does not replace a worker. If the parent implements, record one concrete exception: genuinely trivial task, unavailable worker, unsafe handoff, immediate tightly coupled coordination, or explicit user request. Do not repeatedly use “trivial” to keep a broad plan in the parent.
+For each bounded task or milestone, choose parent execution or delegation based on whether fresh context, independent judgment, safe parallelism, or specialization materially outweighs coordination and handoff risk. Delegation is considered, not mandatory. Parent execution is valid without an exception when delegation is unavailable, unsafe, or not worthwhile; record the reason briefly enough to make the strategy understandable.
 
-Record each backend and its run/thread/pane/session identifier when available. Capture worker-to-parent communication from backend output, native thread state, terminal output, or an optional artifact such as `.subagents/<id>.handoff.md`; the parent applies its evidence to this tracker. Keep this tracker parent/single-writer when workers run in parallel or could resume concurrently. Task-owned source, tests, plans, and evidence remain at their required project paths rather than moving into a communication directory.
+Whenever delegation is used:
 
-| Task IDs | Owner | Mode | Backend / run ID | Context and dependencies / write isolation | Handoff / evidence or parent-execution exception |
+- grant least-privilege files, tools, write scope, credentials-free context, and commands;
+- use fresh context with the plan/tracker paths, task IDs, acceptance criteria, constraints, relevant files, and verification expectations;
+- allow concurrent writers only for independent tasks with one isolated worktree per writer; writers sharing a worktree run sequentially even when files do not overlap;
+- track the assignment to a terminal state and capture its run identity when available, files changed/read, decisions, commands/results, skips, risks, blockers, and exact remaining work;
+- keep this tracker parent/single-writer when lanes run in parallel or may resume concurrently;
+- require parent diff inspection, claim spot-checking, and task-specific verification before accepting the handoff;
+- clean temporary worktrees, processes, sessions, credentials, and unneeded handoff artifacts without discarding owner work.
+
+Task-owned source, tests, plans, and retained evidence remain at their required project paths rather than moving into a communication directory. A scout or reviewer provides evidence but does not silently become the implementation owner.
+
+| Task IDs | Owner | Mode | Capability / run ID | Context and dependencies / write isolation | Terminal handoff, parent evidence, and cleanup |
 |---|---|---|---|---|---|
-| `T01` | `Worker W1` | `Sequential` | `<backend + available run/thread/pane/session ID>` | `Fresh: plan + tracker paths, task ID, relevant files; <depends on / isolated lane>` | `<captured output or optional artifact; parent-applied evidence, or parent exception>` |
+| `T01` | `Parent / Delegated W1` | `Sequential / Parallel isolated` | `<capability + available run/thread/pane/session ID, or parent>` | `Fresh: plan + tracker, task ID, files; <dependencies/isolation>` | `<terminal output/handoff, parent checks, cleanup; or parent-strategy reason>` |
 
 ## Loop journal
 
 ### `<task ID>` — `<short name>`
 
 - **Analyze:** `<current state, relevant files, risks, unknowns>`
-- **Plan:** `<bounded change, acceptance criteria, planned verification, rollback/checkpoint>`
-- **Implement:** `<worker/parent owner, backend + available run/thread/pane/session ID, files/actions, captured handoff/evidence; parent exception reason if applicable>`
-- **Verify:** `<commands/manual or browser checks and exact results; parent spot-checks of worker claims/diff>`
-- **Review:** `<reviewer backend/run, terminal state, findings, fixes, follow-up>`
+- **Plan:** `<bounded change, acceptance criteria, planned verification, rollback/cleanup/checkpoint>`
+- **Implement:** `<parent/delegated owner, available run identity, files/actions, terminal handoff; permissions/isolation/cleanup when delegated>`
+- **Verify:** `<commands/manual or browser checks and exact results; parent diff inspection and spot-checks of delegated claims>`
+- **Review:** `<N/A with reason | direct/milestone/final review ID, findings, fixes, follow-up>`
 - **Decision:** `<Verified / repeat / Blocked; next ready task ID>`
+
+A task row may reference one aligned milestone or final review; it does not require a separate reviewer. A plan-authored and workflow-authored checkpoint count as one review when scope, baseline, evidence, and exit conditions align. Record whether the review was independent or a checklist-driven direct fallback and any independence limitation.
+
+## Review register
+
+| Review ID | Scope / axes | Method and independence | Payload / coverage | Findings and rationale | Fixes, reruns, follow-up | Status |
+|---|---|---|---|---|---|---|
+| `M01 / F01` | `<plan-backed; bounded/full; embedded; handoff-only>` | `<independent capability/run or direct fallback + limitation>` | `<plan/tracker, task IDs, files/callers, tests, evidence/skips, deviations/risks>` | `<severity/confidence/evidence; accepted/rejected rationale>` | `<task IDs, commands/results, same-assignment follow-up>` | `<Open / Resolved / Blocked>` |
+
+Embedded reviews default to handoff-only with no separate artifact. The handoff records files/boundaries read or skipped, checks run/skipped, severity, confidence, location/evidence, impact, smallest safe fix or decisive validation, and applicable baseline-quality, compliance, implementation-quality, and test/validation-quality verdicts.
 
 ## Deviations and decisions
 
@@ -63,11 +83,13 @@ Record each backend and its run/thread/pane/session identifier when available. C
 
 - [ ] Re-read the full original plan, not only this tracker.
 - [ ] Every actionable plan item maps to one or more inventory rows.
-- [ ] Worker ownership, backend/context mode, available run/thread/pane/session identifiers, dependencies/isolation, terminal states, and handoff/evidence are recorded; every parent-executed task has an allowed concrete exception reason.
+- [ ] Parent/delegated ownership, context mode, dependencies/isolation, and expected evidence are recorded; when delegation was used, least privilege, available run identifiers, terminal handoffs, parent verification, and cleanup are evidenced.
 - [ ] No row remains `Pending`, `In progress`, or `Blocked`.
 - [ ] Every `Verified` row includes concrete validation evidence.
 - [ ] Every `Descoped` row includes rationale and explicit user approval.
 - [ ] Required automated, integration, browser/manual, cleanup, docs, migration, and acceptance checks are complete.
-- [ ] Step-review and final-review material findings are resolved; any unresolved material finding has a `Blocked` inventory row.
+- [ ] Every applicable plan/workflow milestone checkpoint is resolved once without duplicate per-row reviews; aligned rows reference its review ID.
+- [ ] The full plan-backed embedded final review covers the entire plan/tracker and all applicable review dimensions, or its direct checklist fallback and independence limitation are recorded.
+- [ ] Every milestone/final finding has acceptance/rejection rationale; accepted or unresolved material findings became task rows, fixes and validation reruns are recorded, and follow-up is resolved. Any unresolved material finding has a `Blocked` inventory row.
 - [ ] Scope-relevant final validation passes; any scope-relevant failure has a `Blocked` inventory row. Clearly unrelated/pre-existing failures are recorded separately as caveats with evidence.
 - [ ] `Overall status` is updated to `Complete` only after every check above passes and no `Blocked` row exists.
