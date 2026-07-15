@@ -121,9 +121,9 @@ When third-party APIs, framework behavior, security assumptions, or migrations m
 
 ## Findings, confidence, and caveats
 
-Admit only material findings under the core materiality and proportionality contract. Each includes severity and concrete impact; affected authority item when applicable; location (`path:line` when possible); implementation and validation evidence; confidence (`CONFIRMED`, `PLAUSIBLE`, or `NEEDS RUNTIME VALIDATION`); and the smallest proportionate safe fix or decisive validation step. `NEEDS RUNTIME VALIDATION` creates a decisive validation task, not speculative implementation. Distinguish deterministic behavior, a reachable evidence-backed path, and an observed incident.
+Admit only material findings under the core contract. Each includes advisory reviewer severity/confidence scores, concrete impact, authority item when applicable, location, implementation/validation evidence, path state, and the smallest proportionate fix or decisive validation. Scores never decide disposition; the owner may rescore or reject even `S4` after independent materiality/proportionality checks. Mark `NEEDS RUNTIME VALIDATION` separately; it creates validation work, not speculative implementation.
 
-Group findings by root cause and severity and cite matrix rows where relevant. By default, report every Critical finding and at most five additional High/Medium material root causes; omit Low/Optional findings unless the user explicitly requests them. Prefer no finding over speculation, and record confirmed-good areas only when they demonstrate meaningful coverage.
+Group findings by root cause and severity and cite matrix rows where relevant. By default, report every `S4 Critical` and at most five additional `S3 High`/`S2 Medium` material root causes; omit `S1 Low`/`S0 Optional` unless explicitly requested. Prefer no finding over speculation, and record confirmed-good areas only when they demonstrate meaningful coverage.
 
 If more than five non-Critical material root causes remain, include one blocking `not review-ready` caveat rather than a hidden or serialized backlog. State the highest remaining severity, affected areas/dimensions, aggregate impact, evidence basis, and known count or lower bound; reflect it in verdict confidence and do not return a ready verdict. The owning workflow decides broader remediation or escalation.
 
@@ -131,7 +131,7 @@ Other caveats must identify partial/skipped files, unavailable tools/environment
 
 ## Workflow
 
-1. Resolve the authority target, full or bounded scope, standalone or embedded invocation, and output constraints. For a follow-up, inspect only accepted fixes, affected integration boundaries, and material regressions; do not reopen unrelated dimensions or broad discovery. Surface an incidentally observed Critical issue separately for owner or human escalation without expanding the search.
+1. Resolve authority, scope, invocation, and output constraints. For a follow-up, inspect only accepted fixes, affected boundaries, and material regressions; do not reopen broad discovery. Surface an incidentally observed apparently severe issue separately for owner reassessment without expanding the search.
 2. Read all authority sources; extract requirements, implications, approvals, conflicts, and baseline-quality concerns.
 3. Inspect implementation evidence and required integration boundaries. Load and apply the generic dimension reference for all broad or applicable implementation-quality checks.
 4. Build the complete applicable matrix and assign only evidence-supported statuses.

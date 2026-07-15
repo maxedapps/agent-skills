@@ -66,16 +66,17 @@
 
 ## Findings
 
-<!-- Findings are selective even when coverage is broad. Deduplicate by root cause. By default report every Critical and at most five additional High/Medium material root causes; omit Low/Optional unless explicitly requested. Order admitted findings by severity, then impact. -->
+<!-- Findings are selective even when coverage is broad. Deduplicate by root cause. By default report every S4 and at most five additional S3/S2 material root causes; omit S1/S0 unless requested. Scores are advisory and must not decide disposition. -->
 
-### <Critical | High | Medium; Low/Optional only when requested> — <finding title>
+### <S4 Critical | S3 High | S2 Medium; S1 Low/S0 Optional only when requested> — <finding title>
 
 - **Dimension / authority item:** <category and plan item if applicable>
 - **Location:** `<path:line, symbol, runtime surface, or evidence source>`
 - **Impact:** <plausible/reachable path and meaningful user/operator/security/data/compatibility/operations consequence>
 - **Evidence:** <sufficient evidence for the issue and confidence, including repro/check result>
-- **Confidence:** `<CONFIRMED | PLAUSIBLE | NEEDS RUNTIME VALIDATION>`
+- **Confidence:** `<C3 Confirmed | C2 Supported | C1 Tentative>`
 - **Condition:** <deterministic, reachable, or observed incident when relevant>
+- **Validation state:** `<none | NEEDS RUNTIME VALIDATION>`
 - **Smallest safe fix / next validation:** <correction whose benefit exceeds complexity, regression risk, and maintenance cost, or decisive runtime validation; never speculative implementation>
 
 ## Confirmed-good areas

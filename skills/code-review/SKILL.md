@@ -42,8 +42,8 @@ Resolve each axis separately; one axis never implies another.
 - Do not edit source unless explicitly asked. A declared report is an output artifact, not a source edit, and remains governed by the output axis.
 - Evaluate high-value tests, not counts: user-visible behavior, acceptance criteria, regressions, invariants, integration boundaries, important success and failure paths, and plausible boundary cases tied to a contract or meaningful security, data, or operational risk.
 - Cheaply confirm serious suspicions when practical with targeted checks or disposable assertion-based repros. Record checks not run and how they limit confidence; delete temporary repro artifacts.
-- Deduplicate findings by root cause. By default report every Critical finding, at most five additional High/Medium material root causes, and no Low/Optional findings. Explicit user depth or output instructions override this default. If additional material root causes remain, disclose one blocking `not review-ready` caveat with their highest severity, affected areas/dimensions, aggregate impact, evidence basis, and known count or lower bound; return remediation control to the owner rather than serializing a backlog.
-- For direct and delegated reviews, default to an initial review plus one follow-up. Follow-ups inspect accepted fixes, affected integration boundaries, and material regressions only; they do not reopen unrelated dimensions or broad discovery. Allow one additional follow-up only for an unresolved Critical/High issue, confirmed material regression, or substantial change invalidating prior coverage; then return control to the owner/human rather than continue autonomously. Surface any incidentally observed Critical issue separately and escalate it without authorizing broader search.
+- Deduplicate findings by root cause. By default report every `S4 Critical`, at most five additional `S3 High`/`S2 Medium` material root causes, and no `S1 Low`/`S0 Optional` findings. Explicit user depth/output instructions override this default. If more material root causes remain, disclose one blocking `not review-ready` caveat with highest severity, affected areas/dimensions, aggregate impact, evidence basis, and known count/lower bound; return remediation control to the owner rather than serialize a backlog.
+- For direct and delegated reviews, default to an initial review plus one follow-up. Follow-ups inspect accepted fixes, affected boundaries, and material regressions only; they do not reopen broad discovery. Allow one extra follow-up only for unresolved material risk, confirmed regression, or invalidated coverage; then return control to the owner/human. Surface any incidentally observed apparently severe issue separately for independent reassessment without authorizing broader search.
 - Use bounded read-only subagents only when independence justifies coordination. Give each exact scope, dimensions, evidence/output requirements, permissions, and stop condition; prohibit edits and recursion. The parent integrates coverage, deduplicates before output limits, spot-verifies material claims, and owns conclusions.
 
 ## Workflow
@@ -58,7 +58,20 @@ Resolve each axis separately; one axis never implies another.
 
 ## Finding quality
 
-Each admitted finding includes severity and concrete impact; location (`path:line` when possible) and affected contract or authority item; evidence and confidence (`CONFIRMED`, `PLAUSIBLE`, or `NEEDS RUNTIME VALIDATION`); whether its path is deterministic, reachable, or observed; and the smallest proportionate safe fix or decisive validation step. `NEEDS RUNTIME VALIDATION` calls for decisive validation, never speculative implementation.
+Scores are advisory:
+
+| Score | Guidance |
+|---|---|
+| `S4 Critical` | Catastrophic, irreversible, security, data, or availability impact if real. |
+| `S3 High` | Major user/operator or core-path impact. |
+| `S2 Medium` | Meaningful but bounded impact or a practical workaround. |
+| `S1 Low` | Minor, nonblocking impact. |
+| `S0 Optional` | Polish or preference. |
+| `C3 Confirmed` | Direct code, runtime, test, or reproduction evidence. |
+| `C2 Supported` | Evidence-backed reachable path, not directly reproduced. |
+| `C1 Tentative` | Plausible but insufficiently evidenced; validate before acting. |
+
+For each candidate, record both scores, location/authority, evidence, path state, impact, and the smallest safe fix or validation. Scores guide ordering only: independently reassess evidence, reachability, relevance, impact, and proportionality, and downgrade or reject even `S4` when niche or immaterial. `NEEDS RUNTIME VALIDATION` is a separate next-action flag, never a confidence score or permission for speculative implementation.
 
 ## If fixes are explicitly requested
 

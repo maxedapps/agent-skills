@@ -50,7 +50,7 @@ If a mandatory resource cannot be loaded, planning is blocked; do not fabricate 
 - Research third-party contracts rather than relying on memory. Read `web-research` for current, version-specific dependency/API/framework evidence, official docs, source repositories, release history, URLs, and other external sources.
 - Do not defer code planning merely because credentials, environment IDs, or live resources are unavailable. Pin the documented contract, plan fail-closed configuration and fake-provider tests, and isolate real provisioning/verification as an operator step.
 - Consider fresh, read-only subagents for genuinely separable research, codebase scouting, or independent draft critique when their fresh context or independence is worth the coordination cost. Give them the complete bounded assignment and evidence payload; direct research and review remain valid.
-- Review drafts proportionately through fresh, read-only independent judgment when worthwhile, or a recorded checklist-driven direct fallback. Request prioritized, high-confidence material blockers—not niche/speculative edges, optional polish, or disproportionate redesign—and independently admit findings; unavailable delegation alone never blocks completion.
+- Review drafts proportionately through fresh read-only judgment when worthwhile, or a recorded direct fallback. Request advisory severity (`S4 Critical`→`S0 Optional`) and confidence (`C3 Confirmed`→`C1 Tentative`) scores, then independently assess findings; labels never decide disposition, and unavailable delegation never blocks completion.
 - Do not prescribe branches, pushes, PRs, or merges unless the user asks.
 
 ## Workflow
@@ -83,9 +83,17 @@ Before drafting, load `assets/implementation-plan-template.md`, then copy and ad
 
 Before review, load `references/plan-quality-checklist.md` and complete every applicable check. Draft-plan critique stays in this workflow because implementation evidence does not yet exist.
 
-When independent review is worthwhile, provide the draft/support, sources/decisions, constraints/risks, questions, and code/test pointers. Require fresh, read-only judgment: every Critical and at most five additional high-confidence High/Medium material blockers to safety, consistency, executability, simplicity, or outcome; omit Low/Optional, niche/speculative work, and disproportionate redesign by default. If more remain, require one blocking `not review-ready` caveat with highest remaining severity, affected areas, aggregate impact, evidence basis, and count/lower bound. Otherwise record the direct review and independence limit.
+When independent review is worthwhile, provide the draft/support, sources/decisions, constraints/risks, questions, and code/test pointers. Require fresh read-only judgment: every `S4`, at most five additional high-confidence `S3`/`S2` material blockers, and no `S1`/`S0`, niche/speculative, or disproportionate work by default. If more remain, require one blocking `not review-ready` caveat with highest severity, affected areas, aggregate impact, evidence basis, and count/lower bound. Otherwise record the direct review and independence limit.
 
-Independently check evidence, reachability, outcome/constraint relevance, impact, confidence, and fix complexity/regression/maintenance cost; accept/reject/defer with rationale. Unconfirmed potentially material concerns remain decisive validation questions, not plan expansions. Revise accepted work and rerun the checklist/evidence. Default to an initial review plus one fix/regression-only follow-up; separately escalate incidental Critical issues without reopening discovery. One additional follow-up requires unresolved Critical/High, confirmed material regression, or substantial coverage-invalidating change; then stop autonomous review for a reasoned parent/human disposition. Completion requires material concerns resolved, reasonedly rejected/deferred, or exposed as human decisions.
+Evaluate independently:
+
+| Decision input | Required handling |
+|---|---|
+| Reviewer scores | Guidance only; independently rescore severity/confidence. No label—even `S4`—admits or blocks by itself. |
+| Materiality | Check evidence, reachability, outcome relevance, impact, assumptions, and fix/regression/maintenance cost. |
+| Disposition | Record reviewer/planner scores, assumptions, and accept/reject/defer rationale; downgrade or reject niche, irrelevant, immaterial, or disproportionate findings. |
+| Unconfirmed concern | Keep it as a validation question, not a plan expansion. |
+| Follow-up | Rerun evidence after accepted work; allow initial review plus one fix/regression-only follow-up. Surface apparently severe incidental issues for reassessment without broad discovery. One extra round requires unresolved material risk, confirmed regression, or invalidated coverage; then stop for parent/human disposition. |
 
 ### 5. Save, render, and open
 

@@ -119,11 +119,32 @@ Provide a complete, non-steering payload:
 - validation commands/results, runtime/manual evidence, skipped checks with reasons, and confidence limits;
 - constraints, non-goals, deviations, known risks, blockers, unresolved questions, and exact read/write permissions.
 
-Require complete inspection, every applicable authority-matrix row, and the four verdicts: baseline quality, implementation compliance, implementation quality, and test/validation quality. Findings remain selective: every Critical and at most five additional High/Medium material root causes; omit Low/Optional by default. If more remain, one blocking `not review-ready` caveat states highest severity, affected areas, aggregate impact, evidence basis, and known count/lower bound—not a backlog. The handoff records review ID/method, read/run coverage and skips, confidence, location/evidence/reachability/impact, smallest safe fix or decisive validation, explicit no-material-findings, and source/tool limits.
+Require this handoff:
 
-Before admission, the parent rechecks evidence, reachability, scope relevance, impact, confidence, and fix complexity/regression/maintenance cost, recording accepted/rejected/deferred rationale. `NEEDS RUNTIME VALIDATION` creates a decisive validation row, not speculative implementation. Accepted/unresolved material findings become task rows; Low/Optional work cannot block without explicit user direction. Fix admitted issues and rerun affected validation.
+| Part | Required content |
+|---|---|
+| Coverage | Complete inspection, every authority-matrix row, and separate baseline, compliance, implementation, and validation-quality verdicts. |
+| Advisory scores | Severity `S4 Critical`→`S0 Optional`; confidence `C3 Confirmed`→`C1 Tentative`. |
+| Finding selection | Every `S4`, at most five material `S3`/`S2`, and no `S1`/`S0` by default. |
+| Overflow | One blocking `not review-ready` caveat with highest score, affected areas, aggregate impact, evidence, and count/lower bound. |
+| Evidence | Coverage/skips, scores, location, evidence, reachability, impact, smallest fix/validation, no-material-findings, and limitations. |
 
-The shared milestone/final policy, including direct fallback, is an initial review plus one follow-up limited to accepted fixes, affected boundaries, and material regressions; separately escalate incidental Critical issues without reopening discovery. One additional follow-up requires unresolved Critical/High, confirmed material regression, or substantial coverage-invalidating change; then stop autonomous review for a parent/human disposition. Reuse reviewer context when practical. Exit when admitted material concerns are resolved, reasonedly rejected/deferred, or exposed as human decisions; do not overlap work until resolved or isolated.
+The parent applies this admission gate:
+
+| Gate | Required handling |
+|---|---|
+| Scores | Guidance only; independently rescore. No label—even `S4`—admits or blocks by itself. |
+| Materiality | Check evidence, reachability, scope relevance, impact, assumptions, and fix/regression/maintenance cost. |
+| Disposition | Record reviewer/parent scores and accept/reject/defer rationale; downgrade or reject niche, irrelevant, immaterial, or disproportionate findings. |
+| Validation | Treat `NEEDS RUNTIME VALIDATION` separately from confidence; create validation work, not speculative implementation. |
+| Tasks/blocking | Create rows only for admitted material findings; `S1`/`S0` cannot block without user direction. Fix admitted work and rerun validation. |
+
+| Review lifecycle | Rule |
+|---|---|
+| Normal | Initial review plus one follow-up limited to accepted fixes, affected boundaries, and material regressions. |
+| Incidental severe issue | Surface for parent reassessment without broad discovery. |
+| Extra round | Require unresolved material risk, confirmed regression, or invalidated coverage; then stop for parent/human disposition. |
+| Exit | Resolve, reasonedly reject/defer, expose a human decision, or isolate before overlapping work. Reuse reviewer context when practical. |
 
 ### 5. Reconcile and finish
 

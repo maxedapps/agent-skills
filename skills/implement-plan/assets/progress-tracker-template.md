@@ -61,7 +61,7 @@ Task-owned source, tests, plans, and retained evidence remain at their required 
 - **Plan:** `<bounded change, acceptance criteria, planned verification, rollback/cleanup/checkpoint>`
 - **Implement:** `<parent/delegated owner, available run identity, files/actions, terminal handoff; permissions/isolation/cleanup when delegated>`
 - **Verify:** `<commands/manual or browser checks and exact results; parent diff inspection and spot-checks of delegated claims>`
-- **Review:** `<N/A with reason | review ID; evidence/reachability and materiality/proportionality checks; accepted/rejected/deferred rationale; fixes/validation; follow-up scope + round; extra-round justification; Low/Optional user approval>`
+- **Review:** `<N/A with reason | review ID; advisory reviewer→parent S/C scores; evidence/reachability/materiality/proportionality + assumptions; accepted/rejected/deferred rationale; validation/fixes; follow-up scope/round; extra-round reason; S1/S0 blocking approval>`
 - **Decision:** `<Verified / repeat / Blocked; next ready task ID>`
 
 A task row may reference one aligned milestone or final review; it does not require a separate reviewer. A plan-authored and workflow-authored checkpoint count as one review when scope, baseline, evidence, and exit conditions align. Record whether the review was independent or a checklist-driven direct fallback and any independence limitation.
@@ -70,9 +70,9 @@ A task row may reference one aligned milestone or final review; it does not requ
 
 | Review ID | Scope / axes | Method and independence | Payload / coverage | Findings and rationale | Fixes, reruns, follow-up | Status |
 |---|---|---|---|---|---|---|
-| `M01 / F01` | `<plan-backed; bounded/full; embedded; handoff-only>` | `<independent capability/run or direct fallback + limitation>` | `<plan/tracker, task IDs, files/callers, tests, evidence/skips, deviations/risks>` | `<severity/confidence; evidence/reachability; materiality/proportionality; accepted/rejected/deferred rationale; Low/Optional approval>` | `<task/validation IDs, reruns/results; follow-up scope + round; justified extra round>` | `<Open / Resolved / Blocked>` |
+| `M01 / F01` | `<plan-backed; bounded/full; embedded; handoff-only>` | `<independent capability/run or direct fallback + limitation>` | `<plan/tracker, task IDs, files/callers, tests, evidence/skips, deviations/risks>` | `<advisory reviewer→parent S/C scores; evidence/reachability/impact; assumptions; materiality/proportionality; disposition rationale; S1/S0 blocking approval>` | `<task/validation IDs, reruns/results; follow-up scope/round; extra-round reason>` | `<Open / Resolved / Blocked>` |
 
-Embedded reviews default to handoff-only. Record complete inspection/matrix coverage but selective findings; files/boundaries and checks read/run or skipped; confidence, location/evidence, reachability, impact, smallest proportionate fix or decisive validation; applicable four verdicts; and any blocking excess-finding caveat. Follow-ups record fix/regression-only scope and incidental Critical escalation.
+Embedded reviews default to handoff-only. Record complete matrix coverage but selective findings; read/run coverage and skips; reviewer/parent scores, evidence, reachability, impact, assumptions, smallest fix/validation, four verdicts, and any overflow caveat. Scores guide but never determine disposition. Follow-ups record fix/regression-only scope and severe incidental issues surfaced for reassessment.
 
 ## Deviations and decisions
 
@@ -90,7 +90,7 @@ Embedded reviews default to handoff-only. Record complete inspection/matrix cove
 - [ ] Required automated, integration, browser/manual, cleanup, docs, migration, and acceptance checks are complete.
 - [ ] Every applicable plan/workflow milestone checkpoint is resolved once without duplicate per-row reviews; aligned rows reference its review ID.
 - [ ] The full plan-backed embedded final review covers the entire plan/tracker and all applicable review dimensions, or its direct checklist fallback and independence limitation are recorded.
-- [ ] Every milestone/final finding has verified evidence/reachability, materiality/proportionality, and accepted/rejected/deferred rationale; validation-only concerns became validation rows, and Low/Optional blocking work has explicit user approval.
-- [ ] Accepted/unresolved material findings became task rows; fixes/reruns and fix/regression-only follow-up scope/round are recorded; any extra round meets and records an allowed exception, and autonomous review stopped afterward. Any unresolved material finding has a `Blocked` row.
+- [ ] Every finding records advisory reviewer/parent S/C scores, assumptions, independently checked evidence/reachability/materiality/proportionality, and disposition rationale; no label alone admitted or blocked work, validation-only concerns became validation rows, and S1/S0 blocking work has user approval.
+- [ ] Admitted/unresolved material findings became task rows; fixes/reruns and fix/regression-only follow-up scope/round are recorded; any extra round has a material reason, and autonomous review stopped afterward. Any unresolved admitted finding has a `Blocked` row.
 - [ ] Scope-relevant final validation passes; any scope-relevant failure has a `Blocked` inventory row. Clearly unrelated/pre-existing failures are recorded separately as caveats with evidence.
 - [ ] `Overall status` is updated to `Complete` only after every check above passes and no `Blocked` row exists.
