@@ -1,6 +1,7 @@
 ---
 name: web-research
 description: Researches current web and external technical information with source-backed discovery, content retrieval, repository/document/media inspection, and critical follow-up. Use when the user needs current facts, docs, articles, URLs, repositories, PDFs, videos, comparisons, or version-specific library/API/framework evidence. Do not use static research alone for interactive browser tasks such as login, forms, or UI-state inspection; use an available browser automation capability.
+license: MIT
 compatibility: >-
   Requires at least one current search, content-retrieval, repository, document,
   or media capability appropriate to the task. Interactive login, form, or UI

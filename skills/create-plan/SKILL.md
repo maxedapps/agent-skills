@@ -9,6 +9,7 @@ description: >-
   implementation plan before coding. Do not use to implement a plan, to audit
   whether implementation satisfies a plan, or for quick conceptual answers that
   need no implementation handoff.
+license: MIT
 compatibility: >-
   Requires project file access. Saving and rendering plans requires write access
   and Node.js 18+; Bun is optional and enables rich Markdown rendering. Current

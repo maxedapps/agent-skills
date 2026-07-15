@@ -6,6 +6,7 @@ description: >-
   optional bounded delegation, and plan-backed milestone and final reviews. Use
   when the user asks to implement, execute, carry out, or continue an existing
   plan. Do not use for creating a plan from scratch or only reviewing a plan.
+license: MIT
 compatibility: >-
   Requires project write access. Optional delegation requires a safely available
   execution capability that supports least privilege, isolated writers, terminal

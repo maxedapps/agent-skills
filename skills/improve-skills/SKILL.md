@@ -1,6 +1,7 @@
 ---
 name: improve-skills
 description: Improves existing Agent Skills from real interactions by making small, reusable, evidence-backed updates. Use after a skill-driven task or reusable user correction reveals missing guidance, ambiguous instructions, weak description routing, unclear resource pointers, stale tool usage, or content that should move into references/assets/scripts. Do not use for one-off preferences or speculative edits; ask when unsure.
+license: MIT
 metadata:
   short-description: Improve skills from real interactions
 ---

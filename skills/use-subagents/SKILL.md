@@ -7,6 +7,7 @@ description: >-
   or when asked to spawn, use, or manage subagents. Load this skill before
   choosing a backend; loading it does not require launching a subagent. Do not
   use for ordinary background shell commands.
+license: MIT
 compatibility: >-
   The decision workflow can run without a delegation backend. Launching a
   child requires Herdr, a runtime-native subagent capability, or an

@@ -8,6 +8,7 @@ description: >-
   Follow explicit scope and output constraints; when underspecified, inspect the
   current codebase broadly. Do not use for an unimplemented draft plan or to
   implement fixes unless asked.
+license: MIT
 metadata:
   short-description: Adaptable generic and plan-backed implementation review
 ---
