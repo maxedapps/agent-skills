@@ -30,22 +30,24 @@ Complete this checklist before draft review and repeat it after material revisio
 
 - Each phase names exact automated checks or concrete inspections plus applicable manual checks, with expected success signals or retained evidence; automation N/A is justified rather than fabricated.
 - Planned commands exist, use the correct working directory, and distinguish focused checks from authoritative repository gates.
-- Tests cover meaningful happy paths, failures, edge cases, regressions, and invariants; defect fixes include fail-before proof when practical.
+- Tests cover meaningful happy paths, failures, plausible contract/risk boundary cases, regressions, and invariants; defect fixes include fail-before proof when practical.
 - UI work includes real-browser guidance; migrations, external services, destructive work, background processes, and rollout include applicable operator, cleanup, rollback, or recovery checks.
 - Every review checkpoint states its **focus**, authoritative **baseline**, required **evidence**, and **exit/rerun requirements**, including exact checks to repeat after fixes.
 - When implementation exists, phase checkpoints request bounded plan-backed code review and final checkpoints request full plan-backed code review; invocation is embedded only when an owning workflow requests that checkpoint.
 - A plan-authored checkpoint and an owning implementation workflow checkpoint are one review when scope, baseline, evidence, and exit conditions align; the plan does not create duplicate per-task or per-document reviews.
 - Review payloads include the plan/tracker paths, task IDs and acceptance criteria, changed files/diff and callers, validation evidence, skipped checks, deviations, constraints, integration boundaries, and known risks.
 - Independent review is preferred only when safely available and worthwhile. Otherwise the plan requires a recorded separate checklist-driven direct review with its independence limitation; plan completion never blocks solely on delegation.
-- Material findings are evaluated rather than accepted blindly, with acceptance/rejection rationale, tracked fixes, affected validation reruns, and same-assignment follow-up after material changes.
+- Review requests require complete applicable inspection/matrix coverage but selective output: prioritized high-confidence material blockers, every Critical plus at most five additional High/Medium root causes, and no niche/speculative, Low/Optional, or disproportionate recommendations by default; excess material root causes produce one blocking `not review-ready` caveat with highest remaining severity, affected areas/dimensions, aggregate impact, evidence basis, and known count/lower bound.
+- Findings are independently checked for evidence, reachability, relevance, impact, confidence, and proportionate fix cost; accepted/rejected/deferred rationale is recorded, and unconfirmed concerns become decisive validation questions.
+- The default initial review plus one fix/regression-only follow-up and incidental Critical escalation are explicit; one extra round requires unresolved Critical/High, confirmed material regression, or invalidated coverage, then owner/human stop.
 - Definition of Done is observable and reconciles all requirements, validation, documentation, downstream work, review findings, blockers, and operator steps.
 
 ## Draft review evidence
 
 - Before finalization, the complete request, draft, planning memory or equivalent support, sources, decisions, constraints/non-goals, risks, assumptions, unresolved questions, and relevant code pointers are available to the review pass.
-- The review asks for independent judgment rather than approval and looks for missing requirements/files, unsafe assumptions, weak rationale, false-green checks, and unnecessary complexity or repetition.
-- A safely available, worthwhile independent reviewer uses fresh read-only context; same-assignment follow-up is requested after material revisions when practical.
-- If independent review is unavailable or not worthwhile, the limitation and separate checklist-driven direct-review findings are recorded. In either path, material concerns are resolved, reasonedly rejected, or exposed as human decisions.
+- The review asks for independent judgment and prioritized material blockers to safety, consistency, executability, simplicity, or outcome—not approval, optional polish, or future-flexibility redesign.
+- A safely available, worthwhile independent reviewer uses fresh read-only context; otherwise the limitation and same-policy checklist-driven direct review are recorded.
+- Follow-up stays within accepted fixes and material regressions; findings are resolved, reasonedly rejected/deferred, or exposed as human decisions within the bounded round policy.
 
 ## Compression
 

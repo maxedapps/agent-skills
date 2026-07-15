@@ -16,7 +16,7 @@
 
 ## Summary
 
-<Concise overall result, highest user/operator risks, and confidence. If no material issue was found, say so without inventing polish.>
+<Concise overall result, highest material user/operator/security/data/compatibility/operations risks, and confidence. If no material issue was found, say so without inventing polish; if excess material concerns remain, state that the target is not review-ready.>
 
 ## Coverage
 
@@ -66,17 +66,17 @@
 
 ## Findings
 
-<!-- Order by severity, then user impact. Deduplicate symptoms with one root cause. Repeat the following block. -->
+<!-- Findings are selective even when coverage is broad. Deduplicate by root cause. By default report every Critical and at most five additional High/Medium material root causes; omit Low/Optional unless explicitly requested. Order admitted findings by severity, then impact. -->
 
-### <Critical | High | Medium | Low | Optional> — <finding title>
+### <Critical | High | Medium; Low/Optional only when requested> — <finding title>
 
 - **Dimension / authority item:** <category and plan item if applicable>
 - **Location:** `<path:line, symbol, runtime surface, or evidence source>`
-- **Impact:** <concrete user/operator/security/data/maintenance consequence>
-- **Evidence:** <what proves or supports the issue, including repro/check result>
+- **Impact:** <plausible/reachable path and meaningful user/operator/security/data/compatibility/operations consequence>
+- **Evidence:** <sufficient evidence for the issue and confidence, including repro/check result>
 - **Confidence:** `<CONFIRMED | PLAUSIBLE | NEEDS RUNTIME VALIDATION>`
-- **Condition:** <deterministic, confirmed reachable, or observed incident when relevant>
-- **Smallest safe fix / next validation:** <proportionate correction or decisive check; include fix-safety concern>
+- **Condition:** <deterministic, reachable, or observed incident when relevant>
+- **Smallest safe fix / next validation:** <correction whose benefit exceeds complexity, regression risk, and maintenance cost, or decisive runtime validation; never speculative implementation>
 
 ## Confirmed-good areas
 
@@ -85,9 +85,9 @@
 ## Limitations and caveats
 
 - `<scope, source access, runtime, credential, tool, skipped check, or baseline limitation and its consequence>`
+- `<when excess material root causes remain: one blocking not-review-ready caveat with highest remaining severity, affected areas/dimensions, aggregate impact, evidence basis, and known count or lower bound>`
 
 ## Next steps
 
-1. `<must-fix or decisive validation in priority order>`
-2. `<important improvement>`
-3. `<optional follow-up only if worthwhile>`
+1. `<admitted must-fix or decisive validation in priority order>`
+2. `<owner remediation/escalation decision if the target is not review-ready>`

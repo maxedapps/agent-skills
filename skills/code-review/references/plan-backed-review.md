@@ -61,7 +61,7 @@ Assess baseline quality separately for completeness, internal consistency, feasi
 
 ## Evidence matrix
 
-Create and maintain this traceability shape:
+Create and maintain this traceability shape for every applicable authority item or implied requirement, regardless of whether it produces a finding:
 
 ```text
 authority item / implied requirement
@@ -80,7 +80,7 @@ For each row record:
 - approval provenance when status is `Approved deviation`;
 - one status from the definitions below and any confidence limitation.
 
-Inspect evidence directly: repository status, supplied and working-tree diffs, relevant commits, progress claims, touched files, callers, tests, configuration, docs, migrations, environment examples, generated outputs, package contents, CI, and runtime behavior. A tracker checkbox, filename, implementation note, or test name is not proof by itself.
+Inspect evidence directly: repository status, supplied and working-tree diffs, relevant commits, progress claims, touched files, callers, tests, configuration, docs, migrations, environment examples, generated outputs, package contents, CI, and runtime behavior. A tracker checkbox, filename, implementation note, or test name is not proof by itself. Complete matrix coverage and selective findings are separate obligations: a `Complete` row needs evidence, not a manufactured improvement.
 
 For a living product, roadmap, or status document whose meaning may have changed over time, inspect its Git history and the patch that introduced the relevant claim (for example, `git log --follow -- <path>` and the applicable `git show`). Distinguish newly specified future requirements from historical implementation claims; current desired-state text alone is not evidence that implementation exists.
 
@@ -111,7 +111,7 @@ A strong compliance verdict cannot excuse unsafe or incorrect code. A weak basel
 
 ## Tests and validation
 
-Treat tests as first-class implementation evidence. Evaluate whether they protect acceptance criteria, important success paths, failure/error paths, edge cases, regressions, invariants, concurrency/isolation, integration boundaries, security/data safety, migrations, and user-visible behavior. Identify critical behaviors that are protected, untested, skipped, gated, superficial, over-mocked, duplicate, or implementation-detail-only.
+Treat tests as first-class implementation evidence. Evaluate whether they protect acceptance criteria, important success paths, failure/error paths, regressions, invariants, concurrency/isolation, integration boundaries, security/data safety, migrations, user-visible behavior, and important or plausible boundary cases tied to a contract, regression, or meaningful risk. Identify critical behaviors that are protected, untested, skipped, gated, superficial, over-mocked, duplicate, or implementation-detail-only.
 
 For rendered forms and browser flows, verify tests exercise actual generated controls, hidden values, cookies, redirects, and browser-managed state. Synthetic reconstruction from upstream data can bypass broken wiring.
 
@@ -121,27 +121,20 @@ When third-party APIs, framework behavior, security assumptions, or migrations m
 
 ## Findings, confidence, and caveats
 
-Each material finding includes:
+Admit only material findings under the core materiality and proportionality contract. Each includes severity and concrete impact; affected authority item when applicable; location (`path:line` when possible); implementation and validation evidence; confidence (`CONFIRMED`, `PLAUSIBLE`, or `NEEDS RUNTIME VALIDATION`); and the smallest proportionate safe fix or decisive validation step. `NEEDS RUNTIME VALIDATION` creates a decisive validation task, not speculative implementation. Distinguish deterministic behavior, a reachable evidence-backed path, and an observed incident.
 
-- severity and user/operator impact;
-- affected authority item or implied requirement when applicable;
-- location (`path:line` when possible);
-- concrete implementation and validation evidence;
-- confidence: `CONFIRMED`, `PLAUSIBLE`, or `NEEDS RUNTIME VALIDATION`;
-- the smallest safe fix or decisive validation next step.
+Group findings by root cause and severity and cite matrix rows where relevant. By default, report every Critical finding and at most five additional High/Medium material root causes; omit Low/Optional findings unless the user explicitly requests them. Prefer no finding over speculation, and record confirmed-good areas only when they demonstrate meaningful coverage.
 
-Use `CONFIRMED` for direct code/runtime/test evidence, `PLAUSIBLE` for a reachable evidence-backed risk not yet demonstrated, and `NEEDS RUNTIME VALIDATION` when the decisive state cannot be established statically. Distinguish deterministic behavior, a confirmed reachable path, and an incident observed in the target workflow.
+If more than five non-Critical material root causes remain, include one blocking `not review-ready` caveat rather than a hidden or serialized backlog. State the highest remaining severity, affected areas/dimensions, aggregate impact, evidence basis, and known count or lower bound; reflect it in verdict confidence and do not return a ready verdict. The owning workflow decides broader remediation or escalation.
 
-Group findings by severity and cite matrix rows where relevant. Prefer no finding over speculation. Record confirmed-good areas when they demonstrate meaningful coverage, not as a request for approval.
-
-Caveats must identify partial/skipped files, unavailable tools/environments/credentials, gated tests, unresolved authority conflicts, missing runtime evidence, and any scope boundary that prevents a broader conclusion. Reflect material caveats in statuses and verdict confidence rather than relegating them to a footnote.
+Other caveats must identify partial/skipped files, unavailable tools/environments/credentials, gated tests, unresolved authority conflicts, missing runtime evidence, and scope boundaries. Reflect material caveats in statuses and verdict confidence rather than relegating them to a footnote.
 
 ## Workflow
 
-1. Resolve the authority target, full or bounded scope, standalone or embedded invocation, and output constraints.
+1. Resolve the authority target, full or bounded scope, standalone or embedded invocation, and output constraints. For a follow-up, inspect only accepted fixes, affected integration boundaries, and material regressions; do not reopen unrelated dimensions or broad discovery. Surface an incidentally observed Critical issue separately for owner or human escalation without expanding the search.
 2. Read all authority sources; extract requirements, implications, approvals, conflicts, and baseline-quality concerns.
 3. Inspect implementation evidence and required integration boundaries. Load and apply the generic dimension reference for all broad or applicable implementation-quality checks.
-4. Build the matrix and assign only evidence-supported statuses.
+4. Build the complete applicable matrix and assign only evidence-supported statuses.
 5. Assess high-value tests and run targeted validation, preserving skipped-check and runtime limitations.
-6. Write severity-ranked findings, confirmed-good evidence where useful, the complete applicable matrix, and all four verdicts.
+6. Write selective severity-ranked findings, confirmed-good evidence where useful, the complete matrix, and all four verdicts.
 7. Produce the selected report or handoff with explicit coverage and caveats. Never claim full-plan compliance from a bounded review.
