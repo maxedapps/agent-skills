@@ -2,10 +2,11 @@
 name: implement-plan
 description: Implements existing Markdown plans exhaustively with a mandatory loaded tracker, worker-first task delegation, Analyze → Plan → Implement → Verify loops, active validation, and independent reviews. Use when the user asks to implement, execute, carry out, or continue an existing plan. Do not use for creating a plan from scratch or only reviewing a plan.
 compatibility: >-
-  Requires project write access and the `use-subagents` prerequisites: Herdr
-  0.7.3+ with a running compatible server, HERDR_ENV=1, and an installed
-  interactive agent executable. Browser-visible tasks additionally require an
-  available browser automation capability for manual verification.
+  Requires project write access and a usable delegation backend selected through
+  `use-subagents` for required workers and reviewers: Herdr when installed and
+  usable, runtime-native subagents, or a suitable authenticated non-interactive
+  agent CLI. Browser-visible tasks additionally require an available browser
+  automation capability for manual verification.
 metadata:
   short-description: Implement plans with a mandatory tracker and worker task loops
 ---
@@ -14,7 +15,7 @@ metadata:
 
 ## Instruction priority
 
-Follow explicit user/system/developer instructions over this workflow. All delegated workers and reviewers must run through `use-subagents` in visible Herdr panes. If Herdr delegation is unavailable, record the blocker and do not substitute hidden or headless agents.
+Follow explicit user/system/developer instructions over this workflow. All delegated workers and reviewers must run through `use-subagents` using its backend priority and safety contract. A failed Herdr preflight must continue to runtime-native and then suitable non-interactive CLI fallbacks. If no backend is usable for required delegation, record the blocker; do not silently keep broad implementation in the parent or weaken worker/reviewer requirements.
 
 ## Mandatory startup gate
 
@@ -41,16 +42,16 @@ On resumed work, reload the template, reread the full plan, and reconcile the tr
 
 - For multi-step or broad plans, the parent primarily orchestrates. Assign each bounded implementation task or milestone to a worker by default; scouts, researchers, validators, and reviewers do not satisfy this implementation requirement.
 - Dependencies do not prevent delegation: use sequential workers and checkpoint between them. Concurrent writers are allowed only for independent tasks with one isolated worktree per writer. Writers sharing a worktree must run sequentially even when their files do not overlap.
-- Use one fresh Herdr pane and fresh agent session per task or milestone. Give it plan/tracker paths, assigned task IDs, relevant files, scope, acceptance criteria, and verification expectations; persist essential context in project artifacts instead of forking parent context.
-- Close each worker with a structured communication handoff under `.subagents/`, then have the parent record the resulting evidence in the owning plan tracker. Keep the tracker single-writer when workers run in parallel or could resume concurrently. At milestone boundaries, carry forward files and evidence—not accumulated worker transcripts or one long implementation session.
+- Use one fresh backend context/run per task or milestone. Give it plan/tracker paths, assigned task IDs, relevant files, scope, acceptance criteria, and verification expectations; persist essential context in project artifacts instead of forking parent context. Record the backend and its run/thread/pane/session identifier when available.
+- Close each worker with a structured handoff captured from backend output, native thread state, terminal output, or an optional `.subagents/` artifact, then have the parent record the resulting evidence in the owning plan tracker. Keep the tracker single-writer when workers run in parallel or could resume concurrently. At milestone boundaries, carry forward files and evidence—not accumulated transcripts or one long implementation context.
 - Parent implementation is an exception requiring a concrete tracker reason: genuinely trivial work, unavailable worker, unsafe handoff, immediate tightly coupled coordination, or explicit user request. Do not repeatedly label rows “trivial” to retain a broad plan in the parent.
 - The parent remains responsible for decomposition, assignments, synthesis, consistency, validation, reviews, decisions, and the final outcome.
 
-Before launching any worker or subagent, read and apply the `use-subagents` skill, including its worker isolation, session, transcript, and handoff boundaries.
+Before launching any worker or subagent, read and apply the `use-subagents` skill, including its backend selection, permissions, isolation, context/run, monitoring, and handoff boundaries.
 
 ## Core rules
 
-- Run milestone and final reviewers as fresh-context, read-only subagents through `use-subagents`. Use the user's requested reviewer when safely available; otherwise use that workflow's default reviewer. Ask for independent critique rather than approval, capture the handoff, and reuse the same reviewer session for follow-up on that milestone when possible.
+- Run milestone and final reviewers as fresh-context, read-only subagents through the backend selected by `use-subagents`. Use the user's requested reviewer when safely available; otherwise use that workflow's selected suitable reviewer. Ask for independent critique rather than approval, capture the handoff, and reuse the same reviewer context/run for follow-up on that milestone when possible.
 - Document plan deviations before or immediately after making them.
 - Before each task loop, define verification, meaningful test coverage, and any human checkpoint.
 - Add or update tests when they protect acceptance criteria, user-visible behavior, regressions, integration boundaries, failure paths, edge cases, or security/data invariants. Avoid implementation-detail, duplicate, over-mocked, or count-only tests; document why strong automated coverage is impractical when applicable.
@@ -72,7 +73,7 @@ Before launching any worker or subagent, read and apply the `use-subagents` skil
 ### 2. Decompose and assign
 
 - Split compound rows until each is one coherent, independently verifiable loop. Preserve plan phases as milestone groupings.
-- Apply the worker contract to every implementation row. Record owner, sequential/parallel mode, Herdr pane/session ID, dependencies/write isolation, and expected handoff. Record the allowed exception when the parent owns a row.
+- Apply the worker contract to every implementation row. Record owner, sequential/parallel mode, backend plus run/thread/pane/session identifier when available, dependencies/write isolation, and expected handoff/evidence. Record the allowed exception when the parent owns a row.
 - If the plan is too vague or large to assign safely, first add a task/milestone breakdown; ask the user only if it changes scope, behavior, or risk.
 
 ### 3. Execute each task loop
@@ -88,7 +89,7 @@ Choose the next dependency-ready row. Multiple rows may be `In progress` only in
 Operational rules:
 
 - Give workers narrow prompts using paths and assigned task IDs; include full plan content only when they cannot access the file.
-- Do not advance past required workers/reviewers still running. Continue independent work, then use the runtime wait/status mechanism and incorporate results.
+- Do not advance past required workers/reviewers still running. Continue only independent work, then use the selected backend's wait/status mechanism, require a terminal state, and incorporate results.
 - Do not overlap writers in one worktree. Do not edit overlapping code while a step review is running.
 - If context/time limits force a stop, checkpoint exact non-terminal rows and the restart point; report a partial handoff, not completion.
 - For uncertain third-party behavior or current external evidence, read `web-research` and require current, version-specific sources. Delegate separable research/reconnaissance where useful.
@@ -98,7 +99,7 @@ Operational rules:
 
 Before review, update the tracker. Give the reviewer the plan/tracker paths, task IDs and acceptance criteria, touched files/diffs, validation evidence, skipped checks, constraints, deviations, and blockers. Require independent inspection and no edits unless explicitly intended.
 
-Evaluate findings critically, fix material issues, update the tracker, rerun validation, and follow up with the same reviewer session when possible. Do not begin overlapping work until the review is resolved or isolated.
+Evaluate findings critically, fix material issues, update the tracker, rerun validation, and follow up in the same reviewer context/run when possible. Do not begin overlapping work until the review is resolved or isolated.
 
 ### 5. Reconcile and finish
 

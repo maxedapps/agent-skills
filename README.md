@@ -6,7 +6,7 @@
 - `implement-plan` — execute existing Markdown implementation plans with active tracking and verification.
 - `improve-skills` — improve Agent Skills from evidence gathered during real interactions.
 - `review-plan-implementation` — verify an implementation against its source plan and acceptance criteria.
-- `use-subagents` — delegate bounded work to visible Herdr-managed agent panes.
+- `use-subagents` — decide when delegation is worthwhile and coordinate bounded subagent work across available backends.
 - `web-research` — perform current, source-backed research across web content and repositories.
 
 ## Install
@@ -44,7 +44,7 @@ Review each skill and its compatibility requirements before use. Some skills int
 
 - **Bun is optional.** Only `create-plan` attempts to use Bun, and only for rich Markdown-to-HTML rendering. If Bun is unavailable, its Node.js renderer warns and produces escaped plain-text HTML instead. No skill fails solely because Bun is missing.
 - **Node.js 18+ is required** when `create-plan` renders HTML.
-- **Herdr 0.7.3+ with `HERDR_ENV=1`, a running compatible server, and an interactive agent is required** by `use-subagents` and `implement-plan`. `create-plan` requires these prerequisites for independent subagent review but permits documented self-review when they are unavailable. `review-plan-implementation` requires them when a large plan or multiple subsystems need delegated review.
+- **Subagent launches require a usable delegation backend.** `use-subagents` prefers Herdr when it is installed and passes preflight, then uses a runtime-native subagent capability, then a suitable authenticated non-interactive agent CLI. Its decision workflow can run without a backend. `implement-plan` requires a usable backend for its workers and reviewers; `create-plan` permits documented self-review only when all three backend options are unusable; large or multi-subsystem `review-plan-implementation` work requires a usable backend.
 - **`agent-browser` remains external.** Install it from [skills.sh](https://www.skills.sh/vercel-labs/agent-browser/agent-browser) when browser interaction or UI verification is needed:
 
   ```sh
@@ -71,7 +71,7 @@ Compares an implemented change with its source plan, acceptance criteria, and im
 
 ### `use-subagents`
 
-Runs bounded worker, reviewer, research, or validation tasks in visible Herdr-managed panes. It defines strict isolation, permissions, handoff, verification, and cleanup rules and requires Herdr 0.7.3 or newer.
+Decides whether bounded worker, reviewer, research, or validation work benefits from delegation, then coordinates it with least-privilege permissions, writer isolation, monitored handoffs, parent verification, and owned-resource cleanup. It prefers Herdr when installed and usable, falls back to runtime-native delegation, then to a suitable authenticated non-interactive agent CLI.
 
 ### `web-research`
 

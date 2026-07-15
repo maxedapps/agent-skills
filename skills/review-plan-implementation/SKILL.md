@@ -3,10 +3,10 @@ name: review-plan-implementation
 description: Reviews implemented Markdown plans against their goals, checklist items, acceptance criteria, implied requirements, and test evidence. Use when the user provides a plan/tracker/design doc and asks whether the implementation is complete, correct, safe, well-tested, and faithful to the plan, including prompts like “this plan was implemented; evaluate the plan and implementation” or “review implementation of .plans/foo.md”. Do not use for ordinary code review without a plan target.
 compatibility: >-
   Requires project and repository read access. Large-plan or multi-subsystem
-  delegation requires the `use-subagents` prerequisites: Herdr 0.7.3+ with a
-  running compatible server, HERDR_ENV=1, and an installed interactive agent
-  executable. Browser-visible implementation review additionally requires an
-  available browser automation capability.
+  delegated review requires a usable backend selected through `use-subagents`:
+  Herdr when installed and usable, runtime-native subagents, or a suitable
+  authenticated non-interactive agent CLI. Browser-visible implementation review
+  additionally requires an available browser automation capability.
 metadata:
   short-description: Review an implementation against its plan
 ---
@@ -24,7 +24,7 @@ Be adversarial but evidence-bound. Verify plan claims against code, tests, docs,
 - Build or record a verification matrix: `plan item / implied requirement → expected evidence → actual code evidence → test/validation evidence → status`.
 - Treat tests as a first-class review target. Evaluate **high-value test coverage**, not test volume: important happy paths, failure/error paths, edge cases, regressions, invariants, integration boundaries, acceptance criteria, and security/data-safety risks. Flag missing high-value tests and low-value tests that only increase counts, assert implementation details, over-mock real behavior, duplicate existing coverage, or create false confidence. For rendered forms and browser flows, verify tests submit the actual generated controls/hidden values/cookies rather than reconstructing a request from upstream data; synthetic submission can bypass broken form wiring.
 - Work file by file and section by section. Read relevant files in full unless generated/vendor/too large; record skipped or partial reads and why.
-- For large plans or multiple subsystems, read and apply the `use-subagents` skill and use read-only subagents. Give each subagent a bounded plan section/subsystem, require files read/skipped, CONFIRMED vs PLAUSIBLE findings with `path:line`, test-quality assessment, and smallest safe fix. The main agent spot-verifies, dedupes, and remains responsible.
+- For large plans or multiple subsystems, read and apply the `use-subagents` skill and use read-only subagents through its selected backend. Give each subagent a bounded plan section/subsystem, require files read/skipped, CONFIRMED vs PLAUSIBLE findings with `path:line`, test-quality assessment, and smallest safe fix. The main agent spot-verifies, dedupes, and remains responsible. If no backend is usable, report delegated review as blocked rather than claiming partitioned independent coverage.
 - Use current, version-specific docs and source when judging third-party APIs, framework behavior, security assumptions, or migration requirements; read the `web-research` skill when applicable.
 - Do not implement fixes unless explicitly requested.
 - Create/reuse `.progress/<review-slug>.md` and save the final report to `.reviews/<review-slug>.md` unless file writes are forbidden.

@@ -5,10 +5,9 @@ compatibility: >-
   Requires project file access. Saving and rendering plans requires write access
   and Node.js 18+; Bun is optional and enables rich Markdown rendering. Current
   external research requires suitable search/retrieval access. Independent
-  subagent review requires the `use-subagents` prerequisites: Herdr 0.7.3+ with
-  a running compatible server, HERDR_ENV=1, and an interactive agent. If those
-  review prerequisites are unavailable, the workflow permits a documented
-  self-review instead.
+  review requires a usable delegation backend selected through `use-subagents`.
+  If Herdr, runtime-native delegation, and suitable non-interactive agent CLIs
+  are all unusable, the workflow permits a documented self-review instead.
 metadata:
   short-description: Create researched, implementation-ready plans
 ---
@@ -76,9 +75,9 @@ Before drafting, load `assets/implementation-plan-template.md`, then copy and ad
 
 Before review, load `references/plan-quality-checklist.md` and complete every applicable check.
 
-Request a fresh-context, read-only critique through `use-subagents`. Use the user's requested reviewer when safely available; otherwise use the default reviewer supported by that workflow. Ask the reviewer to judge independently rather than confirm the draft. Provide the request, draft, progress path, source artifacts, decisions, constraints, known risks, and relevant code pointers. Ask for missing requirements/files, unsafe assumptions, weak rationale, incomplete snippets/checks/review guidance, false green checkpoints, and unnecessary repetition.
+Request a fresh-context, read-only critique through `use-subagents`. Use the user's requested reviewer when safely available; otherwise select a suitable reviewer through that workflow. Ask the reviewer to judge independently rather than confirm the draft. Provide the request, draft, progress path, source artifacts, decisions, constraints, known risks, and relevant code pointers. Ask for missing requirements/files, unsafe assumptions, weak rationale, incomplete snippets/checks/review guidance, false green checkpoints, and unnecessary repetition.
 
-Evaluate feedback critically, record accepted/rejected details in `.progress`, revise without copying the transcript into the plan, rerun the quality checklist, and follow up in the same reviewer session after material changes when possible. If independent review is unavailable, record that limitation and perform a separate self-review pass.
+Evaluate feedback critically, record accepted/rejected details in `.progress`, revise without copying the transcript into the plan, rerun the quality checklist, and follow up in the same reviewer context/run after material changes when possible. Use documented self-review only after `use-subagents` exhausts Herdr, runtime-native delegation, and suitable non-interactive CLI fallbacks; record that limitation and perform a separate self-review pass.
 
 ### 5. Save, render, and open
 

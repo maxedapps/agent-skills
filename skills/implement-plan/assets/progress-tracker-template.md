@@ -1,6 +1,6 @@
 # Implementation Progress
 
-> **Mandatory use:** the `implement-plan` agent must load this file with the file-reading tool before any project source edit or implementation-subagent launch. Copy/adapt it into the plan when possible; otherwise use a retained Markdown tracker. Preserve the task inventory, status semantics, subagent strategy, loop journal, deviations, evidence, and reconciliation gates.
+> **Mandatory use:** the `implement-plan` agent must load this file with the file-reading tool before any project source edit or implementation-worker launch. Copy/adapt it into the plan when possible; otherwise use a retained Markdown tracker. Preserve the task inventory, status semantics, worker/execution strategy, loop journal, deviations, evidence, and reconciliation gates.
 
 - **Template loaded from:** `implement-plan/assets/progress-tracker-template.md`
 - **Plan:** `<path>`
@@ -33,15 +33,15 @@ Allowed task-row statuses:
 
 Do not use `Done` as a substitute for verification. Do not mark a parent phase complete while any child row remains `Pending`, `In progress`, or `Blocked`.
 
-## Subagent and execution strategy
+## Worker and execution strategy
 
-For multi-step or broad plans, assign bounded implementation tasks/milestones to workers by default. Sequential workers are expected for dependent work. Concurrent writers require independent tasks and one isolated worktree per writer; writers sharing a worktree must run sequentially even when their files do not overlap. A scout/reviewer does not replace a worker. If the parent implements, record one concrete exception: genuinely trivial task, unavailable worker, unsafe handoff, immediate tightly coupled coordination, or explicit user request. Do not repeatedly use “trivial” to keep a broad plan in the parent.
+For multi-step or broad plans, assign bounded implementation tasks/milestones to workers by default through the backend selected by `use-subagents`. Sequential workers are expected for dependent work. Concurrent writers require independent tasks and one isolated worktree per writer; writers sharing a worktree must run sequentially even when their files do not overlap. A scout/reviewer does not replace a worker. If the parent implements, record one concrete exception: genuinely trivial task, unavailable worker, unsafe handoff, immediate tightly coupled coordination, or explicit user request. Do not repeatedly use “trivial” to keep a broad plan in the parent.
 
-Use `.subagents/<id>.handoff.md` for worker-to-parent communication; the parent applies its evidence to this tracker. Keep this tracker parent/single-writer when workers run in parallel or could resume concurrently. Task-owned source, tests, plans, and evidence remain at their required project paths rather than moving into `.subagents/`.
+Record each backend and its run/thread/pane/session identifier when available. Capture worker-to-parent communication from backend output, native thread state, terminal output, or an optional artifact such as `.subagents/<id>.handoff.md`; the parent applies its evidence to this tracker. Keep this tracker parent/single-writer when workers run in parallel or could resume concurrently. Task-owned source, tests, plans, and evidence remain at their required project paths rather than moving into a communication directory.
 
-| Task IDs | Owner | Mode | Context | Dependencies / write isolation | Handoff or parent-execution exception |
+| Task IDs | Owner | Mode | Backend / run ID | Context and dependencies / write isolation | Handoff / evidence or parent-execution exception |
 |---|---|---|---|---|---|
-| `T01` | `Worker W1` | `Sequential` | `Fresh: plan + tracker paths, task ID, relevant files` | `<depends on / isolated lane>` | `<.subagents/<id>.handoff.md; parent-applied tracker evidence, or parent exception>` |
+| `T01` | `Worker W1` | `Sequential` | `<backend + available run/thread/pane/session ID>` | `Fresh: plan + tracker paths, task ID, relevant files; <depends on / isolated lane>` | `<captured output or optional artifact; parent-applied evidence, or parent exception>` |
 
 ## Loop journal
 
@@ -49,9 +49,9 @@ Use `.subagents/<id>.handoff.md` for worker-to-parent communication; the parent 
 
 - **Analyze:** `<current state, relevant files, risks, unknowns>`
 - **Plan:** `<bounded change, acceptance criteria, planned verification, rollback/checkpoint>`
-- **Implement:** `<worker/parent owner, files/actions, .subagents handoff path, parent-applied tracker evidence; parent exception reason if applicable>`
-- **Verify:** `<commands/manual or browser checks and results>`
-- **Review:** `<reviewer, findings, fixes, follow-up>`
+- **Implement:** `<worker/parent owner, backend + available run/thread/pane/session ID, files/actions, captured handoff/evidence; parent exception reason if applicable>`
+- **Verify:** `<commands/manual or browser checks and exact results; parent spot-checks of worker claims/diff>`
+- **Review:** `<reviewer backend/run, terminal state, findings, fixes, follow-up>`
 - **Decision:** `<Verified / repeat / Blocked; next ready task ID>`
 
 ## Deviations and decisions
@@ -63,7 +63,7 @@ Use `.subagents/<id>.handoff.md` for worker-to-parent communication; the parent 
 
 - [ ] Re-read the full original plan, not only this tracker.
 - [ ] Every actionable plan item maps to one or more inventory rows.
-- [ ] Worker ownership, execution/context mode, dependencies/isolation, and handoffs are recorded; every parent-executed task has an allowed concrete exception reason.
+- [ ] Worker ownership, backend/context mode, available run/thread/pane/session identifiers, dependencies/isolation, terminal states, and handoff/evidence are recorded; every parent-executed task has an allowed concrete exception reason.
 - [ ] No row remains `Pending`, `In progress`, or `Blocked`.
 - [ ] Every `Verified` row includes concrete validation evidence.
 - [ ] Every `Descoped` row includes rationale and explicit user approval.
