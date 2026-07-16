@@ -6,7 +6,7 @@
 - `create-plan` — create, review, and improve researched, implementation-ready plans before coding.
 - `implement-plan` — execute existing Markdown implementation plans with active tracking and verification.
 - `improve-skills` — improve Agent Skills from evidence gathered during real interactions.
-- `use-subagents` — decide independently when delegation is worthwhile and coordinate bounded subagent work across available backends.
+- `use-subagents` — plan and coordinate portable, bounded subagent work with runtime-specific lifecycle adapters.
 - `web-research` — perform current, source-backed research across web content and repositories.
 
 ## Install
@@ -46,7 +46,7 @@ Review each skill and its compatibility requirements before use. Skills may opti
 ## Runtime and related skills
 
 - **`create-plan` rendering requires Node.js 18+.** Bun is optional and enables rich Markdown-to-HTML rendering. Without Bun, the bundled Node.js renderer warns and produces escaped plain-text HTML instead.
-- **Subagent work is optional.** Planning, implementation, and review workflows may consider available subagents for bounded, independent, or separable work, but direct execution remains valid and no delegation backend is required merely to use those workflows.
+- **Subagent coordination is portable.** The generic `use-subagents` strategy can pair with a runtime-specific adapter for exact lifecycle mechanics, or use an inspected native capability or suitably controlled non-interactive CLI when no adapter exists. Planning and coordination do not themselves require delegation.
 - **`agent-browser` remains external.** Install it from [skills.sh](https://www.skills.sh/vercel-labs/agent-browser/agent-browser) when browser interaction or UI verification is needed:
 
   ```sh
@@ -73,7 +73,7 @@ Refines Agent Skills using evidence from real interactions. It favors small, reu
 
 ### `use-subagents`
 
-Independently decides whether bounded worker, reviewer, research, or validation work benefits from delegation, then coordinates it with least-privilege permissions, writer isolation, monitored handoffs, parent verification, and owned-resource cleanup. It can select Herdr, a runtime-native capability, or a suitable authenticated non-interactive agent CLI when available; deciding not to delegate is valid.
+Decides whether delegation is worthwhile, splits work into independent fan-out, staged, fresh-review, or isolated-writer lanes, and defines bounded assignments with least privilege, monitored handoffs, parent verification, and owned-resource cleanup. Exact launch, status, stop, worktree, and cleanup mechanics belong to a runtime-specific adapter when available; otherwise the skill uses only inspected native capabilities or a suitably controlled non-interactive CLI, and fails closed when neither is safe.
 
 ### `web-research`
 
