@@ -1,6 +1,6 @@
 ---
 name: web-research
-description: Researches current web and external technical information with source-backed discovery, content retrieval, repository/document/media inspection, and critical follow-up. Use when the user needs current facts, docs, articles, URLs, repositories, PDFs, videos, comparisons, or version-specific library/API/framework evidence. Do not use static research alone for interactive browser tasks such as login, forms, or UI-state inspection; use an available browser automation capability.
+description: Researches current web and external technical information through source-backed discovery, retrieval, and repository, document, or media inspection. Use this skill when the user needs current facts, docs, articles, URLs, repositories, PDFs, videos, comparisons, or version-specific library/API/framework evidence. Do not use this skill alone for interactive browser tasks such as login, forms, or UI-state inspection; use an available browser automation capability.
 license: MIT
 compatibility: >-
   Requires at least one current search, content-retrieval, repository, document,
@@ -21,8 +21,9 @@ Use the best currently available search, content-retrieval, repository, document
 
 ## Core rules
 
-- Create or reuse `.progress/<research-slug>.md` early for questions, context, search angles, sources, findings, conflicts, rejected evidence, open questions, and synthesis decisions.
-- Reread relevant progress notes before final responses, handoffs, compaction summaries, or user-requested summaries.
+- For substantive multi-source, conflicting, resumable, implementation-critical, or high-risk research, create or reuse `.progress/<research-slug>.md` early for questions, context, search angles, sources, findings, conflicts, rejected evidence, open questions, and synthesis decisions.
+- Small direct lookups or source reads do not require a progress artifact. Preserve answer-critical sources and findings in the response.
+- When progress notes exist, reread them before final responses, handoffs, compaction summaries, or user-requested summaries.
 - Prefer primary sources: official docs, source repositories, release notes, changelogs, standards, vendor announcements, and first-party data.
 - Read answer-critical source content. Search snippets and generated summaries are discovery aids, not sufficient evidence for behavior-sensitive claims.
 - Continue with targeted follow-up when evidence is incomplete, ambiguous, outdated, conflicting, version-mismatched, or available only from weak secondary sources.
@@ -44,9 +45,10 @@ Use the best currently available search, content-retrieval, repository, document
 
 ## Workflow
 
-1. **Create research memory and classify the task**
-   - Record the question, intended output, constraints, evidence bar, known context, and search angles.
-   - Classify it as general discovery, direct-source reading, comparison, code/dependency research, repository investigation, or document/media research.
+1. **Classify the task and create proportional research memory**
+   - Classify it as a small direct lookup/source read or as substantive multi-source, conflicting, resumable, implementation-critical, or high-risk research.
+   - For substantive research, create or reuse `.progress/<research-slug>.md` and record the question, intended output, constraints, evidence bar, known context, and search angles.
+   - For a small lookup, work directly and retain answer-critical sources and findings for the response.
 
 2. **Establish exact technical context when applicable**
    - Identify dependency/library/framework names and versions from manifests, lockfiles, imports, config, or installed metadata.
@@ -62,7 +64,7 @@ Use the best currently available search, content-retrieval, repository, document
    - Read the actual official docs, source files, release notes, standards, repository examples, PDFs, or media needed for the answer.
    - For repositories, inspect implementation and tests when behavior matters; README-level claims alone may be insufficient.
    - Retrieve full stored content or use another retrieval path when results are truncated.
-   - Record useful, weak, stale, conflicting, and rejected sources in progress memory.
+   - For substantive research, record useful, weak, stale, conflicting, and rejected sources in progress memory.
 
 5. **Evaluate sufficiency and follow up**
    - Check authority, date/version match, directness, agreement, edge cases, failure behavior, and implementation implications.

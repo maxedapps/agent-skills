@@ -1,86 +1,115 @@
 # [Plan title]
 
-> **Status:** Ready for implementation | Blocked on [decision]
-> **Planning memory:** `.progress/[plan-slug].md` | Not persisted — chat-only/read-only constraint; essential support is included here
+> **Status:** Ready for implementation | Blocked on [specific decision]
+> **Planning memory:** `.progress/<plan-slug>.md` | Not persisted — [no-write reason]
 
-## Outcome and approach
+## Problems
 
-State the intended outcome, chosen approach, and the brief implementation-relevant reason for that approach. Name material scope boundaries or blockers only when they prevent ambiguity.
+- Describe each material current-state problem, affected outcome, and evidence concisely.
+- Separate distinct problems; do not turn this section into implementation steps.
 
-## Sources and traceability
+## Implementation summary
 
-| Reference | Required use |
-|---|---|
-| `.progress/[plan-slug].md#[heading]` | Retrieve [supporting inventory/research]; the executable decision remains below |
-| `.reviews/[relevant-review].md` | Address findings [IDs] and preserve their acceptance criteria |
-| `src/example.ts` — `exampleSymbol` | Preserve or change [current contract] |
+Summarize the chosen approach, dependency order, and why it solves the problems. Keep detailed investigation and rejected alternatives in planning memory.
 
-Include only applicable project plans, `.progress` notes, `.reviews` reports, durable docs, authoritative URLs, and source/test symbols. Do not invent missing artifacts. Prefer symbols or headings; line ranges are discovery aids, not durable identifiers.
+## Conducted research and relevant sources
+
+| Source or artifact | Material finding | Implementation impact |
+|---|---|---|
+| `src/example.ts` — `targetSymbol` | [Observed contract or constraint] | [Required implementation action or safeguard] |
+| [Authoritative URL, plan, review, test, or durable doc] | [Material finding] | [Decision, task, check, or non-goal it drives] |
+
+- **Research/delegation record:** [Meaningful codebase-scouting or external-research lane and terminal handoff, plus parent verification of material claims. For direct work, record the concrete allowed fallback reason.]
+- Cite only inspected sources. Keep essential findings and effects here even when detailed notes exist in planning memory.
+
+## Scope and non-goals
+
+- **In scope:** [Bounded outcomes and integration surfaces.]
+- **Non-goals:** [Adjacent work intentionally excluded and why, when material.]
 
 ## Decisions and constraints
 
-| Decision | Why | Status / consequence |
+| Decision or constraint | Why | Status / consequence |
 |---|---|---|
-| [chosen behavior or architecture] | [brief reason] | Confirmed / inferred-reversible / approval required |
+| [Chosen behavior, architecture, invariant, compatibility boundary, or assumption] | [Brief implementation-relevant reason] | Confirmed / inferred-reversible / approval required |
 
-Record non-obvious decisions, invariants, compatibility boundaries, and assumptions an implementer must not rediscover. Put detailed alternatives and rejected evidence in planning memory.
+## Phase 1 — [Concrete, independently verifiable outcome]
 
-## Phase 1 — [concrete, verifiable outcome]
+### Problems addressed
 
-**Files and references**
+- [Problem from the top-level inventory resolved or reduced by this phase.]
 
-- Modify `src/example.ts` — `exampleSymbol`: [purpose].
-- Create `src/example.test.ts`: [behavior protected].
-- Delete or move `[path]` only after [prerequisite/replacement].
+### Implementation summary
 
-If an exact path is genuinely unknown, provide the narrow search pattern and require resolving it before edits.
+State the phase approach, dependency boundary, and resulting observable state in a few sentences.
 
-**Implementation**
+### Tasks
 
-1. [Imperative implementation instruction and intended behavior.]
-2. [Required caller, generated artifact, fixture, documentation, or downstream-consumer update.]
-3. [Test work integrated with the behavior rather than deferred to a generic final phase.]
+#### T1.1 — [Task title]
 
-**Contract or shape** — include when changing an API, type, schema, query, configuration, CLI, protocol, or state machine; otherwise omit this block.
+**Description**
 
-```ts
-// Show only the critical target shape, invariant, or transition.
+- Implement [specific behavior] in [symbol/component] and state the intended control/data flow.
+- Update required integration boundaries and preserve [named invariant or compatibility behavior].
+- Inspect and add every coupled caller, test, fixture, configuration entry, schema, generated file, document, and downstream consumer discovered during implementation; the files below are starting points, not a closed allowlist.
+
+**Relevant files — non-exhaustive starting points**
+
+- Modify `src/example.ts` — `targetSymbol`: [purpose].
+- Create or modify `test/example.test.ts`: [behavior protected].
+- Search `[narrow pattern]` and resolve the exact path before editing when a path is not yet knowable.
+
+**Dependencies**
+
+- [Task IDs, approval, migration state, or `None`.]
+
+**Contract or shape** *(include only for a material API, type, schema, query, config, CLI, protocol, or state-machine contract)*
+
+```text
+[Critical target shape, invariant, or transition only]
 ```
 
-**Pitfalls and safeguards**
+**Acceptance and verification**
 
-- [Failure mode, edge case, unsafe shortcut, compatibility issue, or recovery rule.]
-- [Explain briefly why the prescribed implementation avoids it.]
+- [Observable acceptance criterion] — run `[exact command or manual/operator check]`; expect [specific signal] and retain [test output, diff, screenshot, log, or migration evidence].
+- [Failure/regression criterion] — verify [boundary behavior] with [exact evidence].
 
-**Checks**
+**Task-local risks** *(include only when applicable)*
 
-- `[focused automated command or concrete inspection]` — expect [specific passing signal, invariant, or retained evidence]. If automation is genuinely inapplicable, say so briefly instead of inventing a command.
-- `[manual/browser/operator check]` — expect [observable behavior]; omit only when genuinely inapplicable and state why in final validation when material.
-- Confirm the checkpoint includes every coupled schema, caller, generated file, fixture, and test needed to be green.
+- [Task-specific failure mode and safeguard or recovery action.]
 
-**Review checkpoint**
+<!-- Repeat titled stable-ID tasks as needed. IDs remain stable if tasks move or are refined. -->
 
-- **Focus:** [completed task IDs, high-risk behavior/files, callers, and integration boundaries]. Request complete inspection but selective findings with advisory severity (`S4 Critical`→`S0 Optional`) and confidence (`C3 Confirmed`→`C1 Tentative`) scores: every `S4`, at most five additional material `S3`/`S2`, and no `S1`/`S0`, niche/speculative, or disproportionate work by default. If more remain, require one blocking `not review-ready` caveat with highest severity, affected areas/dimensions, aggregate impact, evidence basis, and count/lower bound.
-- **Baseline:** [this phase's requirements, decisions, invariants, acceptance criteria, and approved deviations]. When implementation exists, request a **bounded plan-backed code review** of this scope. Treat it as embedded only when the owning implementation workflow requests the checkpoint; a direct request remains standalone.
-- **Evidence:** [plan/tracker paths, changed files/diff, focused tests and results, logs/screenshots/migration output, skipped checks with reasons, constraints, deviations, and known risks].
-- **Exit and rerun:** treat scores as guidance, independently rescore from evidence, reachability, relevance, impact, assumptions, and fix cost, and record reviewer/owner scores plus disposition rationale; no label alone admits or blocks. Turn unconfirmed concerns into validation tasks and track accepted fixes. Rerun [named checks], then allow one fix/regression-only follow-up; separately escalate incidental severe issues. One extra round requires unresolved material risk, confirmed regression, or invalidated coverage; then stop for an owner/human decision.
-- If an owning workflow already requires a milestone review with the same scope, baseline, evidence, and exit conditions, satisfy both with one review and one finding-resolution loop; do not request a duplicate reviewer merely because both the plan and workflow contain a checkpoint.
+### Risks, safeguards, and recovery
 
-<!-- Repeat only for meaningful dependency, migration/rollout, delivery, or independently verifiable boundaries. Not every phase is automatically a major review milestone. -->
+- **Material failure or migration risk:** [Failure mode and affected state.]
+- **Safeguard:** [Prevention, compatibility, observability, or fail-closed behavior.]
+- **Rollback/recovery:** [Concrete reversal, retry, cleanup, or operator action and validation.]
+
+Use exactly `None material for this phase` when investigation found no material failure, migration, rollback, or recovery concern; do not add generic boilerplate.
+
+### Phase validation and review
+
+- **Checks:** Run [focused and phase-wide commands/manual checks]; expect [specific results]. Confirm the phase is green with all discovered coupled artifacts and consumers.
+- **Review focus:** [Task IDs, highest-risk behavior/files, callers, and integration boundaries.]
+- **Baseline:** [This phase's problems, decisions, task acceptance criteria, and approved deviations.]
+- **Evidence:** [Plan/tracker path, changed diff, checks/results, runtime artifacts, skipped checks with reasons, and known risks.]
+- **Exit and rerun:** Apply the current `code-review` authoritative finding and follow-up contract, disposition material findings, fix admitted work, and rerun [named checks]. Use one fresh read-only review for a meaningful checkpoint when safely available; otherwise record the concrete fallback reason and independence limitation. Deduplicate an aligned owning-workflow review.
+
+<!-- Add numbered phases only for real dependency, delivery, migration/rollout, or independently verifiable boundaries. Each phase repeats the complete required structure above. -->
 
 ## Final validation and review
 
-- Run `[authoritative repository gate]` — expect [result].
-- Run applicable browser/manual, migration, security, performance, cleanup, and no-drift checks; name any justified skip and its confidence impact.
-- **Focus:** the complete implementation, all changed files and required integration boundaries, highest-risk decisions, and all applicable code-review dimensions/matrix rows. Apply the phase checkpoint's proportional request and selective finding default.
-- **Baseline:** this full plan, its sources and acceptance criteria, the implementation tracker/progress evidence, and documented approvals/deviations. Request a **full plan-backed code review**. Treat it as embedded only when the owning implementation workflow requests the final checkpoint; otherwise it is standalone.
-- **Evidence:** provide this plan, tracker/progress artifact when present (otherwise the annotated plan), changed files/diff, callers, tests and validation results, skipped checks, constraints, deviations, and known risks.
-- **Exit and rerun:** apply the phase checkpoint's independent rescoring/disposition, validation-task, focused-follow-up, severe-issue reassessment, and round-stop rules; fix accepted work and rerun affected/final gates. Prefer worthwhile independent review, otherwise record the direct-review limitation. Deduplicate an aligned owning-workflow final review.
+- Run `[authoritative repository gates]`; expect [exact success signals].
+- Perform applicable integration, browser/manual, migration/rollback, security, performance, documentation, generated-output, and cleanup checks; justify material skips.
+- **Review focus:** the complete implementation, all changed and discovered coupled files, highest-risk decisions, and cross-phase integration.
+- **Baseline:** this full plan, sources, decisions, acceptance criteria, Definition of Done, and approved deviations.
+- **Evidence:** provide the plan and tracker/progress evidence, complete diff, callers/consumers, all validation results, skips, constraints, deviations, and known risks.
+- **Exit and rerun:** Apply the current `code-review` contract. Default to a fresh read-only final reviewer when safely available; otherwise record an allowed concrete fallback and independence limitation. Resolve findings, rerun affected and final gates, and deduplicate any equivalent implementation-workflow final review.
 
 ## Definition of Done
 
-- [Observable product/technical outcome is complete.]
-- [Every requirement, source finding, and approved decision is implemented or explicitly approved as deferred.]
-- [Required automated and manual checks pass with retained evidence.]
-- [Documentation, migration/rollout/recovery, generated artifacts, and downstream consumers are complete where applicable.]
-- [Applicable milestone and final reviews are resolved through independent review when safely available and worthwhile, or a recorded checklist-driven direct review; remaining blockers or operator steps are explicit.]
+- [Each problem and required outcome is resolved with observable evidence.]
+- [Every task, source-driven requirement, decision, and accepted review finding is implemented or explicitly approved as deferred.]
+- [Automated/manual checks pass; coupled callers, tests, config, schemas, generated artifacts, docs, consumers, migration/rollout, and recovery work are complete where applicable.]
+- [Review and fallback evidence is resolved, with remaining blockers or operator steps explicit.]

@@ -1,13 +1,11 @@
 ---
 name: code-review
 description: >-
-  Performs evidence-bound reviews of diffs, PRs, codebases, implementation
-  steps, and completed plan implementations for correctness, security, tests,
-  performance, typing, maintainability, and complexity. Use when the user asks
-  to review, audit, critique, find issues, or evaluate implemented plan work.
-  Follow explicit scope and output constraints; when underspecified, inspect the
-  current codebase broadly. Do not use for an unimplemented draft plan or to
-  implement fixes unless asked.
+  Reviews repository diffs, PRs, codebases, and completed implementations for
+  material, evidence-backed defects and plan compliance. Use this skill when
+  asked to review, audit, critique, find code issues, or evaluate implemented
+  plan work. Do not use for draft-plan review or implementation unless fixes are
+  explicitly requested.
 license: MIT
 metadata:
   short-description: Adaptable generic and plan-backed implementation review
@@ -34,17 +32,36 @@ Resolve each axis separately; one axis never implies another.
 3. **Invocation:** **Standalone** is directly requested, even when bounded. **Embedded** means another workflow owns the checkpoint and resolution loop.
 4. **Output:** **Chat-only**, **Markdown report plus concise summary**, or **embedded handoff**. Standalone defaults to report plus summary; embedded to handoff. A no-write instruction suppresses artifacts unless a report is explicitly exempted.
 
-## Core rules
+## Authoritative finding contract
 
-- Be adversarial but evidence-bound. A material finding requires a plausible/reachable path, meaningful impact to outcomes, users, operators, security, data, compatibility, or operations, and sufficient evidence/confidence. Exclude niche edges, speculative future concerns, optional polish, and redesign unless comparably material; uncommon security/data paths still qualify when reachability and impact justify them.
-- Challenge each recommendation against implementation complexity, regression risk, and maintenance cost. If likely benefit does not exceed those costs, prefer no finding, a smaller correction, or decisive validation.
-- Inspect relevant files in full, including call sites, tests, configuration, documentation, and nearby patterns. Broad scope requires coverage of every selected dimension, but does not require reporting marginal findings. Record partial/skipped generated, vendor, lock, or oversized content and the resulting coverage limit.
+This skill owns materiality, severity/confidence, finding selection/limits, overflow, and follow-up. Consumers including `create-plan` and `implement-plan` must reference this contract rather than copy it, adding only axes, evidence payload, and workflow-specific disposition/exit rules.
+
+- Admit only evidence-backed findings with a plausible/reachable path and meaningful impact to user/operator outcomes, security, data, compatibility, or operations. Exclude niche/speculative concerns, optional polish, and redesign unless comparably material; uncommon security/data paths qualify when reachability and impact justify them.
+- Weigh each recommendation against implementation complexity, regression risk, and maintenance cost. When benefit does not exceed cost, reject/downgrade it or prefer a smaller correction, decisive validation, or no finding.
+
+| Score | Meaning |
+|---|---|
+| `S4 Critical` | Catastrophic, irreversible, security, data, or availability impact if real. |
+| `S3 High` | Major user/operator or core-path impact. |
+| `S2 Medium` | Meaningful bounded impact or a practical workaround. |
+| `S1 Low` | Minor, nonblocking impact. |
+| `S0 Optional` | Polish or preference. |
+| `C3 Confirmed` | Direct code, runtime, test, or reproduction evidence. |
+| `C2 Supported` | Evidence-backed reachable path, not directly reproduced. |
+| `C1 Tentative` | Plausible but insufficient evidence; validate first. |
+
+- Record both scores, location/authority, evidence, path state, impact, and smallest safe fix/validation for each candidate. Scores only order work: independently reassess evidence, reachability, relevance, impact, and proportionality; even `S4` may be downgraded or rejected. `NEEDS RUNTIME VALIDATION` is a next-action flag, not confidence or permission to implement speculation.
+- Deduplicate root causes. Unless explicit depth/output instructions override, report every `S4`, at most five additional material `S3`/`S2`, and no `S1`/`S0`. Replace further material findings with one blocking `not review-ready` caveat giving highest severity, affected areas/dimensions, aggregate impact, evidence basis, and known count/lower bound; return remediation control to the owner.
+- Default to an initial review plus one follow-up limited to accepted fixes, affected boundaries, and material regressions; never reopen broad discovery. One extra follow-up requires unresolved material risk, confirmed regression, or invalidated coverage; then return control to the owner/human. Surface incidental apparently severe issues separately for reassessment, without broadening search.
+
+## Core review rules
+
+- Inspect relevant files in full, including call sites, tests, configuration, documentation, and nearby patterns. Broad scope requires coverage of every selected dimension but not reporting marginal findings. Record partial/skipped generated, vendor, lock, or oversized content and the resulting coverage limit.
 - Preserve the worktree. Do not checkout, restore, stash, clean, or overwrite owner changes. Before a check that may rewrite tracked generated files, record their state; remove or reverse only review-created changes afterward. Treat package commands that may rewrite manifests, lockfiles, metadata, or install state as mutating.
 - Do not edit source unless explicitly asked. A declared report is an output artifact, not a source edit, and remains governed by the output axis.
 - Evaluate high-value tests, not counts: user-visible behavior, acceptance criteria, regressions, invariants, integration boundaries, important success and failure paths, and plausible boundary cases tied to a contract or meaningful security, data, or operational risk.
 - Cheaply confirm serious suspicions when practical with targeted checks or disposable assertion-based repros. Record checks not run and how they limit confidence; delete temporary repro artifacts.
-- Deduplicate findings by root cause. By default report every `S4 Critical`, at most five additional `S3 High`/`S2 Medium` material root causes, and no `S1 Low`/`S0 Optional` findings. Explicit user depth/output instructions override this default. If more material root causes remain, disclose one blocking `not review-ready` caveat with highest severity, affected areas/dimensions, aggregate impact, evidence basis, and known count/lower bound; return remediation control to the owner rather than serialize a backlog.
-- For direct and delegated reviews, default to an initial review plus one follow-up. Follow-ups inspect accepted fixes, affected boundaries, and material regressions only; they do not reopen broad discovery. Allow one extra follow-up only for unresolved material risk, confirmed regression, or invalidated coverage; then return control to the owner/human. Surface any incidentally observed apparently severe issue separately for independent reassessment without authorizing broader search.
+- For plan-backed work, apply the authority precedence, complete one matrix row per applicable authority item or implied requirement using the exact statuses, and produce all four separate verdicts required by [`references/plan-backed-review.md`](references/plan-backed-review.md); never collapse them into an aggregate pass.
 - Use bounded read-only subagents only when independence justifies coordination. Give each exact scope, dimensions, evidence/output requirements, permissions, and stop condition; prohibit edits and recursion. The parent integrates coverage, deduplicates before output limits, spot-verifies material claims, and owns conclusions.
 
 ## Workflow
@@ -56,23 +73,6 @@ Resolve each axis separately; one axis never implies another.
 5. Run only validation that materially improves confidence: targeted tests, lint/typecheck/build, migrations, API or runtime probes, package checks, browser/UI checks, or small repros. Preserve the worktree and record skips.
 6. Produce the selected output. Before a standalone report, reread [`assets/review-report-template.md`](assets/review-report-template.md). If allowed and no path was supplied, use `.reviews/<review-slug>.md`; substantial reviews may keep `.progress/<review-slug>.md` evidence notes. Create neither for chat-only, handoff-only, or no-write output. Format permitted artifacts when required.
 7. Before the final response, reread any created evidence/report notes. Summarize top findings, verdicts when applicable, validation run/skipped, limitations, and only the artifact paths that actually exist.
-
-## Finding quality
-
-Scores are advisory:
-
-| Score | Guidance |
-|---|---|
-| `S4 Critical` | Catastrophic, irreversible, security, data, or availability impact if real. |
-| `S3 High` | Major user/operator or core-path impact. |
-| `S2 Medium` | Meaningful but bounded impact or a practical workaround. |
-| `S1 Low` | Minor, nonblocking impact. |
-| `S0 Optional` | Polish or preference. |
-| `C3 Confirmed` | Direct code, runtime, test, or reproduction evidence. |
-| `C2 Supported` | Evidence-backed reachable path, not directly reproduced. |
-| `C1 Tentative` | Plausible but insufficiently evidenced; validate before acting. |
-
-For each candidate, record both scores, location/authority, evidence, path state, impact, and the smallest safe fix or validation. Scores guide ordering only: independently reassess evidence, reachability, relevance, impact, and proportionality, and downgrade or reject even `S4` when niche or immaterial. `NEEDS RUNTIME VALIDATION` is a separate next-action flag, never a confidence score or permission for speculative implementation.
 
 ## If fixes are explicitly requested
 

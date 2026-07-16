@@ -1,111 +1,97 @@
 ---
 name: create-plan
 description: >-
-  Creates, reviews, and improves thoroughly researched, implementation-ready
-  plans that are complete but distilled, structured into adaptive numbered
-  phases, and explicit about decisions, files, pitfalls, checks, and review. Use
-  when the user asks to create or make an implementation plan, plan a feature or
-  change, or review, improve, critique, or audit an existing unimplemented
-  implementation plan before coding. Do not use to implement a plan, to audit
-  whether implementation satisfies a plan, or for quick conceptual answers that
-  need no implementation handoff.
+  Creates, reviews, and improves research-backed implementation plans with
+  problem-led phases and stable, actionable tasks. Use this skill when the user
+  asks to plan a feature or change, create an implementation handoff, or review
+  or improve an unimplemented plan before coding. Do not use to implement a plan,
+  audit completed implementation against a plan, or answer a small conceptual
+  question that needs no implementation handoff.
 license: MIT
 compatibility: >-
-  Requires project file access. Saving and rendering plans requires write access
-  and Node.js 18+; Bun is optional and enables rich Markdown rendering. Current
-  external research requires suitable search/retrieval access. Fresh read-only
-  research or critique capabilities are optional; their absence does not block a
-  recorded checklist-driven direct review.
+  Requires project file access. Saving requires write access; structural
+  validation requires Node.js 18+. Bun is optional for rich HTML rendering. Current
+  external research requires suitable search/retrieval access. Delegated
+  research and review require a safely available subagent capability.
 metadata:
-  short-description: Create or improve implementation-ready plans
+  short-description: Create or improve actionable implementation plans
 ---
 
 # Create Plan
 
-## Instruction priority
+## Mandatory resources and output
 
-Follow explicit user constraints and higher-priority instructions. If the user narrows scope, forbids tools, requests chat-only output, or changes this workflow, adapt and briefly record meaningful deviations.
+1. **Before drafting or revising a plan, read and copy [`assets/implementation-plan-template.md`](assets/implementation-plan-template.md).** Every non-conditional section and exact task field is required; do not use a remembered format.
+2. **Before draft review and finalization, read [`references/plan-quality-checklist.md`](references/plan-quality-checklist.md).** Complete it, then repeat it after material revisions.
+3. **For every saved plan, run [`scripts/validate-plan-structure.mjs`](scripts/validate-plan-structure.mjs)** before review and after material revisions. Structural success does not replace semantic review.
 
-## Mandatory steps
+If a mandatory resource cannot be loaded, stop rather than inventing it. Follow explicit user and higher-priority constraints; record meaningful workflow deviations. Do not implement the planned change.
 
-Read and use these resources:
+Always save the finished Markdown plan to `.plans/<descriptive-kebab-case-name>.md` when writes are permitted, without overwriting unrelated work. A no-write or explicit chat-only constraint keeps the plan in chat and records that persistence and structural CLI validation were unavailable.
 
-1. **Before drafting or revising any plan, load [`assets/implementation-plan-template.md`](assets/implementation-plan-template.md).** Copy and adapt its structure. Every non-conditional section is mandatory; omit only blocks the template explicitly marks conditional. Do not substitute a remembered or invented format.
-2. **Before independent or direct draft review and finalization, load [`references/plan-quality-checklist.md`](references/plan-quality-checklist.md).** Complete it against the draft and repeat it after material revisions.
+## Planning contract
 
-If a mandatory resource cannot be loaded, planning is blocked; do not fabricate its contents. Chat-only plans still use the template even though files are not saved or rendered.
+- Produce a complete but distilled handoff. The required top-level structure is `Problems`, `Implementation summary`, `Conducted research and relevant sources`, `Scope and non-goals`, and `Decisions and constraints`, followed by numbered phases, final validation/review, and observable Definition of Done.
+- Every phase states problems addressed, a concise implementation summary, titled stable-ID tasks, risks/safeguards/recovery, and phase validation/review. One phase is valid; add phases only for meaningful dependency, migration/rollout, delivery, or independently verifiable boundaries.
+- Every task provides an actionable description, **Relevant files — non-exhaustive starting points**, dependencies, and acceptance/verification with exact expected evidence. Include task-local risks where they matter.
+- File lists are discovery starts, never closed allowlists. Require implementers to inspect and add coupled callers, tests, fixtures, config, schemas, generated files, docs, and downstream consumers found during implementation.
+- Keep detailed inventories, source evaluation, alternatives, and reviewer discussion in planning memory. Keep every essential finding, decision, action, safeguard, and check in the plan so a fresh implementer need not reconstruct chat or repeat core research.
+- Cite only inspected local artifacts and authoritative external sources. Use exact paths and symbols; if a path is unknowable, provide a narrow search pattern and require resolution before editing. Never invent artifacts, commands, or evidence.
+- Include short critical-shape snippets only for material API, type, schema, query, config, CLI, protocol, or state-machine contracts. Use at least one useful table and prefer concise imperative lists.
+- State non-obvious decisions, status, and brief implementation reason. Put compatibility, failure, migration, rollback, cleanup, security, observability, and operator behavior where they affect a task or phase. Use `None material for this phase` only when no material phase risk exists.
+- Ask only when material scope, behavior, security, data, compatibility, migration, or irreversible decisions cannot be inferred safely. Otherwise choose and label a reversible default with a fallback.
 
-## Core contract
+## Delegation and research policy
 
-- Do not implement the requested change. Reviewing an unimplemented plan is a local draft-quality task; do not route it through implementation-evidence review. Auditing whether code satisfies a plan is outside this skill.
-- Make research deep; make the final plan **complete, distilled, and executable**. Concision removes research narrative, repetition, and generic advice—not files, decisions, instructions, rationale, pitfalls, checks, or review guidance.
-- Create or reuse `.progress/<plan-slug>.md` early for detailed research, source evaluation, inventories, alternatives, rejected reasoning, reviewer feedback, assumptions, and open investigations. Reread it before review, finalization, and summary. If writes are forbidden, mark planning memory as not persisted and keep all essential support in the chat-only plan; never cite a fictitious path.
-- Discover relevant `.plans/`, `.progress/`, `.reviews/`, durable project docs, source/test symbols, and authoritative URLs. Cite applicable artifacts in the template's source table and state exactly what each contributes. Never invent an artifact; keep essential actions and decisions in the plan rather than hiding them behind references.
-- Use exact paths and symbols. Line ranges may help discovery but are not durable identifiers. When a path is genuinely unknown, give a narrow search pattern and require resolution before edits instead of guessing.
-- Use numbered phases only for meaningful dependency, delivery, migration/rollout, or independently verifiable boundaries. One phase is valid. Every advertised checkpoint must include all coupled schema, generated files, callers, fixtures, docs, and tests needed to be green.
-- Use imperative lists, at least one useful table, and short critical-shape snippets for API/type/schema/query/config/CLI/protocol/state-machine changes. Do not force a synthetic snippet when no such contract changes.
-- State every non-obvious decision, its status, and a brief implementation-relevant reason. Record full comparisons in `.progress`; mention a rejected approach in the plan only when it prevents a likely mistake.
-- Put pitfalls, edge cases, unsafe shortcuts, compatibility boundaries, partial-failure behavior, and recovery where they affect implementation.
-- Make checks and review guidance mandatory: exact commands/manual checks, expected signals, review focus, baseline, required evidence, exit conditions, and reruns after fixes. End with observable Definition of Done criteria.
-- Ask the user only when material scope, behavior, security, data, migration, compatibility, or irreversible decisions cannot be inferred safely. Otherwise choose a reasonable reversible default, label it, explain why briefly, and name a fallback.
-- Research third-party contracts rather than relying on memory. Read `web-research` for current, version-specific dependency/API/framework evidence, official docs, source repositories, release history, URLs, and other external sources.
-- Do not defer code planning merely because credentials, environment IDs, or live resources are unavailable. Pin the documented contract, plan fail-closed configuration and fake-provider tests, and isolate real provisioning/verification as an operator step.
-- Consider fresh, read-only subagents for genuinely separable research, codebase scouting, or independent draft critique when their fresh context or independence is worth the coordination cost. Give them the complete bounded assignment and evidence payload; direct research and review remain valid.
-- Review drafts proportionately through fresh read-only judgment when worthwhile, or a recorded direct fallback. Request advisory severity (`S4 Critical`→`S0 Optional`) and confidence (`C3 Confirmed`→`C1 Tentative`) scores, then independently assess findings; labels never decide disposition, and unavailable delegation never blocks completion.
-- Do not prescribe branches, pushes, PRs, or merges unless the user asks.
+For non-trivial planning, actively identify and launch at least one meaningful separable codebase-scouting or external-research lane when a safe capability exists. Use parallel lanes only for non-overlapping questions. Read `use-subagents` before delegation and preserve its scope, isolation, lifecycle, and parent-verification rules.
+
+Each lane receives exact questions, scope, sources, constraints, and output expectations. Require a sourced terminal handoff listing files/sources inspected, findings, uncertainty, and skipped work. Independently inspect evidence and verify material claims before adopting them.
+
+Direct substantive research is a fallback only when a concrete reason is recorded: trivial scope, inseparability, unavailable or unsafe capability, user prohibition, or coordination cost disproportionate to the bounded question. “Faster” alone is not a reason. Research third-party, version-sensitive, or current contracts through `web-research` rather than memory.
+
+Create or reuse `.progress/<plan-slug>.md` early for substantive, multi-source, resumable, conflict-heavy, or high-risk planning. Record goals, scope, constraints, source details, alternatives, open questions, delegation handoffs, and review dispositions. Genuinely small planning may omit separate memory; a no-write request must omit it. In both cases preserve answer-critical research and decisions in the plan itself.
 
 ## Workflow
 
-### 1. Establish planning memory and scope
+### 1. Establish scope and evidence strategy
 
-- Create or reuse `.progress/<plan-slug>.md` with the goal, scope, constraints, decision status, source artifacts, and open questions unless writes are forbidden; then use the template's non-persisted planning-memory value and keep essential support in the plan.
-- Inspect relevant source, tests, config, docs, existing patterns, `.plans`, `.progress`, and `.reviews`. For API/schema/protocol/CLI changes, search the whole workspace for callers, generated clients, scripts, docs, and downstream consumers.
-- Record detailed findings, risks, unknowns, likely validation, and chat-only provenance in planning memory.
+- Inspect relevant source, tests, config, docs, current plans/progress/reviews, repository instructions, and nearby patterns.
+- Inventory requirements, affected outcomes, dependencies, risks, decisions, validation, and likely coupled surfaces.
+- Decide and record planning-memory and delegation strategy, including a concrete allowed fallback where applicable.
 
-### 2. Resolve questions and research
+### 2. Research until implementation choices are supportable
 
-- Ask only blocking clarification questions and wait when user input is required.
-- Investigate until local architecture, external contracts, integration boundaries, failure behavior, migration/rollout implications, and validation are understood. Prefer official docs, version-matched source, release notes, and repository examples; resolve material conflicts.
-- Compare viable strategies for correctness, project fit, maintainability, risk, migration effort, performance, and testability. Keep detailed comparison and rejected evidence in `.progress`; retain the chosen decision and brief why in the plan.
-- When fresh read-only research or scouting is useful, bound it to exact questions and sources. Require a terminal handoff containing files/sources inspected, findings, uncertainties, and skipped work; independently verify material claims before using them.
+- Resolve local architecture, integration boundaries, external contracts, failure behavior, compatibility, migration/rollout, and verification.
+- Compare viable approaches for correctness, project fit, simplicity, risk, and testability. Retain the chosen decision and concise why in the plan; keep detailed rejected reasoning in planning memory.
+- Do not defer code planning because live credentials or resources are unavailable. Pin documented contracts, design fail-closed configuration and fake-provider coverage, and isolate real provisioning as an operator step.
 
-### 3. Draft with the mandatory template
+### 3. Draft from the template
 
-Before drafting, load `assets/implementation-plan-template.md`, then copy and adapt it rather than starting from a blank document.
+Load the template again, copy it, and replace all guidance and sentinels. Integrate tests with the behavior they protect. Make every phase independently executable and green, including coupled artifacts. Keep final checks for genuinely cross-phase validation.
 
-- Preserve all non-conditional sections and remove placeholder guidance from the finished plan.
-- Use the source table for applicable `.plans`, `.progress`, `.reviews`, docs, URLs, and code/test symbols; include traceability from requirements/findings to phases when multiple inputs exist.
-- For each phase, provide exact files/references, ordered instructions, applicable contract snippets, localized pitfalls, exact checks with expected results, and an implementation-review checkpoint with focus, baseline, evidence, exit, and rerun requirements.
-- Integrate tests and verification with the behavior they protect. Add final cross-cutting validation only for checks spanning phases.
-- Keep operator steps, migration/rollout, rollback/recovery, security, performance, observability, browser/manual validation, and cleanup only where relevant—but make them concrete when relevant.
-- Make the plan self-contained enough that a fresh implementer need not repeat core research or recover unstated decisions from chat.
+### 4. Validate and independently review
 
-### 4. Validate and review the draft locally
+Run from this skill directory or use the equivalent absolute path:
 
-Before review, load `references/plan-quality-checklist.md` and complete every applicable check. Draft-plan critique stays in this workflow because implementation evidence does not yet exist.
+```sh
+node scripts/validate-plan-structure.mjs /path/to/.plans/example.md
+```
 
-When independent review is worthwhile, provide the draft/support, sources/decisions, constraints/risks, questions, and code/test pointers. Require fresh read-only judgment: every `S4`, at most five additional high-confidence `S3`/`S2` material blockers, and no `S1`/`S0`, niche/speculative, or disproportionate work by default. If more remain, require one blocking `not review-ready` caveat with highest severity, affected areas, aggregate impact, evidence basis, and count/lower bound. Otherwise record the direct review and independence limit.
+Then complete the quality checklist. Fix structural errors and semantic gaps before review.
 
-Evaluate independently:
+A fresh read-only independent plan reviewer is the default before finalization when safely available. Supply the complete request, draft, planning memory or equivalent support, research sources, decisions, constraints, risks, unresolved questions, and relevant code/test pointers. Require a sourced terminal handoff and parent verification.
 
-| Decision input | Required handling |
-|---|---|
-| Reviewer scores | Guidance only; independently rescore severity/confidence. No label—even `S4`—admits or blocks by itself. |
-| Materiality | Check evidence, reachability, outcome relevance, impact, assumptions, and fix/regression/maintenance cost. |
-| Disposition | Record reviewer/planner scores, assumptions, and accept/reject/defer rationale; downgrade or reject niche, irrelevant, immaterial, or disproportionate findings. |
-| Unconfirmed concern | Keep it as a validation question, not a plan expansion. |
-| Follow-up | Rerun evidence after accepted work; allow initial review plus one fix/regression-only follow-up. Surface apparently severe incidental issues for reassessment without broad discovery. One extra round requires unresolved material risk, confirmed regression, or invalidated coverage; then stop for parent/human disposition. |
+Use the current `code-review` authoritative materiality, finding-selection, disposition, and bounded follow-up contract instead of copying its scoring lifecycle. Draft critique remains plan-quality review, not implementation-compliance review. Record accepted/rejected/deferred findings and rerun the validator and affected checks after fixes. Direct checklist-driven review is allowed only for a recorded concrete fallback: trivial scope, inseparability, unavailable/unsafe capability, user prohibition, or disproportionate coordination cost; state the independence limitation.
 
-### 5. Save, render, and open
+Plan meaningful implementation checkpoints and final review with focus, baseline, evidence, exit/rerun requirements, and fresh read-only review by default. Deduplicate any checkpoint that aligns with the owning implementation workflow.
 
-1. Write `.plans/<descriptive-kebab-case-name>.md` without overwriting an unrelated plan.
-2. Run `node scripts/render-plan-html.mjs --help` from this skill directory or use the equivalent absolute path.
-3. Render with this bundled script—not `preview_export`—and include `--open`:
+### 5. Save and optionally render
 
-   ```sh
-   node /absolute/path/to/create-plan/scripts/render-plan-html.mjs .plans/example.md --out .plans/example.html --open
-   ```
+Save Markdown whenever writes are permitted and share its path. HTML is conditional: render/open only when requested, required by project convention, or useful in an interactive environment. First inspect renderer options, then run it without `--open` unless opening is appropriate:
 
-4. If `--open` was omitted, rerun with it.
-5. If the renderer warns that Bun is unavailable but exits successfully, accept the escaped plain-text HTML fallback; do not treat missing Bun as a blocked plan. Rich Markdown HTML requires Bun.
-6. Share the Markdown, HTML, and planning-memory paths. Mention only blockers, important assumptions, review limitations, or meaningful workflow deviations; do not paste the full plan unless asked.
+```sh
+node scripts/render-plan-html.mjs --help
+node scripts/render-plan-html.mjs /path/to/.plans/example.md --out /path/to/.plans/example.html [--open]
+```
+
+The renderer is bundled and read/write scoped to the selected files. A successful Bun-unavailable fallback is acceptable; rich Markdown rendering requires Bun. Report only artifacts that exist, plus blockers, important assumptions, skipped gates, and meaningful review/delegation limitations.

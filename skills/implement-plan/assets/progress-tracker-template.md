@@ -1,96 +1,77 @@
 # Implementation Progress
 
-> **Mandatory use:** the `implement-plan` agent must load this file with the file-reading tool before any project source edit or delegated implementation launch. Copy/adapt it into the plan when possible; otherwise use a retained Markdown tracker. Preserve the task inventory, status semantics, execution/delegation strategy, loop journal, deviations, evidence, review resolution, and reconciliation gates.
+> **Mandatory use:** the `implement-plan` agent must load this file with the file-reading tool before any project source edit or delegated implementation launch. Copy/adapt it into the plan when possible; otherwise retain it as a Markdown tracker. The parent is the tracker owner and its only writer while lanes run concurrently or may resume concurrently.
 
 - **Template loaded from:** `implement-plan/assets/progress-tracker-template.md`
 - **Plan:** `<path>`
 - **Overall status:** `In progress | Partial | Blocked | Complete`
 - **Last updated:** `<timestamp or date>`
-- **Completion rule:** `Complete` is allowed only when every actionable plan requirement is traceably covered by a `Verified` row or explicitly `Descoped` with user approval.
+- **Completion rule:** `Complete` only when every actionable requirement is covered by a `Verified` row or explicitly `Descoped` with user approval, reconciliation passes, and no admitted material finding remains open.
 
-Overall status meanings:
-
-- `In progress`: execution is actively continuing
-- `Partial`: execution stopped with unfinished but otherwise actionable rows; use only for an explicit handoff/resource limit, never as completion
-- `Blocked`: no dependency-ready work can continue without a decision, access, environment change, or blocker resolution
-- `Complete`: every completion and reconciliation gate passed
+Status meanings: `In progress` is active execution; `Partial` is an explicit unfinished handoff/resource stop; `Blocked` means no dependency-ready work can continue; `Complete` means every completion gate passed.
 
 ## Plan coverage inventory
 
-Create this inventory from the full plan before implementation. Give every independently executable implementation, migration, cleanup, documentation, and verification task a row. Trace every plan checkbox, bullet, acceptance criterion, and required check to one or more rows through the plan reference and verification/evidence fields; create a separate row when the requirement is independently executable. Split compound tasks rather than hiding several unrelated changes in one row.
+Build this from the full plan before implementation. Give each independently executable implementation, migration, cleanup, documentation, rollout, and verification item a stable row. Trace plan bullets, acceptance criteria, and required checks through the plan reference and evidence; split compound work rather than hiding it.
 
-| ID | Original plan reference / requirement | Dependencies | Status | Owner | Verification | Evidence / notes |
-|---|---|---|---|---|---|---|
-| T01 | `<section + exact requirement>` | — | Pending | `Parent / Delegated W1` | `<planned check>` | `<may reference milestone/final review ID>` |
+| ID | Plan reference / requirement | Dependencies | Status | Planned verification | Evidence / notes |
+|---|---|---|---|---|---|
+| T01 | `<section + exact requirement>` | — | Pending | `<task-specific check>` | `<result or review ID>` |
 
-Allowed task-row statuses:
-
-- `Pending`: not started
-- `In progress`: active in its execution lane; multiple rows are allowed only when genuinely independent, explicitly isolated, and separately verified
-- `Blocked`: cannot proceed; blocker and requested decision/access are recorded
-- `Verified`: implementation and task-specific verification passed; evidence is recorded
-- `Descoped`: intentionally omitted with explicit user approval and rationale
-
-Do not use `Done` as a substitute for verification. Do not mark a parent phase complete while any child row remains `Pending`, `In progress`, or `Blocked`.
+Allowed row statuses: `Pending`, `In progress`, `Blocked`, `Verified`, and `Descoped`. Multiple `In progress` rows require independent isolated lanes. `Verified` requires task-specific evidence; `Descoped` requires explicit user approval and rationale. Never use `Done`, and never complete a parent phase with an open child row.
 
 ## Execution and delegation strategy
 
-For each bounded task or milestone, choose parent execution or delegation based on whether fresh context, independent judgment, safe parallelism, or specialization materially outweighs coordination and handoff risk. Delegation is considered, not mandatory. Parent execution is valid without an exception when delegation is unavailable, unsafe, or not worthwhile; record the reason briefly enough to make the strategy understandable.
+Before each batch, enumerate dependency-ready rows. Classify every bounded non-trivial row for delegation. Delegate eligible rows when a safe capability exists. Parent execution requires one concrete recorded reason: true triviality; tight coupling/integration ownership; overlapping scope; unavailable safe isolation/capability; immediate iterative decision-making; user prohibition; or verification cost greater than benefit. Do not label a broad plan trivial.
 
-Whenever delegation is used:
+Use isolated worktrees and non-overlapping ownership for concurrent writers; run writers sequentially in a shared checkout. Keep the tracker parent/single-writer. Require least privilege, terminal lifecycle resolution and handoff, parent diff/claim inspection, task-specific checks, and ownership-safe cleanup.
 
-- grant least-privilege files, tools, write scope, credentials-free context, and commands;
-- use fresh context with the plan/tracker paths, task IDs, acceptance criteria, constraints, relevant files, and verification expectations;
-- allow concurrent writers only for independent tasks with one isolated worktree per writer; writers sharing a worktree run sequentially even when files do not overlap;
-- track the assignment to a terminal state and capture its run identity when available, files changed/read, decisions, commands/results, skips, risks, blockers, and exact remaining work;
-- keep this tracker parent/single-writer when lanes run in parallel or may resume concurrently;
-- require parent diff inspection, claim spot-checking, and task-specific verification before accepting the handoff;
-- clean temporary worktrees, processes, sessions, credentials, and unneeded handoff artifacts without discarding owner work.
+| Task IDs | Eligible? | Owner + concrete rationale | Batch / dependencies / join point | Ownership / overlap / isolation | Capability/run + terminal handoff | Parent evidence / cleanup | Review checkpoint |
+|---|---|---|---|---|---|---|---|
+| `T01` | `Yes / No / N/A-trivial` | `<delegated owner or allowed parent reason>` | `<B1; deps; join>` | `<files/domain; overlap analysis; isolated/sequential>` | `<capability + run ID/state; handoff path/summary>` | `<diff inspection, spot-checks, checks, cleanup>` | `<M01 / F01 / N/A-small>` |
 
-Task-owned source, tests, plans, and retained evidence remain at their required project paths rather than moving into a communication directory. A scout or reviewer provides evidence but does not silently become the implementation owner.
+For each run retain only useful evidence: assignment/run identity when available, files read/changed, decisions, exact commands/results, skipped checks, risks/blockers, and remaining work. A child handoff is evidence, not parent verification.
 
-| Task IDs | Owner | Mode | Capability / run ID | Context and dependencies / write isolation | Terminal handoff, parent evidence, and cleanup |
-|---|---|---|---|---|---|
-| `T01` | `Parent / Delegated W1` | `Sequential / Parallel isolated` | `<capability + available run/thread/pane/session ID, or parent>` | `Fresh: plan + tracker, task ID, files; <dependencies/isolation>` | `<terminal output/handoff, parent checks, cleanup; or parent-strategy reason>` |
+## Analyze → Plan → Implement → Verify journal
 
-## Loop journal
+### `<task or batch ID>` — `<short name>`
 
-### `<task ID>` — `<short name>`
+- **Analyze:** `<current state, files/boundaries, risks, unknowns>`
+- **Plan:** `<bounded action; owner/rationale; batch/join/isolation; acceptance evidence; rollback/cleanup; review need>`
+- **Implement:** `<actions/files; delegated run and terminal handoff, or parent execution>`
+- **Verify:** `<parent diff inspection and claim spot-check; commands and exact results; browser/manual checks or skip limitation>`
+- **Review:** `<review ID or N/A-small; fresh read-only method or allowed direct fallback + limitation; material dispositions; fixes/reruns/follow-up>`
+- **Decision:** `<Verified / repeat / Blocked; next dependency-ready batch>`
 
-- **Analyze:** `<current state, relevant files, risks, unknowns>`
-- **Plan:** `<bounded change, acceptance criteria, planned verification, rollback/cleanup/checkpoint>`
-- **Implement:** `<parent/delegated owner, available run identity, files/actions, terminal handoff; permissions/isolation/cleanup when delegated>`
-- **Verify:** `<commands/manual or browser checks and exact results; parent diff inspection and spot-checks of delegated claims>`
-- **Review:** `<N/A with reason | review ID; advisory reviewer→parent S/C scores; evidence/reachability/materiality/proportionality + assumptions; accepted/rejected/deferred rationale; validation/fixes; follow-up scope/round; extra-round reason; S1/S0 blocking approval>`
-- **Decision:** `<Verified / repeat / Blocked; next ready task ID>`
-
-A task row may reference one aligned milestone or final review; it does not require a separate reviewer. A plan-authored and workflow-authored checkpoint count as one review when scope, baseline, evidence, and exit conditions align. Record whether the review was independent or a checklist-driven direct fallback and any independence limitation.
+One aligned checkpoint may cover several rows. Reference its ID rather than duplicating review bookkeeping.
 
 ## Review register
 
-| Review ID | Scope / axes | Method and independence | Payload / coverage | Findings and rationale | Fixes, reruns, follow-up | Status |
-|---|---|---|---|---|---|---|
-| `M01 / F01` | `<plan-backed; bounded/full; embedded; handoff-only>` | `<independent capability/run or direct fallback + limitation>` | `<plan/tracker, task IDs, files/callers, tests, evidence/skips, deviations/risks>` | `<advisory reviewer→parent S/C scores; evidence/reachability/impact; assumptions; materiality/proportionality; disposition rationale; S1/S0 blocking approval>` | `<task/validation IDs, reruns/results; follow-up scope/round; extra-round reason>` | `<Open / Resolved / Blocked>` |
+Apply the current `code-review` authority for materiality, scores, finding selection, overflow, and follow-up; do not copy that protocol here. Default to a fresh read-only subagent reviewer for plan-authored checkpoints, major integration/migration/risk/dependency/delivery boundaries, risky coherent batches, and final reconciliation. Direct review requires a recorded unavailable/unsafe capability, user restriction, or genuinely disproportionate review scope. Deduplicate aligned checkpoints.
 
-Embedded reviews default to handoff-only. Record complete matrix coverage but selective findings; read/run coverage and skips; reviewer/parent scores, evidence, reachability, impact, assumptions, smallest fix/validation, four verdicts, and any overflow caveat. Scores guide but never determine disposition. Follow-ups record fix/regression-only scope and severe incidental issues surfaced for reassessment.
+| ID / covered tasks | Axes, method, independence/fallback | Baseline, scope, and evidence | Material dispositions, fixes, reruns, follow-up | Matrix + four verdicts / status |
+|---|---|---|---|---|
+| `M01 / T01–T03` | `<plan-backed; bounded; embedded; handoff-only; fresh run ID or direct reason/limitation>` | `<plan/tracker refs; files/boundaries; checks/skips; deviations/risks>` | `<accepted/rejected/deferred + rationale; fix/validation rows; reruns and bounded follow-up>` | `<complete matrix location/summary; baseline/compliance/quality/validation verdicts; Open/Resolved/Blocked>` |
+
+The parent admits findings only after checking evidence, reachability, scope relevance, impact, and proportional cost. Record task/review IDs and any validation-only row; labels never determine admission. An unresolved admitted material finding requires a `Blocked` row.
 
 ## Deviations and decisions
 
 | Plan reference | Deviation or decision | Reason | User approval needed/received | Impact |
 |---|---|---|---|---|
 
+Record execution/review fallbacks here when they affect expected independence, coverage, or risk rather than only one strategy row.
+
 ## Final reconciliation
 
 - [ ] Re-read the full original plan, not only this tracker.
-- [ ] Every actionable plan item maps to one or more inventory rows.
-- [ ] Parent/delegated ownership, context mode, dependencies/isolation, and expected evidence are recorded; when delegation was used, least privilege, available run identifiers, terminal handoffs, parent verification, and cleanup are evidenced.
-- [ ] No row remains `Pending`, `In progress`, or `Blocked`.
-- [ ] Every `Verified` row includes concrete validation evidence.
-- [ ] Every `Descoped` row includes rationale and explicit user approval.
-- [ ] Required automated, integration, browser/manual, cleanup, docs, migration, and acceptance checks are complete.
-- [ ] Every applicable plan/workflow milestone checkpoint is resolved once without duplicate per-row reviews; aligned rows reference its review ID.
-- [ ] The full plan-backed embedded final review covers the entire plan/tracker and all applicable review dimensions, or its direct checklist fallback and independence limitation are recorded.
-- [ ] Every finding records advisory reviewer/parent S/C scores, assumptions, independently checked evidence/reachability/materiality/proportionality, and disposition rationale; no label alone admitted or blocked work, validation-only concerns became validation rows, and S1/S0 blocking work has user approval.
-- [ ] Admitted/unresolved material findings became task rows; fixes/reruns and fix/regression-only follow-up scope/round are recorded; any extra round has a material reason, and autonomous review stopped afterward. Any unresolved admitted finding has a `Blocked` row.
-- [ ] Scope-relevant final validation passes; any scope-relevant failure has a `Blocked` inventory row. Clearly unrelated/pre-existing failures are recorded separately as caveats with evidence.
-- [ ] `Overall status` is updated to `Complete` only after every check above passes and no `Blocked` row exists.
+- [ ] Every actionable requirement maps to one or more inventory rows; no compound work is hidden.
+- [ ] Every bounded non-trivial row has eligibility, owner/rationale, dependencies, batch/join point, ownership, overlap/isolation, expected evidence, and checkpoint classification.
+- [ ] Delegated runs evidence least privilege, run identity when available, terminal handoff/state, parent diff/claim inspection, task-specific validation, and safe cleanup; the tracker remained parent/single-writer.
+- [ ] No row remains `Pending`, `In progress`, or `Blocked`; every `Verified` row has evidence and every `Descoped` row has explicit user approval.
+- [ ] Required automated, integration, browser/manual, cleanup, documentation, migration, rollout, and acceptance checks passed or a scope-relevant failure is blocked.
+- [ ] Plan-authored and workflow checkpoints were deduplicated; required fresh reviews or concrete direct fallbacks/limitations are recorded.
+- [ ] The final plan-backed full embedded handoff includes the complete authority matrix and separate baseline-quality, implementation-compliance, implementation-quality, and test/validation-quality verdicts.
+- [ ] Material findings have evidence-based parent dispositions; admitted fixes/validation, reruns, review IDs, and bounded follow-up are recorded. Unresolved admitted findings are blocked.
+- [ ] Deviations, unrelated pre-existing failures, skipped checks, and confidence limits are explicit.
+- [ ] `Overall status` is `Complete` only after every gate passes and no admitted material issue or blocked row remains.

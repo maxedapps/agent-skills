@@ -1,12 +1,11 @@
 ---
 name: use-subagents
 description: >-
-  Plan and coordinate bounded subagent work across coding agents. Use whenever
-  considering delegation, decomposition, parallel research, review or
-  implementation, independent validation, or an explicit request to spawn or
-  manage subagents. Load it before choosing how to launch; loading it does not
-  require delegation. Do not use for ordinary background shell, server, or
-  process work.
+  Plans and coordinates bounded subagent work across coding agents. Use this
+  skill whenever considering delegation, decomposition, parallel research,
+  review or implementation, independent validation, or an explicit request to
+  spawn or manage subagents. Do not use for ordinary background shell, server,
+  or process work.
 license: MIT
 compatibility: >-
   Decision and coordination guidance is instruction-only. Launching requires a

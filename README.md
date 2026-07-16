@@ -4,8 +4,8 @@
 
 - `code-review` — perform adaptable generic, scoped, and plan-backed implementation reviews.
 - `create-plan` — create, review, and improve researched, implementation-ready plans before coding.
-- `implement-plan` — execute existing Markdown implementation plans with active tracking and verification.
-- `improve-skills` — improve Agent Skills from evidence gathered during real interactions.
+- `create-skill` — create, rewrite, and review concise, actionable Agent Skills.
+- `implement-plan` — execute existing Markdown implementation plans with delegation-first tracking and verification.
 - `use-subagents` — plan and coordinate portable, bounded subagent work with runtime-specific lifecycle adapters.
 - `web-research` — perform current, source-backed research across web content and repositories.
 
@@ -35,13 +35,13 @@ Install all six skills explicitly:
 npx skills add maxedapps/agent-skills \
   --skill code-review \
   --skill create-plan \
+  --skill create-skill \
   --skill implement-plan \
-  --skill improve-skills \
   --skill use-subagents \
   --skill web-research
 ```
 
-Review each skill and its compatibility requirements before use. Skills may optionally use available research, browser, or subagent capabilities when those capabilities materially help; none requires another catalog skill as a runtime dependency.
+Review each skill and its compatibility requirements before use. `create-plan` and `implement-plan` default suitable bounded work and independent review to safe subagent lanes, with recorded direct fallbacks. The generic `use-subagents` contract remains portable, and no catalog skill is a hard runtime dependency of another.
 
 ## Runtime and related skills
 
@@ -61,15 +61,15 @@ Performs evidence-bound reviews that adapt to the requested target, baseline, sc
 
 ### `create-plan`
 
-Researches a requested change and turns the findings into a concrete, implementation-ready Markdown plan. It also reviews or improves an existing unimplemented plan before coding, recording decisions, affected files, risks, validation steps, and review checkpoints without implementing the change.
+Researches a requested change and produces a concise problem-led Markdown plan with numbered phases and stable, actionable tasks. It actively delegates safe separable research and fresh draft review, records narrow fallbacks, validates the required structure, and keeps HTML rendering optional.
+
+### `create-skill`
+
+Creates, rewrites, reviews, and evidence-backed improves Agent Skills with literal activation routing, concise execution contracts, progressive disclosure, exact resources, trigger/near-miss evaluation, and representative output checks. It includes a placeholder-safe starter and quality checklist.
 
 ### `implement-plan`
 
-Executes an existing Markdown plan through tracked Analyze → Plan → Implement → Verify loops. It maintains a detailed progress tracker, optionally delegates bounded work when useful and safe, validates each task, requests plan-backed milestone and final reviews, and reconciles the result against the original plan.
-
-### `improve-skills`
-
-Refines Agent Skills using evidence from real interactions. It favors small, reusable corrections to routing, instructions, resource references, scripts, or safety guidance instead of speculative rewrites.
+Executes an existing Markdown plan through tracked Analyze → Plan → Implement → Verify loops. It classifies bounded non-trivial work for delegation, forms safe dependency-ready batches with isolated writers, keeps the parent as tracker/integration authority, validates every task, and defaults meaningful checkpoints and final reconciliation to fresh plan-backed review.
 
 ### `use-subagents`
 
@@ -77,7 +77,7 @@ Decides whether delegation is worthwhile, splits work into independent fan-out, 
 
 ### `web-research`
 
-Researches current web and external technical information with available search, retrieval, repository, document, media, and browser capabilities. It also covers version-specific library, framework, SDK, and API research, favoring official documentation and source code while recording evidence, conflicts, and implementation implications.
+Researches current web and external technical information with available search, retrieval, repository, document, media, and browser capabilities. It favors official, version-matched evidence; small direct lookups can remain artifact-free, while substantive or conflicting research retains progress memory.
 
 ## Structure
 
@@ -91,10 +91,17 @@ for d in skills/*; do
 done
 ```
 
-Validate local Markdown links:
+Validate catalog metadata and local Markdown links:
 
 ```sh
+node scripts/validate-skill-metadata.mjs skills
 node scripts/validate-skill-links.mjs README.md skills
+```
+
+Validate a generated implementation plan:
+
+```sh
+node skills/create-plan/scripts/validate-plan-structure.mjs path/to/plan.md
 ```
 
 Verify CLI discovery without telemetry:

@@ -1,57 +1,49 @@
 # Plan Quality Checklist
 
-Complete this checklist before draft review and repeat it after material revisions. Draft-plan critique stays local to plan creation; it does not require implementation evidence or route through implementation code review.
+Complete this checklist before independent/direct draft review and repeat it after material revisions. Check semantics yourself; the structural validator proves only the required Markdown shape.
 
-## Handoff completeness
+## Structure and handoff
 
-- The mandatory template was loaded and every non-conditional section is present.
-- A fresh implementer can act without reconstructing decisions from chat or repeating core research.
-- The outcome, chosen approach, material boundaries, decision status, and brief rationale are explicit.
-- Detailed research remains in `.progress`, while executable decisions, instructions, pitfalls, and critical shapes remain in the plan.
+- The current [`../assets/implementation-plan-template.md`](../assets/implementation-plan-template.md) was loaded and copied; all guidance and explicit sentinels such as `[Plan title]`, `[Task title]`, `src/example.ts`, and `REPLACE_ME` were replaced.
+- `Problems` describes evidence-backed current-state problems without hiding implementation steps; `Implementation summary` gives the chosen overall approach and dependency order concisely.
+- `Conducted research and relevant sources` has source/artifact, material finding, and implementation-impact columns; cited artifacts and URLs were actually inspected.
+- `Scope and non-goals` bounds the outcome, and `Decisions and constraints` records non-obvious choices, invariants, assumptions, status, consequences, and brief reasons.
+- The plan has one or more numbered, titled phases and ends with `Final validation and review` plus an observable `Definition of Done`; phase count follows real boundaries rather than a target.
+- Every phase includes concise `Problems addressed`, `Implementation summary`, `Tasks`, `Risks, safeguards, and recovery`, and `Phase validation and review` sections.
+- Every task has a unique stable ID and title, actionable `Description`, `Relevant files — non-exhaustive starting points`, `Dependencies`, and `Acceptance and verification`; task-local risks are included where applicable.
+- `node scripts/validate-plan-structure.mjs <plan.md>` succeeds for the final saved plan, and its exact result is retained. For a no-write/chat-only plan, the same structure was checked manually and the unavailable CLI gate is explicit.
 
-## Sources and traceability
+## Research, traceability, and strategy
 
-- Relevant project plans, `.progress` notes, `.reviews` reports, docs, URLs, source symbols, and tests were searched and cited with what each contributes.
-- No artifact, path, symbol, command, or heading was invented; mutable line numbers are not the sole anchor.
-- Every requirement, review finding, audit item, or accepted decision maps to a phase, explicit assumption, approval gate, or approved deferment.
-- File coverage includes callers, consumers, generated artifacts, fixtures, docs, configuration, migrations, and cleanup where applicable.
+- Relevant source, tests, config, docs, plans, progress/reviews, callers, consumers, generated artifacts, fixtures, schemas, migrations, and repository conventions were searched deeply enough to support the tasks.
+- Every requirement, source finding, accepted review item, and decision maps to a task, phase safeguard/check, explicit approval gate, or approved deferment; essential actions are not hidden in planning memory.
+- Paths, symbols, commands, headings, and source claims are exact and non-invented. Unknown files use a narrow discovery pattern and must be resolved before edits; mutable line numbers are not the sole anchor.
+- Current or third-party contracts use version-matched authoritative evidence; material source conflicts, uncertainty, unavailable credentials, and operator-only provisioning are resolved or made explicit with fail-closed/test strategy.
+- For non-trivial planning with a safe capability, at least one meaningful separable scouting/research lane produced a sourced terminal handoff and material claims were independently verified. Parallel lanes covered non-overlapping questions only.
+- Any direct substantive research fallback records one concrete allowed reason—triviality, inseparability, unavailable/unsafe capability, user prohibition, or disproportionate coordination cost—and its evidence limitation.
+- Planning memory exists for substantive, multi-source, resumable, conflict-heavy, or high-risk work and contains detailed evidence/alternatives/open questions; omission is justified by genuinely small scope or no-write constraints. The plan itself retains all answer-critical support.
 
-## Phase quality
+## Task and phase actionability
 
-- Each phase has a concrete outcome and exists for a real dependency, delivery, migration/rollout, or independently verifiable boundary.
-- Instructions use imperative actions, exact files/symbols, intended behavior, ordering, and dependencies.
-- Unknown paths have narrow discovery instructions rather than guessed references.
-- Non-obvious decisions have a brief why; detailed alternatives are not duplicated from planning memory.
-- Relevant API/type/schema/query/config/CLI/protocol/state-machine changes include a short critical-shape snippet.
-- Pitfalls, edge cases, unsafe shortcuts, compatibility limits, partial failures, and recovery are placed where they matter.
-- Every advertised green checkpoint includes all coupled schema, generated files, callers, fixtures, docs, and tests.
+- Each task states intended behavior/control flow, ordering, dependencies, integration boundaries, and enough detail for a fresh implementer to proceed without repeating core research.
+- Every task file list is explicitly non-exhaustive and requires implementation-time discovery of coupled callers, tests, fixtures, config, schemas, generated files, docs, and downstream consumers.
+- Relevant API/type/schema/query/config/CLI/protocol/state-machine work includes a short critical target shape or invariant; no synthetic snippet was added where none helps.
+- Tests and verification are colocated with the behavior they protect and cover meaningful success, failure, regression, compatibility, migration, and risk boundaries rather than being deferred to a generic final phase.
+- Every advertised phase-green state includes discovered coupled artifacts and consumers, and tasks do not defer necessary integration to an unspecified later step.
+- The required phase risk section names material failure/migration behavior, safeguards, and rollback/recovery, or states exactly `None material for this phase`; generic risk boilerplate is absent.
 
 ## Validation and review
 
-- Each phase names exact automated checks or concrete inspections plus applicable manual checks, with expected success signals or retained evidence; automation N/A is justified rather than fabricated.
-- Planned commands exist, use the correct working directory, and distinguish focused checks from authoritative repository gates.
-- Tests cover meaningful happy paths, failures, plausible contract/risk boundary cases, regressions, and invariants; defect fixes include fail-before proof when practical.
-- UI work includes real-browser guidance; migrations, external services, destructive work, background processes, and rollout include applicable operator, cleanup, rollback, or recovery checks.
-- Every review checkpoint states its **focus**, authoritative **baseline**, required **evidence**, and **exit/rerun requirements**, including exact checks to repeat after fixes.
-- When implementation exists, phase checkpoints request bounded plan-backed code review and final checkpoints request full plan-backed code review; invocation is embedded only when an owning workflow requests that checkpoint.
-- A plan-authored checkpoint and an owning implementation workflow checkpoint are one review when scope, baseline, evidence, and exit conditions align; the plan does not create duplicate per-task or per-document reviews.
-- Review payloads include the plan/tracker paths, task IDs and acceptance criteria, changed files/diff and callers, validation evidence, skipped checks, deviations, constraints, integration boundaries, and known risks.
-- Independent review is preferred only when safely available and worthwhile. Otherwise the plan requires a recorded separate checklist-driven direct review with its independence limitation; plan completion never blocks solely on delegation.
-- Review requests require complete inspection but selective findings with advisory severity (`S4`→`S0`) and confidence (`C3`→`C1`) scores: every `S4`, at most five material `S3`/`S2`, and no niche/speculative, `S1`/`S0`, or disproportionate work by default; excess findings produce one blocking caveat with highest score, areas, impact, evidence, and count/lower bound.
-- Findings are independently rescored from evidence, reachability, relevance, impact, assumptions, and proportionate fix cost; no label alone admits or blocks, reviewer/owner scores and disposition rationale are recorded, and unconfirmed concerns become validation questions.
-- The default initial review plus one fix/regression-only follow-up and incidental severe-issue escalation are explicit; one extra round requires unresolved material risk, confirmed regression, or invalidated coverage, then owner/human stop.
-- Definition of Done is observable and reconciles all requirements, validation, documentation, downstream work, review findings, blockers, and operator steps.
+- Task acceptance and each phase/final check name an exact command or concrete manual/operator inspection, expected success signal, and retained evidence; automation N/A and material skips are justified.
+- Planned commands exist, use the correct working directory, distinguish focused from authoritative gates, and cover applicable browser/UI, security, performance, migration/rollback, external-service, cleanup, and no-drift behavior.
+- Each phase and final review states focus, baseline, evidence payload, exit/disposition, exact reruns, constraints/deviations, skipped checks, and known risks.
+- Meaningful plan-authored checkpoints and final completion default to fresh read-only independent review when safely available; a direct fallback uses an allowed concrete reason and states the independence limitation.
+- Review handling references the current `code-review` authoritative materiality, finding-selection, disposition, and bounded follow-up contract without copying its scoring/quota lifecycle. Aligned implementation-workflow reviews are deduplicated.
+- Draft review received the complete request, plan, memory/equivalent evidence, sources, decisions, constraints/non-goals, risks, unresolved questions, and code/test pointers. Its sourced terminal handoff was verified; findings are resolved, reasonedly rejected/deferred, or exposed as decisions.
+- After admitted fixes, affected checks and the structural validator were rerun, with review follow-up kept within the authoritative bounded policy.
 
-## Draft review evidence
+## Delivery and compression
 
-- Before finalization, the complete request, draft, planning memory or equivalent support, sources, decisions, constraints/non-goals, risks, assumptions, unresolved questions, and relevant code pointers are available to the review pass.
-- The review asks for independent judgment and prioritized material blockers to safety, consistency, executability, simplicity, or outcome—not approval, optional polish, or future-flexibility redesign.
-- A safely available, worthwhile independent reviewer uses fresh read-only context; otherwise the limitation and same-policy checklist-driven direct review are recorded.
-- Follow-up stays within accepted fixes and material regressions; findings are resolved, reasonedly rejected/deferred, or exposed as human decisions within the bounded round policy.
-
-## Compression
-
-- The plan uses lists, at least one useful table, and critical snippets where applicable.
-- Concision removed research narrative, repetition, generic advice, and transcript history—not implementation instructions or validation detail.
-- No arbitrary phase count or word target distorted the plan.
-- Information appears once at its point of use; references support the plan but do not hide essential decisions or actions.
+- The Markdown plan is saved under `.plans/` whenever writes are permitted and does not overwrite unrelated work; a chat-only result exists only because of an explicit no-write/output constraint.
+- HTML rendering/opening occurs only when requested, required by project convention, or useful interactively; renderer fallback/skip and actual artifact paths are reported accurately.
+- Lists and at least one useful table keep the plan scannable. Concision removed narrative, repetition, generic advice, and transcript history—not decisions, task detail, safeguards, traceability, checks, or evidence.
