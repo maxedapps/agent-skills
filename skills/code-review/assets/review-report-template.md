@@ -58,6 +58,8 @@
 
 ## Findings
 
+<Include material findings only. If none, write: “No material findings.”>
+
 ### <severity> — <title>
 
 - **Dimension / authority:** <category and matrix item>
@@ -69,16 +71,21 @@
 - **Validation state:** <none or NEEDS RUNTIME VALIDATION>
 - **Smallest safe fix / validation:** <proportionate correction or decisive check>
 
+## Context-dependent concerns
+
+- **Concern:** <concrete issue and named condition that would make it material>
+- **Disposition:** <no action needed if the condition is absent; clarification or validation if unresolved>
+
 ## Confirmed-good areas
 
 - `<material behavior/contract>` — <supporting evidence>
 
 ## Limitations and caveats
 
-- `<scope, access, runtime, credential, tool, validation, or baseline limit and consequence>`
-- `<blocking not-review-ready caveat when finding overflow remains>`
+- `<scope, access, runtime, credential, tool, validation, or baseline limit and consequence; never rejected candidates>`
+- `<blocking not-review-ready caveat when material finding overflow remains>`
 
 ## Next steps
 
-1. `<must-fix or decisive validation, in priority order>`
+1. `<must-fix or decisive validation in priority order; omit this section when none>`
 2. `<owner remediation/escalation decision when not review-ready>`

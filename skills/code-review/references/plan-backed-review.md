@@ -27,7 +27,7 @@ Read every authority source in full. Continue truncated reads; never infer conte
 
 For unresolved material conflict, ask when the answer is necessary. If unavailable, add a `baseline quality/conflict` finding, mark affected rows `Unverifiable`, explain competing interpretations, and lower verdict confidence.
 
-A useful requirement omitted by the baseline is not noncompliance. Report the baseline omission separately and judge resulting risk under implementation quality.
+A useful requirement omitted by the baseline is not noncompliance. Report it only when the core finding gate admits the resulting implementation risk.
 
 ## Extract the baseline
 
@@ -41,7 +41,7 @@ Cite:
 - risks, prohibited shortcuts, validation, manual checks, and exit conditions;
 - approved changes and unresolved questions.
 
-Assess baseline completeness, consistency, feasibility, testability, risk handling, missing acceptance criteria, unsafe assumptions, overengineering, and false-green checkpoints. An implied requirement must follow from cited behavior or an integration constraint, not reviewer preference.
+Assess baseline completeness, consistency, feasibility, testability, risk handling, missing acceptance criteria, unsafe assumptions, overengineering, and false-green checkpoints. An implied requirement must follow from cited behavior or an integration constraint, not reviewer preference. Only material baseline defects become findings or verdict exceptions.
 
 For living roadmap/status documents, inspect Git history and the patch introducing relevant claims. Separate future requirements from historical implementation claims; current desired-state text is not proof of implementation.
 
@@ -95,7 +95,7 @@ A strong compliance verdict cannot excuse unsafe code. A weak baseline does not 
 
 ## Findings and validation
 
-Apply the materiality, score, finding-limit, overflow, worktree, validation, and follow-up rules from `SKILL.md`; do not create a separate plan-review policy. Link findings to matrix rows when relevant. Reflect scope gaps, gated checks, unavailable runtime/credentials, authority conflicts, and missing evidence in row statuses and verdict confidence.
+Apply the candidate gate, scoring, limits, worktree, validation, and follow-up rules from `SKILL.md`. Matrix statuses are compliance evidence, not automatically findings. Link admitted findings to rows when relevant. Reflect material evidence limits in row statuses and verdict confidence.
 
 Tests are matrix evidence only when they protect the claimed acceptance behavior or boundary. Use targeted static, runtime, migration, package, API, or browser checks that materially improve confidence. Identify installed versions and version-matched first-party evidence when third-party behavior, framework semantics, security assumptions, or migrations decide a row.
 

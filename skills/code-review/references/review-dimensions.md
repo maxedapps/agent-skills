@@ -1,6 +1,6 @@
 # Review dimensions
 
-Use after the scope, evidence, materiality, and worktree rules in `SKILL.md`. Apply every selected dimension; report only material findings.
+Use after the scope, evidence, materiality, and worktree rules in `SKILL.md`. Apply every selected dimension thoroughly. These heuristics generate candidates, not findings; every candidate must pass the core admission gate.
 
 ## Evidence traps
 
