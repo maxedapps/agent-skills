@@ -1,67 +1,53 @@
 # Plan-backed implementation review
 
-Use this reference whenever implementation is judged against a plan, tracker, design, acceptance criteria, approved decision, or equivalent authority source. Plan compliance adds an authority and traceability layer; it never replaces applicable correctness, security, simplicity, typing, performance, compatibility, accessibility, UX, data/ops, or test review.
+Use whenever implementation is judged against a plan, tracker, design, acceptance criteria, approved decision, or equivalent authority. This adds traceability; it does not replace generic implementation review.
 
-## Contents
-
-- [Scope and invocation](#scope-and-invocation)
-- [Authority and precedence](#authority-and-precedence)
-- [Baseline extraction](#baseline-extraction)
-- [Evidence matrix](#evidence-matrix)
-- [Status definitions](#status-definitions)
-- [Four required verdicts](#four-required-verdicts)
-- [Tests and validation](#tests-and-validation)
-- [Findings, confidence, and caveats](#findings-confidence-and-caveats)
-- [Workflow](#workflow)
+**Contents:** [Scope](#scope-and-invocation) · [Authority](#authority-and-precedence) · [Baseline](#extract-the-baseline) · [Matrix](#evidence-matrix) · [Statuses](#status-definitions) · [Verdicts](#four-required-verdicts) · [Findings](#findings-and-validation) · [Workflow](#workflow)
 
 ## Scope and invocation
 
-Resolve scope and invocation independently:
+| Question | Rule |
+|---|---|
+| Unqualified plan review | Cover the full plan and implementation. |
+| Named phase/task/step/files/diff | Bound scope, but include required callers, contracts, shared state, migrations, generated output, and integration boundaries. |
+| Standalone or embedded | A direct request is standalone. It is embedded only when an owning workflow retains timing and resolution. |
+| Ambiguous authority | Ask one focused question rather than guess. |
 
-- An unqualified request to review implementation of a plan covers the full plan and its implementation.
-- A named phase, task, step, file set, or diff is bounded plan-backed scope. Include only the callers, contracts, shared state, migrations, generated outputs, and integration boundaries required to judge that slice safely.
-- A direct user request remains standalone even when phase-only or otherwise bounded.
-- Invocation is embedded only when an owning workflow requested the checkpoint and retains timing and finding-resolution responsibility.
-- If several plausible plans or authority sources could be intended, ask one focused clarification instead of guessing.
-
-State omitted plan sections and boundaries explicitly. Never describe a bounded review as full-plan compliance.
+State omitted plan sections and boundaries. Never claim full-plan compliance from bounded scope.
 
 ## Authority and precedence
 
-Read every authoritative source in full before assigning compliance statuses. Continue after truncated reads; do not infer the rest from headings, filenames, checkboxes, or summaries.
-
-Apply authority in this order:
+Read every authority source in full. Continue truncated reads; never infer content from headings, filenames, checkboxes, or summaries.
 
 1. Current explicit user constraints and documented approvals override workflow defaults.
-2. When the user states precedence among multiple plan, design, acceptance, or decision sources, follow it.
-3. Without stated precedence, treat named plan, design, and acceptance sources as co-authoritative. Report conflicts instead of silently choosing one.
-4. An approved decision, deviation, or descope supplements or supersedes a baseline only when evidence cites its approval source, exact scope, rationale, and consequence.
-5. Trackers and progress notes are implementation claims and evidence, not authority, unless the user explicitly designates them as authoritative.
+2. Follow user-stated precedence among plans, designs, acceptance criteria, and decisions.
+3. Otherwise treat named sources as co-authoritative; report conflicts.
+4. A decision, deviation, or descope changes the baseline only with approval source, scope, rationale, and consequence.
+5. Trackers and progress notes are claims and evidence unless explicitly designated as authority.
 
-For an unresolved material conflict, ask one focused clarification when the answer is needed to proceed. If clarification is unavailable or output must continue, create a `baseline quality/conflict` finding, mark affected matrix rows `Unverifiable`, explain competing interpretations, and carry the uncertainty into the verdicts.
+For unresolved material conflict, ask when the answer is necessary. If unavailable, add a `baseline quality/conflict` finding, mark affected rows `Unverifiable`, explain competing interpretations, and lower verdict confidence.
 
-Do not treat a useful requirement omitted by the baseline as implementation noncompliance. Report the omission under baseline quality and evaluate any resulting implementation risk under generic implementation quality.
+A useful requirement omitted by the baseline is not noncompliance. Report the baseline omission separately and judge resulting risk under implementation quality.
 
-## Baseline extraction
+## Extract the baseline
 
-From the full authority set, extract and cite:
+Cite:
 
-- goals and intended user/operator outcomes;
-- non-goals and explicit exclusions;
+- goals, outcomes, non-goals, and exclusions;
 - acceptance criteria, checklists, and Definition of Done;
 - functional, security, privacy, data, compatibility, performance, accessibility, and operational requirements;
-- implied requirements necessary for the stated outcome or integration to work safely;
-- affected files, systems, callers, generated artifacts, migrations, docs, configuration, and rollout/recovery expectations;
-- risk notes, unsafe shortcuts, validation commands, manual checks, and review exit conditions;
-- approved decisions, deviations, descopes, and unresolved questions.
+- evidence-backed implied requirements necessary for safe behavior or integration;
+- affected systems, callers, artifacts, migrations, docs, config, rollout, and recovery;
+- risks, prohibited shortcuts, validation, manual checks, and exit conditions;
+- approved changes and unresolved questions.
 
-An implied requirement must be necessary and evidence-backed, not a reviewer preference. Cite the source behavior or integration constraint that implies it.
+Assess baseline completeness, consistency, feasibility, testability, risk handling, missing acceptance criteria, unsafe assumptions, overengineering, and false-green checkpoints. An implied requirement must follow from cited behavior or an integration constraint, not reviewer preference.
 
-Assess baseline quality separately for completeness, internal consistency, feasibility, testability, risk handling, missing acceptance criteria, unsafe assumptions, overengineering, and false-green checkpoints.
+For living roadmap/status documents, inspect Git history and the patch introducing relevant claims. Separate future requirements from historical implementation claims; current desired-state text is not proof of implementation.
 
 ## Evidence matrix
 
-Create and maintain this traceability shape for every applicable authority item or implied requirement, regardless of whether it produces a finding:
+Create one row for every applicable authority item or implied requirement, whether or not it produces a finding:
 
 ```text
 authority item / implied requirement
@@ -71,18 +57,16 @@ authority item / implied requirement
   → status
 ```
 
-For each row record:
+Each row needs:
 
-- source citation and concise authority item or implied requirement;
-- expected code, runtime, migration, config, docs, package, UI, or operational evidence;
-- actual implementation evidence with `path:line`, symbol, diff, commit, or runtime observation where possible;
-- validation/test evidence, including commands/results and skipped or gated checks;
-- approval provenance when status is `Approved deviation`;
-- one status from the definitions below and any confidence limitation.
+- source citation and concise requirement;
+- expected code, runtime, migration, config, docs, package, UI, or operational proof;
+- actual evidence with `path:line`, symbol, diff, commit, or runtime observation;
+- validation results plus skipped/gated checks;
+- approval provenance for `Approved deviation`;
+- one exact status and any confidence limit.
 
-Inspect evidence directly: repository status, supplied and working-tree diffs, relevant commits, progress claims, touched files, callers, tests, configuration, docs, migrations, environment examples, generated outputs, package contents, CI, and runtime behavior. A tracker checkbox, filename, implementation note, or test name is not proof by itself. Complete matrix coverage and selective findings are separate obligations: a `Complete` row needs evidence, not a manufactured improvement.
-
-For a living product, roadmap, or status document whose meaning may have changed over time, inspect its Git history and the patch that introduced the relevant claim (for example, `git log --follow -- <path>` and the applicable `git show`). Distinguish newly specified future requirements from historical implementation claims; current desired-state text alone is not evidence that implementation exists.
+Inspect evidence directly. A tracker checkbox, filename, implementation note, or test name is not proof. Complete matrix coverage and selective findings are separate: a `Complete` row needs evidence, not a manufactured improvement.
 
 ## Status definitions
 
@@ -107,34 +91,20 @@ Give four separate evidence-based overall verdicts. Each verdict states the judg
 3. **Implementation quality beyond the baseline** — applicable generic correctness, security, simplicity, typing, performance, compatibility, accessibility/UX, data/ops, and maintainability concerns, including risks the baseline failed to mention.
 4. **Test and validation quality** — protected critical behaviors, important skipped/gated checks, missing high-value coverage, superficial or misleading tests, and confidence from runtime/manual evidence.
 
-A strong compliance verdict cannot excuse unsafe or incorrect code. A weak baseline does not automatically make implementation noncompliant; keep the baseline defect, compliance result, and generic implementation risk distinct.
+A strong compliance verdict cannot excuse unsafe code. A weak baseline does not automatically make implementation noncompliant. Keep baseline defects, compliance, and generic risks distinct.
 
-## Tests and validation
+## Findings and validation
 
-Treat tests as first-class implementation evidence. Evaluate whether they protect acceptance criteria, important success paths, failure/error paths, regressions, invariants, concurrency/isolation, integration boundaries, security/data safety, migrations, user-visible behavior, and important or plausible boundary cases tied to a contract, regression, or meaningful risk. Identify critical behaviors that are protected, untested, skipped, gated, superficial, over-mocked, duplicate, or implementation-detail-only.
+Apply the materiality, score, finding-limit, overflow, worktree, validation, and follow-up rules from `SKILL.md`; do not create a separate plan-review policy. Link findings to matrix rows when relevant. Reflect scope gaps, gated checks, unavailable runtime/credentials, authority conflicts, and missing evidence in row statuses and verdict confidence.
 
-For rendered forms and browser flows, verify tests exercise actual generated controls, hidden values, cookies, redirects, and browser-managed state. Synthetic reconstruction from upstream data can bypass broken wiring.
-
-Run or recommend only checks that materially improve confidence: targeted tests, typecheck/lint/build, migration and rollback checks, API probes, package-artifact checks, browser/UI interaction, screenshots, or disposable assertion-based repros for serious suspicions. For UI-visible acceptance, representative runtime states are required when practical; static analysis alone cannot establish layout, interaction, responsive, auth, download, or animation behavior.
-
-When third-party APIs, framework behavior, security assumptions, or migrations matter, identify installed versions and use current version-matched official docs, source, release notes, and migration evidence. Record checks not run, why, and how each skip limits a matrix status or verdict.
-
-## Findings, confidence, and caveats
-
-Admit only material findings under the core contract. Each includes advisory reviewer severity/confidence scores, concrete impact, authority item when applicable, location, implementation/validation evidence, path state, and the smallest proportionate fix or decisive validation. Scores never decide disposition; the owner may rescore or reject even `S4` after independent materiality/proportionality checks. Mark `NEEDS RUNTIME VALIDATION` separately; it creates validation work, not speculative implementation.
-
-Group findings by root cause and severity and cite matrix rows where relevant. By default, report every `S4 Critical` and at most five additional `S3 High`/`S2 Medium` material root causes; omit `S1 Low`/`S0 Optional` unless explicitly requested. Prefer no finding over speculation, and record confirmed-good areas only when they demonstrate meaningful coverage.
-
-If more than five non-Critical material root causes remain, include one blocking `not review-ready` caveat rather than a hidden or serialized backlog. State the highest remaining severity, affected areas/dimensions, aggregate impact, evidence basis, and known count or lower bound; reflect it in verdict confidence and do not return a ready verdict. The owning workflow decides broader remediation or escalation.
-
-Other caveats must identify partial/skipped files, unavailable tools/environments/credentials, gated tests, unresolved authority conflicts, missing runtime evidence, and scope boundaries. Reflect material caveats in statuses and verdict confidence rather than relegating them to a footnote.
+Tests are matrix evidence only when they protect the claimed acceptance behavior or boundary. Use targeted static, runtime, migration, package, API, or browser checks that materially improve confidence. Identify installed versions and version-matched first-party evidence when third-party behavior, framework semantics, security assumptions, or migrations decide a row.
 
 ## Workflow
 
-1. Resolve authority, scope, invocation, and output constraints. For a follow-up, inspect only accepted fixes, affected boundaries, and material regressions; do not reopen broad discovery. Surface an incidentally observed apparently severe issue separately for owner reassessment without expanding the search.
-2. Read all authority sources; extract requirements, implications, approvals, conflicts, and baseline-quality concerns.
-3. Inspect implementation evidence and required integration boundaries. Load and apply the generic dimension reference for all broad or applicable implementation-quality checks.
-4. Build the complete applicable matrix and assign only evidence-supported statuses.
-5. Assess high-value tests and run targeted validation, preserving skipped-check and runtime limitations.
-6. Write selective severity-ranked findings, confirmed-good evidence where useful, the complete matrix, and all four verdicts.
-7. Produce the selected report or handoff with explicit coverage and caveats. Never claim full-plan compliance from a bounded review.
+1. Resolve authority, scope, invocation, and output. Follow-ups inspect only accepted fixes, affected boundaries, and material regressions.
+2. Read all authority; extract requirements, implications, approvals, conflicts, and baseline defects.
+3. Inspect implementation and required integration boundaries. Apply relevant generic dimensions.
+4. Complete the matrix with evidence-supported statuses.
+5. Assess high-value tests and targeted validation; retain limitations.
+6. Apply the core finding contract. Produce selective findings, the complete matrix, and four verdicts.
+7. Report explicit coverage and caveats. Never claim full compliance from bounded scope.

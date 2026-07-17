@@ -1,94 +1,84 @@
 # Code review: <title>
 
-> Adapt this template to the selected axes. Omit every irrelevant or empty section and every placeholder instruction. Plan-backed sections are conditional; generic reviews do not need them.
+> Remove all instructions, placeholders, and empty/irrelevant sections. Include plan-backed sections only for plan-backed work.
 
-## Review axes and constraints
+## Review constraints
 
-- **Target:** <repository, PR/diff, files, implementation step, or other target>
-- **Baseline:** <generic | plan-backed, with authority paths if applicable>
-- **Scope:** <full | bounded, naming phase/task/files/diff and required integration boundaries>
-- **Invocation:** <standalone | embedded>
-- **Output:** <chat-only | Markdown report + concise summary | handoff>
-- **Dimensions:** <all applicable or the explicit subset>
-- **Depth/tools/validation constraints:** <only material constraints>
-- **Source writes/artifacts:** <forbidden/allowed and any explicit report exemption>
-- **Evidence notes:** <optional `.progress/<review-slug>.md` path when one actually exists>
+| Axis | Selection |
+|---|---|
+| Target | <repository, diff/PR, files, or implementation step> |
+| Baseline | <generic or plan-backed authority paths> |
+| Scope | <full or bounded, including required boundaries> |
+| Invocation | <standalone or embedded> |
+| Output | <Markdown report plus summary> |
+| Dimensions | <selected dimensions> |
+| Validation/tools | <material constraints> |
+| Writes/artifacts | <permissions and report exemption> |
 
 ## Summary
 
-<Concise overall result, highest material user/operator/security/data/compatibility/operations risks, and confidence. If no material issue was found, say so without inventing polish; if excess material concerns remain, state that the target is not review-ready.>
+<Overall result, highest material risks, and confidence. Say when no material issue was found. If overflow remains, state `not review-ready`.>
 
 ## Coverage
 
-### Files and evidence inspected
+### Inspected
 
-- `<path, diff, commit, symbol, runtime state, authority source, or package artifact>` — <full/partial and purpose>
+- `<path/diff/commit/symbol/runtime/authority/artifact>` — <full or partial; purpose>
 
-### Skipped or partial coverage
+### Skipped or partial
 
-- `<path/area/check>` — <reason and confidence consequence>
+- `<area/check>` — <reason and confidence consequence>
 
-### Integration boundaries
+### Required boundaries
 
-- `<caller, API, migration, generated output, config, UI/runtime, package consumer, or operational path inspected because it was required to judge scope>`
+- `<caller/API/migration/generated output/config/UI/package/operational path>`
 
 ## Validation
 
-### Run
-
-- `<command/probe/manual check>` — <result and what it establishes>
-
-### Skipped or unavailable
-
-- `<check>` — <reason and effect on confidence/status/verdict>
+- **Run:** `<command/probe/manual check>` — <result and what it proves>
+- **Skipped/unavailable:** `<check>` — <reason and confidence/status consequence>
 
 ## Plan-backed verdicts
 
-<!-- Include all four only for a plan-backed review. Keep each verdict separate. -->
-
-1. **Plan/baseline quality and omissions:** <judgment, decisive evidence, exceptions, confidence>
-2. **Implementation compliance:** <judgment, status summary, approved deviations/descopes, confidence>
-3. **Implementation quality beyond the baseline:** <judgment across applicable generic dimensions, confidence>
-4. **Test and validation quality:** <judgment, protected and missing behavior, skipped/superficial checks, confidence>
+1. **Plan/baseline quality and omissions:** <judgment, evidence, exceptions, confidence>
+2. **Implementation compliance:** <judgment, status distribution, deviations/descopes, confidence>
+3. **Implementation quality beyond the baseline:** <judgment, evidence, exceptions, confidence>
+4. **Test and validation quality:** <judgment, protected/missing behavior, limitations, confidence>
 
 ## Plan compliance matrix
 
-<!-- Include only for plan-backed scope. One row per applicable authority item or implied requirement. Allowed statuses: Complete, Partial, Missing, Incorrect, Overbuilt, Unverifiable, Approved deviation. -->
-
 | Authority item / implied requirement | Expected evidence | Implementation evidence | Validation / test evidence | Status |
 |---|---|---|---|---|
-| `<source citation + requirement>` | `<required proof>` | `<path:line, symbol, diff, runtime, or missing>` | `<tests/checks/results/skips>` | `<one allowed status>` |
+| `<source + requirement>` | `<required proof>` | `<path:line/symbol/diff/runtime or missing>` | `<results/skips>` | `<exact status from plan-backed-review.md>` |
 
-### Approval and conflict notes
+### Approvals and conflicts
 
-- **Approved deviation:** <approval source, exact scope, rationale, consequence>
-- **Authority conflict:** <competing sources/interpretations, clarification result or Unverifiable consequence>
+- **Approved deviation:** <source, scope, rationale, consequence>
+- **Authority conflict:** <sources/interpretations and Unverifiable consequence>
 
 ## Findings
 
-<!-- Findings are selective even when coverage is broad. Deduplicate by root cause. By default report every S4 and at most five additional S3/S2 material root causes; omit S1/S0 unless requested. Scores are advisory and must not decide disposition. -->
+### <severity> — <title>
 
-### <S4 Critical | S3 High | S2 Medium; S1 Low/S0 Optional only when requested> — <finding title>
-
-- **Dimension / authority item:** <category and plan item if applicable>
-- **Location:** `<path:line, symbol, runtime surface, or evidence source>`
-- **Impact:** <plausible/reachable path and meaningful user/operator/security/data/compatibility/operations consequence>
-- **Evidence:** <sufficient evidence for the issue and confidence, including repro/check result>
-- **Confidence:** `<C3 Confirmed | C2 Supported | C1 Tentative>`
-- **Condition:** <deterministic, reachable, or observed incident when relevant>
-- **Validation state:** `<none | NEEDS RUNTIME VALIDATION>`
-- **Smallest safe fix / next validation:** <correction whose benefit exceeds complexity, regression risk, and maintenance cost, or decisive runtime validation; never speculative implementation>
+- **Dimension / authority:** <category and matrix item>
+- **Location:** `<path:line, symbol, runtime surface, or source>`
+- **Impact:** <reachable path and material consequence>
+- **Evidence:** <code/runtime/test/repro evidence>
+- **Confidence:** <confidence score>
+- **Condition:** <deterministic, reachable, or observed incident>
+- **Validation state:** <none or NEEDS RUNTIME VALIDATION>
+- **Smallest safe fix / validation:** <proportionate correction or decisive check>
 
 ## Confirmed-good areas
 
-- `<meaningful behavior/contract>` — <evidence that supports confidence>
+- `<material behavior/contract>` — <supporting evidence>
 
 ## Limitations and caveats
 
-- `<scope, source access, runtime, credential, tool, skipped check, or baseline limitation and its consequence>`
-- `<when excess material root causes remain: one blocking not-review-ready caveat with highest remaining severity, affected areas/dimensions, aggregate impact, evidence basis, and known count or lower bound>`
+- `<scope, access, runtime, credential, tool, validation, or baseline limit and consequence>`
+- `<blocking not-review-ready caveat when finding overflow remains>`
 
 ## Next steps
 
-1. `<admitted must-fix or decisive validation in priority order>`
-2. `<owner remediation/escalation decision if the target is not review-ready>`
+1. `<must-fix or decisive validation, in priority order>`
+2. `<owner remediation/escalation decision when not review-ready>`
