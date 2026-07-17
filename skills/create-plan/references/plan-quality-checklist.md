@@ -16,7 +16,7 @@ Complete before final review and again after material revisions.
 
 - [ ] The current template was copied and adapted. All guidance, examples, and placeholders were replaced without removing required headings or task fields.
 - [ ] Problems are evidence-backed; scope, non-goals, dependency order, and intended outcomes are unambiguous.
-- [ ] The design is the simplest evidence-backed solution. No speculative abstraction, package, phase, compatibility layer, or future scope remains.
+- [ ] Every task directly advances the requested outcome or preserves required current behavior; each was challenged for a simpler, narrower alternative, and no unjustified complexity or speculative scope remains.
 - [ ] Each stable-ID task states behavior, integration boundaries, dependencies, non-exhaustive file starts, and observable acceptance evidence.
 - [ ] File starts do not act as allowlists. Implementation-time discovery covers coupled code, tests, config, schemas, generated outputs, docs, and consumers.
 - [ ] Exact target shapes appear only where they prevent ambiguity.

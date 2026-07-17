@@ -35,8 +35,10 @@ Do not implement the change. When writes permit, save only the Markdown plan und
 - Put tests beside the behavior they protect. Give exact checks, expected signals, and evidence to retain.
 - Include short contract snippets only when an API, schema, query, config, protocol, CLI, type, or state transition needs an exact target shape.
 - Cover compatibility, failure behavior, migration, rollback, cleanup, security, observability, and operator actions where material.
-- Choose the simplest evidence-backed design. Do not add abstractions, packages, phases, compatibility layers, or future-facing scope without a current requirement.
-- Ask the user when a consequential choice or reviewer suggestion is unclear. Do not resolve uncertainty by adding complexity.
+- Keep the user’s requested outcome at the center. Research and review may broaden understanding, but must not broaden scope without a current, evidenced need.
+- Before adding any task, phase, abstraction, safeguard, or test, ask whether it is necessary to deliver that outcome now and whether a simpler, narrower option would suffice. Omit or simplify it when not justified.
+- Plan for the project’s observed requirements, not hypothetical scale, future flexibility, or niche scenarios unless the user or repository makes them relevant.
+- **Avoid complexity at all cost. If in doubt, ask the user.**
 
 ## Workflow
 
@@ -82,6 +84,7 @@ Load and copy the template again. Preserve its required order and fields.
 - Use one phase when sufficient. Add phases only for real dependencies, migrations, rollout, delivery boundaries, or independently verifiable outcomes.
 - Make every phase executable and green, including discovered integrations.
 - State phase risks, safeguards, and concrete recovery. Use the template's exact no-material-risk wording only after investigation.
+- Before finalizing, re-evaluate every planned task against the assigned outcome. Remove, merge, or simplify tasks whose value does not justify their complexity.
 - Keep essential evidence and decisions in the plan, not only in chat or research notes.
 - Use short sentences, bullets, and useful tables. Remove investigation narrative and generic advice.
 

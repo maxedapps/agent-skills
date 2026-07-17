@@ -22,6 +22,9 @@ metadata:
 Follow higher-priority constraints. After the startup gate:
 
 - Cover every actionable plan requirement with independently verifiable tracker rows.
+- Keep implementation centered on the user’s requested outcome and the plan’s required behavior. Discovery and review do not authorize adjacent improvements or broader scope.
+- Before adding code, abstractions, tests, safeguards, or follow-up work, ask whether it is necessary now and whether a simpler change would suffice. Omit or simplify it when not justified.
+- **Avoid complexity at all cost. If in doubt, ask the user.**
 - **Before every non-trivial implementation batch, strongly consider subagents.** Delegate eligible bounded work when safe; record why parent-owned work is not eligible.
 - Keep the tracker parent-owned and single-writer whenever lanes run or may resume concurrently.
 - Treat child handoffs as evidence, never acceptance. The parent inspects every diff, verifies claims, integrates, and tests.
@@ -98,8 +101,8 @@ The parent must critically evaluate **every** finding for evidence, reachability
 |---|---|
 | **Fix now** | Valid, in scope, simple, proportionate, and low risk; implement and rerun affected checks. |
 | **Validate** | Plausible but evidence is insufficient; run a bounded check before deciding. |
-| **Reject** | Incorrect, unreachable, out of scope, or disproportionate; record evidence and rationale. |
-| **Human decision** | Doubtful, architectural, scope-changing, risky, or complexity-increasing; queue for final presentation. |
+| **Reject** | Incorrect, unreachable, out of scope, unnecessary for the assigned task, or disproportionate; record evidence and rationale. |
+| **Human decision** | A required scope or architectural choice cannot be resolved safely without the user; queue for final presentation. |
 | **Block** | Material and unresolved; overlapping work or completion cannot safely continue. |
 
 Fix simple valid findings. Do not silently implement queued human decisions. After accepted fixes, allow one focused read-only follow-up on those fixes only; do not reopen a broad review. Do not add speculative abstractions, compatibility layers, or test machinery merely to satisfy review.
@@ -108,10 +111,11 @@ Fix simple valid findings. Do not silently implement queued human decisions. Aft
 
 1. Reread the complete original plan line by line; add and execute any missed row.
 2. Confirm no row is `Pending`, `In progress`, or `Blocked`; verify approved descopes and all evidence.
-3. Run final targeted and repository-wide checks, required browser/manual validation, and safe cleanup.
-4. Run one fresh plan-backed full read-only review; disposition every finding and perform at most one focused follow-up for accepted fixes.
-5. Present the human-decision queue. Any unresolved material issue remains `Blocked`; only evidence-backed unrelated pre-existing failures may be caveats.
-6. Update the tracker and rerun checks covering it when tracked.
+3. Review the diff task by task and remove changes whose scope or complexity is not justified by the assigned outcome.
+4. Run final targeted and repository-wide checks, required browser/manual validation, and safe cleanup.
+5. Run one fresh plan-backed full read-only review; disposition every finding and perform at most one focused follow-up for accepted fixes.
+6. Present the human-decision queue. Any unresolved material issue remains `Blocked`; only evidence-backed unrelated pre-existing failures may be caveats.
+7. Update the tracker and rerun checks covering it when tracked.
 
 ## Final response
 

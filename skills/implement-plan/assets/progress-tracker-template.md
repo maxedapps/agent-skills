@@ -60,4 +60,5 @@ Do not silently implement queued items. Unresolved material decisions block comp
 - [ ] Fresh reviews cover each major coherent boundary and the final full plan, or a direct fallback and limitation is recorded.
 - [ ] Every finding has a disposition; fixes/validation/reruns and at most one focused follow-up are recorded.
 - [ ] Human decisions, deviations, skips, confidence limits, and unrelated pre-existing failures are explicit.
+- [ ] Every change and added test directly supports a plan requirement; unnecessary complexity and adjacent scope were removed.
 - [ ] `Complete` is used only when all gates pass and no material issue or decision remains open.
