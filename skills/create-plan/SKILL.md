@@ -10,8 +10,8 @@ description: >-
 license: MIT
 compatibility: >-
   Requires project file access. Saving requires write access. Current external
-  research requires suitable retrieval access. Delegated work requires a safely
-  available subagent capability.
+  research requires suitable retrieval access. Non-trivial planning requires a
+  safely available subagent capability.
 metadata:
   short-description: Create or improve actionable implementation plans
 ---
@@ -35,7 +35,8 @@ Do not implement the change. When writes permit, save only the Markdown plan und
 - Put tests beside the behavior they protect. Give exact checks, expected signals, and evidence to retain.
 - Include short contract snippets only when an API, schema, query, config, protocol, CLI, type, or state transition needs an exact target shape.
 - Cover compatibility, failure behavior, migration, rollback, cleanup, security, observability, and operator actions where material.
-- Ask only when a consequential decision cannot be inferred safely. Otherwise choose a reversible default, label it, and state the fallback.
+- Choose the simplest evidence-backed design. Do not add abstractions, packages, phases, compatibility layers, or future-facing scope without a current requirement.
+- Ask the user when a consequential choice or reviewer suggestion is unclear. Do not resolve uncertainty by adding complexity.
 
 ## Workflow
 
@@ -45,29 +46,34 @@ Do not implement the change. When writes permit, save only the Markdown plan und
 - Inventory requested outcomes, current problems, constraints, non-goals, open decisions, risks, and validation expectations.
 - Identify the code, tests, configuration, documentation, and runtime surfaces that may participate.
 
-### 2. Explore and research thoroughly
+### 2. Run dedicated exploration and research
 
-Before drafting:
+For every non-trivial plan, launch **multiple dedicated subagents** before drafting. Load `use-subagents` when available; otherwise follow the runtime's reviewed subagent guidance.
 
-- Trace relevant local code end to end. Inspect definitions, callers, consumers, tests, fixtures, config, schemas, migrations, generated artifacts, docs, and nearby patterns.
-- Resolve integration boundaries, data/control flow, failure behavior, compatibility, rollout or migration needs, and available repository checks.
-- Research decision-relevant external contracts when behavior is third-party, version-sensitive, current, security-sensitive, or not established locally. Prefer authoritative, version-matched sources.
-- Deliberately compare viable approaches for correctness, project fit, simplicity, risk, migration cost, and testability. Record the chosen approach and concise reasons; retain meaningful rejected options in the plan.
-- Continue until each material finding drives a decision, task, safeguard, check, non-goal, or explicit unresolved gate.
+| Required lane | Reasonable split |
+|---|---|
+| Local code exploration | Subsystems, call paths, data flow, tests, migrations, runtime or operational boundaries |
+| Decision-relevant research | External API/framework versions, standards, security contracts, compatibility or deployment behavior |
+
+- Use at least two exploration/research lanes. Split local exploration further when external research is not relevant.
+- Give each lane one bounded question, exact scope, constraints, evidence requirements, and stop condition.
+- Require inspected paths or authoritative sources, findings, uncertainty, and skipped work.
+- Prohibit edits and recursive delegation.
+- Keep synthesis, scope, design choices, and final acceptance in the parent.
+
+If safe subagents are unavailable, prohibited, or cannot cover the required work, stop and ask the user whether to proceed with reduced independence. Do not silently replace required lanes with direct work.
+
+### 3. Synthesize and decide
+
+- Read every handoff. Verify material claims against local code or authoritative sources.
+- Fill coverage gaps across definitions, callers, consumers, tests, fixtures, config, schemas, migrations, generated artifacts, docs, and nearby patterns.
+- Resolve integration boundaries, data/control flow, failure behavior, compatibility, rollout, recovery, and repository checks.
+- Compare viable approaches for correctness, project fit, simplicity, risk, migration cost, and testability.
+- Prefer the smallest design that solves the evidenced problems.
+- Map each material finding to a decision, task, safeguard, check, non-goal, or unresolved gate.
+- Ask the user when alternatives change scope, behavior, architecture, risk, migration, or long-term complexity and evidence does not decide clearly.
 
 Unavailable credentials or live services do not justify vague planning. Use documented contracts, fail-closed configuration, fakes, and explicit operator steps where appropriate.
-
-### 3. Consider safe parallel work
-
-For non-trivial planning, strongly consider safe subagents for separable exploration, research, or review. Read `use-subagents` before using them. Do not delegate synthesis, final decisions, or acceptance.
-
-| Reasonable lane | Parent-owned synthesis |
-|---|---|
-| Trace one bounded subsystem and its tests | Integrate cross-system behavior and scope |
-| Check one external contract or version | Compare approaches and choose the design |
-| Review the complete draft against supplied evidence | Verify findings, resolve comments, and finalize |
-
-Give each lane exact questions, scope, constraints, and expected evidence. Require inspected files or sources, findings, uncertainty, and skipped work. The parent independently checks material claims, consolidates the evidence, and owns the final plan. Use direct work when delegation is unsafe, unavailable, inseparable, trivial, prohibited, or disproportionate.
 
 ### 4. Draft the fixed plan
 
@@ -81,8 +87,20 @@ Load and copy the template again. Preserve its required order and fields.
 
 ### 5. Review and deliver
 
-- Complete the semantic checklist. Check every source, path, command, dependency, acceptance signal, and required template field.
-- For consequential plans, use a fresh independent reviewer when safely available and proportionate. Give the reviewer the request, full draft, sources, decisions, constraints, risks, and unresolved questions.
-- Verify reviewer claims. Record accepted, rejected, and deferred findings; fix material gaps; then repeat affected checks and the checklist.
-- Plan focused phase validation and authoritative final validation. Include review focus, evidence, exit conditions, and reruns without duplicating an equivalent implementation workflow.
-- Save or return the Markdown plan. Report its path or no-write reason, assumptions, unresolved gates, skipped research or review, and remaining risks.
+Use a **fresh read-only reviewer subagent** for every non-trivial plan. The reviewer must not be an exploration/research lane and must not delegate.
+
+Give it the request, full draft, lane handoffs, sources, decisions, constraints, risks, and unresolved questions. Require evidence-backed findings and the smallest proportionate improvement.
+
+| Parent disposition | Action |
+|---|---|
+| **Accept** | Evidence-backed, in scope, and simpler or proportionate; update the plan. |
+| **Validate** | Check a claim before changing the plan. |
+| **Reject** | Unsupported, out of scope, duplicate, or complexity-increasing. Record why. |
+| **Ask user** | Scope, behavior, architecture, risk, migration, or complexity choice remains unclear. |
+
+- Evaluate every finding critically. Reviewer output is advice, not authority.
+- Do not add speculative abstractions, packages, phases, compatibility layers, or future scope.
+- After accepted changes, allow one focused follow-up on those changes only. Do not reopen broad review.
+- Complete the semantic checklist after review changes.
+- Plan focused phase and final validation without duplicating the implementation workflow.
+- Save or return the Markdown plan. Report its path or no-write reason, user decisions, rejected/deferred findings, skipped work, and remaining risks.

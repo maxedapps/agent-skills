@@ -19,8 +19,8 @@
 | `[inspected path and symbol]` | [Observed contract or constraint.] | [Decision, task, safeguard, or check.] |
 | [Authoritative source] | [Version-matched finding.] | [Required action or non-goal.] |
 
-- **Exploration coverage:** [Definitions, callers, consumers, tests, config, docs, and other relevant surfaces inspected.]
-- **Research/delegation:** [Lanes used and parent verification, or concise reason for direct work.]
+- **Exploration/research lanes:** [At least two dedicated subagents, their bounded questions, and inspected paths/sources.]
+- **Parent verification:** [Material claims checked, conflicts resolved, and coverage gaps filled.]
 
 ## Scope and non-goals
 
@@ -34,6 +34,16 @@
 | [Chosen approach] | Chosen | [Correctness, fit, risk, and testability rationale.] |
 | [Viable alternative] | Rejected | [Material trade-off.] |
 | [Invariant, assumption, or approval gate] | Confirmed / reversible / blocked | [Implementation consequence or fallback.] |
+
+## Plan review
+
+- **Reviewer:** [Fresh read-only subagent and review scope.]
+
+| Finding | Parent evaluation | Disposition | Plan change or user decision |
+|---|---|---|---|
+| [Evidence-backed reviewer finding.] | [Evidence, scope, impact, and complexity assessment.] | Accept / Validate / Reject / Ask user | [Proportionate update, validation result, rejection reason, or decision needed.] |
+
+- **Focused follow-up:** [Result for accepted changes, or `Not needed`.]
 
 ## Phase 1 — [Independently verifiable outcome]
 

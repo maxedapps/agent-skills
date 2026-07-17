@@ -41,7 +41,7 @@ npx skills add maxedapps/agent-skills \
   --skill web-research
 ```
 
-Review each skill and its compatibility requirements before use. `code-review`, `create-plan`, and `implement-plan` strongly consider safe subagents for suitable bounded work, research, and review while keeping synthesis and acceptance with the parent. The generic `use-subagents` contract remains portable, and no catalog skill is a hard runtime dependency of another.
+Review each skill and its compatibility requirements before use. `code-review` and `implement-plan` strongly consider safe subagents for suitable bounded work and review. `create-plan` requires multiple exploration/research lanes and a fresh reviewer for non-trivial plans. Synthesis and acceptance stay with the parent. No catalog skill is a hard runtime dependency of another.
 
 ## Runtime and related skills
 
@@ -60,7 +60,7 @@ Performs evidence-bound generic and plan-backed reviews. It strongly considers b
 
 ### `create-plan`
 
-Produces a fixed-structure Markdown implementation plan after thorough code exploration, decision-relevant external research, and deliberate approach comparison. It strongly considers safe subagents for separable exploration, research, and review while the parent owns synthesis and decisions.
+Produces a fixed-structure Markdown implementation plan from multiple dedicated exploration/research subagents and a fresh independent reviewer. The parent verifies all evidence, rejects complexity creep, and asks the user when material decisions remain unclear.
 
 ### `create-skill`
 
