@@ -15,29 +15,26 @@ metadata:
 
 ## Instruction precedence
 
-Follow explicit user constraints for target, baseline, scope, dimensions, depth, tools, validation, delegation, writes, artifacts, and output. Ask one focused question only if ambiguity risks reviewing the wrong target. A bare review defaults to the current codebase, generic baseline, full scope, all applicable dimensions, standalone invocation, and standalone output. Never broaden a bounded review repository-wide.
+Perform a thorough, in-depth code review EITHER according to the user task (or as inferred from the context) OR based on the below dimensions and requirements.
+
+If scope is unclear, ask! Do NOT widen or expand scope. Stick to the task and provided information.
 
 ## Required conditional resources
 
-- **Before a broad/all-dimensions review or an in-depth review of any requested dimension, read [`references/review-dimensions.md`](references/review-dimensions.md)** for the complete correctness, simplicity, typing, library, security, performance, test, compatibility/data/ops, package, accessibility, UX, and runtime heuristics.
+- If dimensions were not specified, **before a broad/all-dimensions review or an in-depth review of any requested dimension, read [`references/review-dimensions.md`](references/review-dimensions.md)** for the complete correctness, simplicity, typing, library, security, performance, test, compatibility/data/ops, package, accessibility, UX, and runtime heuristics.
 - **Before reviewing implementation against a plan, tracker, design, acceptance criteria, or other authority source, read [`references/plan-backed-review.md`](references/plan-backed-review.md)** for authority precedence, traceability, statuses, and verdicts.
 - **Before writing a standalone report, load [`assets/review-report-template.md`](assets/review-report-template.md)** and adapt its conditional sections.
 
-## Select four independent axes
+## Output Format
 
-Resolve each axis separately; one axis never implies another.
-
-1. **Baseline:** **Generic** judges contracts and applicable dimensions. **Plan-backed** adds traceability to supplied authority sources without replacing generic quality review.
-2. **Scope:** **Full** inspects the requested target. **Bounded** inspects named work plus call sites and boundaries needed to judge it safely.
-3. **Invocation:** **Standalone** is directly requested, even when bounded. **Embedded** means another workflow owns the checkpoint and resolution loop.
-4. **Output:** **Chat-only**, **Markdown report plus concise summary**, or **embedded handoff**. Standalone defaults to report plus summary; embedded to handoff. A no-write instruction suppresses artifacts unless a report is explicitly exempted.
+- Follow provided instructions regarding the output format
+- If unclear or unspecified, you MUST create a review report `.md` file (stored in local `.reviews` folder)
 
 ## Authoritative finding contract
 
-This skill owns materiality, severity/confidence, finding selection/limits, overflow, and follow-up. Consumers including `create-plan` and `implement-plan` must reference this contract rather than copy it, adding only axes, evidence payload, and workflow-specific disposition/exit rules.
-
 - Admit only evidence-backed findings with a plausible/reachable path and meaningful impact to user/operator outcomes, security, data, compatibility, or operations. Exclude niche/speculative concerns, optional polish, and redesign unless comparably material; uncommon security/data paths qualify when reachability and impact justify them.
 - Weigh each recommendation against implementation complexity, regression risk, and maintenance cost. When benefit does not exceed cost, reject/downgrade it or prefer a smaller correction, decisive validation, or no finding.
+- Respect the context of the project you're working in - most projects are not enterprise scale and not every theoretical risk or potential bug can actually become a risk / bug in every project!
 
 | Score | Meaning |
 |---|---|
@@ -66,7 +63,7 @@ This skill owns materiality, severity/confidence, finding selection/limits, over
 
 ## Workflow
 
-1. Resolve the four axes and any explicit constraints. Clarify only a material ambiguity; otherwise use the defaults.
+1. Evaluate the task and context to decide on the review scope and strictness. Ask for clarification if needed. 
 2. Load the conditional resources above: [`references/review-dimensions.md`](references/review-dimensions.md) for broad/deep dimension review and [`references/plan-backed-review.md`](references/plan-backed-review.md) for an authority baseline.
 3. Inspect repository shape and status, relevant diffs/commits, target files, callers, tests, config, docs, migrations, environment examples, CI, and nearby patterns before judging isolated code.
 4. Establish broad coverage, then review every selected dimension; findings remain selective. For plan-backed work, complete the authority matrix while still applying generic implementation-quality dimensions.
