@@ -22,7 +22,7 @@ metadata:
 Follow higher-priority constraints. After the startup gate:
 
 - Cover every actionable plan requirement with independently verifiable tracker rows.
-- **Before every non-trivial implementation batch, explicitly consider subagents.** Delegate eligible bounded work when safe; record why parent-owned work is not eligible.
+- **Before every non-trivial implementation batch, strongly consider subagents.** Delegate eligible bounded work when safe; record why parent-owned work is not eligible.
 - Keep the tracker parent-owned and single-writer whenever lanes run or may resume concurrently.
 - Treat child handoffs as evidence, never acceptance. The parent inspects every diff, verifies claims, integrates, and tests.
 - Continue through dependency-ready work without asking unless a human decision is required.
@@ -44,7 +44,7 @@ On resume, repeat steps 1–4 and reconcile current state before editing. If the
 
 1. **Inventory:** map implementation, migration, cleanup, docs, rollout, and required validation to stable rows with plan references, dependencies, and acceptance evidence. Split opaque compound rows.
 2. **Select:** enumerate dependency-ready rows. Define the batch's scope, risks, rollback/cleanup, checks, and join point.
-3. **Assign:** explicitly assess every non-trivial batch for delegation. Record owner, ownership boundary, isolation, overlap, rationale, and review checkpoint.
+3. **Assign:** strongly consider subagents for every non-trivial batch. Record owner, ownership boundary, isolation, overlap, rationale, and review checkpoint.
 4. **Implement:** stay within assigned ownership. Record deviations immediately.
 5. **Verify:** parent-inspect diffs and claims; run targeted behavior tests plus applicable test, lint, typecheck, build, migration, and browser/manual checks.
 6. **Update:** record concise evidence. Mark rows `Verified`, `Blocked`, or ready for another batch; then repeat.
@@ -88,7 +88,7 @@ Use a **fresh read-only subagent** applying `code-review` after every major cohe
 
 Deduplicate checkpoints with the same scope and evidence. Use direct parent review only when independent review is unavailable/unsafe, user-prohibited, or genuinely disproportionate; record the reason and independence limit.
 
-Give reviewers the plan/tracker, covered IDs, relevant diff/contracts/tests, validation/manual evidence, skips, deviations, risks, and non-goals. For final review, require plan-backed full scope. Preserve the `code-review` authority matrix and separate baseline, compliance, quality, and validation verdicts when that contract requires them.
+Give reviewers the plan/tracker, covered IDs, relevant diff/contracts/tests, validation/manual evidence, skips, deviations, risks, and non-goals. Require read-only work and prohibit recursive delegation. For final review, require plan-backed full scope. Preserve the `code-review` authority matrix and separate baseline, compliance, quality, and validation verdicts when that contract requires them.
 
 ### Disposition every finding
 

@@ -20,7 +20,7 @@ Map every implementation, migration, cleanup, documentation, rollout, and valida
 
 ## Batches and evidence
 
-Before **every non-trivial batch**, enumerate ready rows and consider subagents. Record a concrete allowed reason for parent ownership. Cap parallel lanes by parent integration/verification capacity; isolate concurrent writers in separate worktrees with non-overlapping ownership. Keep coupled work sequential or parent-owned.
+Before **every non-trivial batch**, enumerate ready rows and strongly consider subagents. Record a concrete allowed reason for parent ownership. Cap parallel lanes by parent integration/verification capacity; isolate concurrent writers in separate worktrees with non-overlapping ownership. Keep coupled work sequential or parent-owned.
 
 | Batch / rows | Owner and delegation rationale | Scope / dependencies / join | Ownership / isolation / overlap | Acceptance and review checkpoint | Parent verification / terminal evidence / cleanup |
 |---|---|---|---|---|---|
@@ -30,7 +30,7 @@ For delegated work retain run identity, terminal state/handoff, files changed, d
 
 ## Reviews and dispositions
 
-Use a fresh read-only subagent after each major coherent boundary—an integration, migration, public contract, security/data invariant, risky dependency, or delivery milestone—and for final full-plan review. Major does not mean “many rows.” Record direct-review fallbacks and independence limits.
+Use a fresh read-only subagent after each major coherent boundary—an integration, migration, public contract, security/data invariant, risky dependency, or delivery milestone—and for final full-plan review. Major does not mean “many rows.” Prohibit reviewer recursion. Record direct-review fallbacks and independence limits.
 
 | Review / covered rows | Boundary and scope | Method / run / evidence | Finding | Disposition and rationale | Fix or validation / rerun / one focused follow-up | Status |
 |---|---|---|---|---|---|---|

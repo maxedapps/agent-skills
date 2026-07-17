@@ -41,11 +41,10 @@ npx skills add maxedapps/agent-skills \
   --skill web-research
 ```
 
-Review each skill and its compatibility requirements before use. `create-plan` and `implement-plan` default suitable bounded work and independent review to safe subagent lanes, with recorded direct fallbacks. The generic `use-subagents` contract remains portable, and no catalog skill is a hard runtime dependency of another.
+Review each skill and its compatibility requirements before use. `code-review`, `create-plan`, and `implement-plan` strongly consider safe subagents for suitable bounded work, research, and review while keeping synthesis and acceptance with the parent. The generic `use-subagents` contract remains portable, and no catalog skill is a hard runtime dependency of another.
 
 ## Runtime and related skills
 
-- **`create-plan` rendering requires Node.js 18+.** Bun is optional and enables rich Markdown-to-HTML rendering. Without Bun, the bundled Node.js renderer warns and produces escaped plain-text HTML instead.
 - **Subagent coordination is portable.** The generic `use-subagents` strategy can pair with a runtime-specific adapter for exact lifecycle mechanics, or use an inspected native capability or suitably controlled non-interactive CLI when no adapter exists. Planning and coordination do not themselves require delegation.
 - **`agent-browser` remains external.** Install it from [skills.sh](https://www.skills.sh/vercel-labs/agent-browser/agent-browser) when browser interaction or UI verification is needed:
 
@@ -57,11 +56,11 @@ Review each skill and its compatibility requirements before use. `create-plan` a
 
 ### `code-review`
 
-Performs evidence-bound reviews that adapt to the requested target, baseline, scope, dimensions, depth, tools, validation, writes, and output. It supports generic repository or diff review, bounded review of a phase or implementation step, and plan-backed review with requirement traceability, separate quality/compliance/test verdicts, and explicit coverage and caveats.
+Performs evidence-bound generic and plan-backed reviews. It strongly considers bounded read-only subagents for independent review dimensions, while the parent verifies evidence, consolidates handoffs, and owns final findings and verdicts.
 
 ### `create-plan`
 
-Researches a requested change and produces a concise problem-led Markdown plan with numbered phases and stable, actionable tasks. It actively delegates safe separable research and fresh draft review, records narrow fallbacks, validates the required structure, and keeps HTML rendering optional.
+Produces a fixed-structure Markdown implementation plan after thorough code exploration, decision-relevant external research, and deliberate approach comparison. It strongly considers safe subagents for separable exploration, research, and review while the parent owns synthesis and decisions.
 
 ### `create-skill`
 
@@ -69,7 +68,7 @@ Creates, rewrites, reviews, and evidence-backed improves Agent Skills with liter
 
 ### `implement-plan`
 
-Executes an existing Markdown plan through tracked Analyze → Plan → Implement → Verify loops. It classifies bounded non-trivial work for delegation, forms safe dependency-ready batches with isolated writers, keeps the parent as tracker/integration authority, validates every task, and defaults meaningful checkpoints and final reconciliation to fresh plan-backed review.
+Executes an existing Markdown plan in verified dependency-ready batches. It strongly considers bounded parallel subagent lanes, keeps integration and acceptance with the parent, reviews major boundaries and the full implementation, and queues doubtful complexity-increasing findings for human decisions.
 
 ### `use-subagents`
 
@@ -96,12 +95,6 @@ Validate catalog metadata and local Markdown links:
 ```sh
 node scripts/validate-skill-metadata.mjs skills
 node scripts/validate-skill-links.mjs README.md skills
-```
-
-Validate a generated implementation plan:
-
-```sh
-node skills/create-plan/scripts/validate-plan-structure.mjs path/to/plan.md
 ```
 
 Verify CLI discovery without telemetry:
