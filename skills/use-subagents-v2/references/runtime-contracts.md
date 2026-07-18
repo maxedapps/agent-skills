@@ -13,8 +13,8 @@ command -v <executable>
 
 Also inspect the relevant subcommand help before constructing an invocation. Require all of the following:
 
-- an explicit worker working directory or a process launched with the isolated worktree as its actual current directory;
-- a permission boundary suitable for the role (read-only for readers; writes limited to the owned worktree for writers);
+- an explicit working directory: the parent checkout for readers or the isolated worktree for workers;
+- a permission policy suitable for the role (enforced read-only tools/sandbox for readers; explicitly authorized write tools/sandbox for isolated workers);
 - observable output and terminal completion;
 - a bounded wait and a safe way to interrupt or stop;
 - one complete, non-interactive request for standalone mode; and
@@ -28,27 +28,34 @@ Probe the installed interface before each workflow:
 
 ```sh
 herdr --help
+herdr status --json
 herdr agent --help
 herdr pane --help
 herdr wait --help
 herdr worktree --help
 ```
 
-Current Herdr help exposes agent start/read/wait controls, pane input/interrupt controls, and worktree create/open/remove controls. Use only forms shown by that installed help. At the time this reference was written, the conservative interactive forms were:
+Use Herdr only when `HERDR_ENV=1`, `HERDR_SOCKET_PATH`, `HERDR_WORKSPACE_ID`, `HERDR_TAB_ID`, and `HERDR_PANE_ID` are set; client/server status is compatible; and `herdr pane current --current` matches those IDs. Re-probe before use. Herdr 0.7.4 exposes these conservative forms:
 
 ```sh
-herdr agent start "$name" --cwd "$workerPath" -- "$executable"
-herdr agent read "$target" --source recent --lines "$lineCount"
-herdr agent wait "$target" --status idle --timeout "$timeoutMs"
+# Reader: create an owned, no-focus sibling pane in the parent checkout.
+herdr agent start "$name" --cwd "$parentCheckout" --tab "$HERDR_TAB_ID" --split right --no-focus -- "$executable"
+
+# Worker: create an owned worktree workspace, then launch in its returned root pane.
+herdr worktree create --cwd "$parentCheckout" --branch "$workerBranch" --base "$baseHead" --no-focus --json
+herdr pane run "$rootPaneId" "$executable"
+
+herdr agent read "$terminalId" --source recent-unwrapped --lines "$lineCount"
+herdr wait agent-status "$paneId" --status idle --timeout "$timeoutMs"
 herdr pane run "$paneId" "$completeAssignment"
 ```
 
-Re-probe before use; placeholders are parent-recorded values, not literal arguments. `pane run` is the documented text-plus-Enter operation and therefore keeps prompt submission atomic.
+Placeholders are freshly recorded values, not literal arguments. Parse and retain returned workspace/tab/pane/terminal IDs. `pane run` is the documented text-plus-Enter operation and keeps each command or prompt submission atomic.
 
 Lifecycle:
 
-1. Create or open the recorded isolated worktree without force.
-2. Start the **normal interactive executable** in that worktree. The argv after Herdr's separator contains the executable and proven interactive startup options only—never a headless/print/exec flag and never the task prompt.
+1. Readers stay in the parent checkout under an enforced read-only policy. Workers use a newly created recorded isolated worktree without force.
+2. Start the **normal interactive executable**. The startup argv contains the executable and proven interactive permission options only—never a headless/print/exec flag and never the task prompt.
 3. Resolve and record the actual agent/pane target. Inspect its output before waiting.
 4. Wait with a finite timeout until the target reports idle. Inspect output again; status is advisory and may be stale or wrong.
 5. Submit the entire assignment with the single atomic `pane run` operation. Do not split prompt text and the submit key across operations.
@@ -63,13 +70,14 @@ Do not use Herdr's force-removal option. A pane, workspace, or worktree with uns
 Probe the exact headless subcommand or flag and its full help. Current discovery probes for common adapters are:
 
 ```sh
-codex exec --help
+pi --help
 claude --help
-opencode run --help
+codex exec --help
+grok --help
 kimi --help
 ```
 
-At the time this reference was written, those probes exposed Codex `exec`, Claude `--print`, and OpenCode `run`; they did not establish one shared permission or cwd syntax. Treat these as entry-point evidence only, not portable invocations. Launch the selected adapter as one foreground process whose actual current directory is the isolated worktree, passing the complete assignment once through the input form and permission controls documented by current help.
+Current entry points are Pi `--print`, Claude `--print`, Codex `exec`, Grok `--single`/`--prompt-file`, and Kimi `--prompt`. They do not share permission, cwd, prompt-input, or output syntax; use only the exact adapter form proven by current help. Run readers in the parent checkout under an enforced read-only mode and workers in the isolated worktree under explicitly authorized write permissions. Pass the complete assignment once through stdin or a prompt file when supported so large prompts and secrets do not enter argv.
 
 The invocation must expose a non-interactive completion result and enforce the assignment's permissions without a dangerous bypass. Capture output and exit status under a timeout. After it exits, inspect Git independently; exit zero is evidence, not acceptance.
 

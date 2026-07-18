@@ -9,7 +9,7 @@ Role: <bounded role>
 Objective: <one concrete outcome>
 
 Starting context
-- Authorized working directory: <absolute isolated worktree path>
+- Authorized working directory: <parent checkout for a read-only reader, or absolute isolated worktree for a worker>
 - Base/starting commit: <commit>
 - Read first: <exact files and why>
 - Known facts/open questions: <only task-relevant context>

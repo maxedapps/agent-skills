@@ -61,7 +61,7 @@ Any failed or ambiguous check retains all resources. Do not repair child work by
 
 ## 3. Reread, dry-run, and explicitly integrate
 
-Reread this entire file now. Confirm the parent checkout is the intended integration branch and clean. Capture `parentHead=$(git rev-parse HEAD)`, review commits and diff again, and perform a non-mutating integration dry-run.
+Reread this entire file now. Confirm the parent checkout is the recorded integration branch and clean. Require the parent's explicit review and worker-check attestations. Capture `parentHead=$(git rev-parse HEAD)`, review commits and diff again, and perform a non-mutating integration dry-run.
 
 Fast-forward is the default. Its dry-run must prove that current parent HEAD is an ancestor of `workerHead` and preview the exact range:
 
@@ -91,7 +91,7 @@ A zero exit is required. If that non-mutating form is unavailable, retain and re
 git merge --no-ff "$workerHead"
 ```
 
-Never resolve conflicts by force or automatic cleanup; retain conflicted state for parent recovery.
+Never auto-resolve a conflict. Inspect and report it, run `git merge --abort`, verify the parent returned to its recorded clean branch/HEAD, retain all worker resources, and begin a fresh integration attempt. Manual conflict resolution cannot unlock automated cleanup in this version.
 
 ## 4. Parent validation and ancestry proof
 
