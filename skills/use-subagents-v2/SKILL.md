@@ -1,48 +1,44 @@
 ---
 name: use-subagents-v2
 description: >-
-  Launches and manages bounded scout, research, and worker coding agents through
-  interactive Herdr or supported standalone CLIs. Use this skill when running,
-  supervising, parallelizing, following up with, stopping, integrating, or
-  cleaning up CLI subagents and their isolated worktrees. Do not use when only
-  deciding or designing delegation, for recursive delegation, or for ordinary
-  background processes.
+  Plans, launches, and manages bounded scout, research, and worker coding agents.
+  Use this skill whenever delegation may help, including task decomposition,
+  parallel research or review, independent validation, isolated implementation,
+  follow-up, integration, or cleanup. Do not use for recursive delegation,
+  ordinary background processes, or direct small work that gains no value from
+  a separate agent.
 license: MIT
 compatibility: >-
   Requires Node.js and a current authenticated Pi, Claude Code, Codex, Grok, or
-  Kimi CLI. Workers require Git; Herdr mode requires a verified in-pane session;
+  Kimi CLI. Workers require Git; Herdr use requires a verified in-pane session;
   standalone asynchronous control supports tested macOS/Linux process APIs.
 metadata:
-  short-description: Run isolated subagents and integrate verified work
+  short-description: Coordinate and run bounded isolated subagents
 ---
 
 # Use Subagents V2
 
-This is a runtime adapter. Use `use-subagents` first for delegation strategy, decomposition, dependencies, and assignment design. The parent remains responsible for review, validation, integration, acceptance, and cleanup.
-
 ## Critical rules
 
-- Never delegate recursively. Every assignment must prohibit the child from launching another agent.
-- Readers use the parent checkout read-only. Give every worker its own branch and isolated worktree; never let a child write in the parent checkout or another active lane.
-- **Before every worker launch, read [`references/worktrees.md`](references/worktrees.md) completely. Read it again immediately before integration or cleanup.** Do not rely on an earlier read.
-- Read [`references/runtime-contracts.md`](references/runtime-contracts.md) before selecting or invoking a runtime. Probe current help and fail closed when required capabilities cannot be proven.
-- Use [`scripts/subagents.mjs`](scripts/subagents.mjs) for every launch and lifecycle operation; run its `--help` before the first operation. In its contract, `backend` is `standalone|herdr` and `harness` is `pi|claude|codex|grok|kimi`.
-- Never force, stash, reset, clean, raw-delete, or use `git branch -D`. Never remove dirty, live, conflicted, moved, unintegrated, unknown, or unverifiable resources.
-- Treat runtime status as advisory. Parent inspection and repository evidence determine whether work can advance.
+- Delegate only work with a bounded scope, verifiable output, stop condition, and benefit greater than coordination cost.
+- Choose a scout for repository discovery, research for source-backed external questions, or a worker for authorized implementation.
+- Readers stay read-only in the parent checkout. Every writer gets an isolated worktree and non-overlapping ownership; the parent and sibling lanes do not mutate it.
+- Never delegate recursively. Every assignment must prohibit launching or coordinating another agent.
+- The parent reviews every handoff and diff, reruns relevant checks, integrates accepted work, validates the result, and owns cleanup.
+- Use only [`scripts/subagents.mjs`](scripts/subagents.mjs) for launch and lifecycle operations. Never reconstruct vendor or Herdr commands.
+- Treat child claims, exit codes, and runtime status as evidence, not acceptance. Retain dirty, live, conflicted, unintegrated, unknown, or unverifiable resources.
 
 ## Workflow
 
-1. Use `use-subagents` to decide and split the work. Record bounded ownership, permissions, dependencies, checks, timeout, stop condition, and handoff requirements.
-2. Build the assignment with [`assets/assignment-prompts.md`](assets/assignment-prompts.md). Include only task-relevant context and require a self-contained handoff.
-3. For a reader, enforce read-only execution in the parent checkout. **Before launching a worker, reread [`references/worktrees.md`](references/worktrees.md) completely.** Create and record an isolated worktree, exact generated branch, base commit, runtime target, and ownership manifest.
-4. Read [`references/runtime-contracts.md`](references/runtime-contracts.md), run `node scripts/subagents.mjs --help` from this skill directory, then use its `doctor` before launching only a supported mode:
-   - Herdr (`--backend herdr`): a normal interactive executable, no headless flag and no task argument; wait for idle, then submit the complete assignment atomically.
-   - Standalone (`--backend standalone`, the default): one headless, non-interactive invocation containing the complete assignment. Follow-up is unsupported.
-5. Bound and supervise the run. Inspect output before waits, use timeouts, investigate blocked/unknown/failed states, and stop safely when needed. Do not treat an idle or successful status as proof.
-6. Inspect the handoff, complete Git status, diff, log, worker HEAD, and worker check output. Require clean, task-only commits before integration.
-7. **Immediately before integration or cleanup, reread [`references/worktrees.md`](references/worktrees.md) completely.** Follow its parent-owned order exactly: integration dry-run, explicit integration, parent validation, ancestry proof, cleanup dry-run, non-force cleanup, then deletion of the exact generated branch with `git branch -d`.
-8. Accept only after the parent has reviewed the diff, rerun relevant checks, and proved the worker HEAD is an ancestor of the validated parent HEAD. Report retained resources and recovery evidence.
+1. Decide whether a separate lane helps, then split work into bounded, independently verifiable assignments with explicit ownership, dependencies, checks, timeout, stop condition, and join point.
+2. Build each assignment from [`assets/assignment-prompts.md`](assets/assignment-prompts.md), using the shared envelope and exactly one role variant.
+3. From this skill directory, run `node scripts/subagents.mjs --help`, then `node scripts/subagents.mjs info`. Select only a reported supported harness/role pair.
+4. Use `node scripts/subagents.mjs run` with the complete assignment. Use asynchronous runs only for genuinely independent lanes and keep concurrency bounded.
+5. Use `node scripts/subagents.mjs status` to supervise through a terminal state; use `send` only for same-assignment Herdr follow-up and `stop` when required.
+6. Inspect the handoff, complete diff, commits, Git state, and check evidence. Reject scope creep and rerun relevant checks in the parent.
+7. For a worker, **immediately before integration and again immediately before cleanup**, read [`references/worktrees.md`](references/worktrees.md) completely. Use script-owned `integrate` dry-run/apply, validate in the parent, then `clean` dry-run/apply.
+8. Report accepted results, exact validation, failures, and every retained run, worktree, branch, or manifest needed for recovery.
 
 ## Failure handling
 
-If any state is dirty, uncommitted, conflicted, moved, unintegrated, live, unknown, or unverifiable, stop the lifecycle. Retain the pane/process, worktree, branch, and manifest; report identifiers, observed evidence, safe recovery steps, and the blocked phase. Never weaken a safety check to finish cleanup.
+If ownership, permissions, identity, liveness, cleanliness, integration, or ancestry cannot be proven, stop at that gate. Do not force, stash, reset, raw-delete, or weaken checks; retain the resources and report the last safe step plus recovery evidence.

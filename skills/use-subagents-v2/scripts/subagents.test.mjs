@@ -127,6 +127,35 @@ test('help exposes exactly seven commands and removed names or aliases are usage
   } finally { rmSync(f.root, { recursive: true }); }
 });
 
+test('assignment resource preserves parser sections and generates complete role contracts', { concurrency: true, timeout: 300000 }, async () => {
+  const f = temp();
+  try {
+    fakePi(f);
+    const repository = repo(f);
+    const template = readFileSync(path.resolve(path.dirname(script), '..', 'assets', 'assignment-prompts.md'), 'utf8');
+    for (const heading of ['## Shared envelope', '## Scout variant', '## Research variant', '## Worker variant']) {
+      assert.equal(template.split(heading).length - 1, 1, `${heading} must occur exactly once`);
+      assert.equal(template.slice(template.indexOf(heading)).startsWith(`${heading}\n\n\`\`\`text`), true);
+    }
+    const roleRules = {
+      scout: /Map .*relevant files, control flow, conventions, tests, and concrete unknowns/,
+      research: /authoritative, version-matched primary sources/,
+      worker: /Implement only .* in the owned isolated worktree/,
+    };
+    for (const role of Object.keys(roleRules)) {
+      const promptFile = path.join(f.root, `${role}.prompt`);
+      const result = await cli(['run', '--harness', 'pi', '--role', role, '--prompt', `inspect ${role} contract`, '--cwd', repository, '--state-root', f.state], f, { FAKE_PROMPT: promptFile });
+      assert.equal(result.status, 0, `${role}: ${result.stderr}`);
+      const assignment = readFileSync(promptFile, 'utf8');
+      assert.match(assignment, new RegExp(`Assignment type: ${role}`));
+      assert.match(assignment, roleRules[role]);
+      assert.match(assignment, /Never delegate, spawn, invoke, or coordinate another agent or subagent/);
+      assert.match(assignment, /SUBAGENTS_NO_DELEGATION=1/);
+      assert.doesNotMatch(assignment, /<[^>]+>/);
+    }
+  } finally { rmSync(f.root, { recursive: true }); }
+});
+
 test('info is no-model, isolates pair probes, and reports concise standalone capability reasons', { concurrency: true, timeout: 300000 }, async () => {
   const f = temp();
   try {

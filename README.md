@@ -6,8 +6,8 @@
 - `create-plan` — create, review, and improve researched, implementation-ready plans before coding.
 - `create-skill` — create, rewrite, and review concise, actionable Agent Skills.
 - `implement-plan` — execute existing Markdown implementation plans with delegation-first tracking and verification.
-- `use-subagents` — plan and coordinate portable, bounded subagent work with runtime-specific lifecycle adapters.
-- `use-subagents-v2` — launch and safely manage CLI subagents, isolated worker worktrees, integration, and cleanup.
+- `use-subagents` — provide legacy delegation guidance only when V2 is unavailable.
+- `use-subagents-v2` — decide, split, launch, supervise, integrate, and clean bounded CLI subagent work.
 - `web-research` — perform current, source-backed research across web content and repositories.
 
 ## Install
@@ -47,7 +47,7 @@ Review each skill and its compatibility requirements before use. `code-review` a
 
 ## Runtime and related skills
 
-- **Subagent coordination is portable.** The generic `use-subagents` strategy owns delegation decisions and assignment design. Pair it with `use-subagents-v2` when the parent must actually launch or supervise Pi, Claude Code, Codex, Grok, or Kimi CLI children, manage Herdr panes, or integrate and clean isolated worker worktrees. V2 requires Node, current authenticated CLIs, Git for workers, and macOS/Linux for standalone asynchronous control.
+- **`use-subagents-v2` owns subagent coordination and runtime execution.** It decides and decomposes bounded work, then launches and supervises supported Pi, Claude Code, Codex, Grok, or Kimi CLI children through verified Herdr or standalone execution. It also integrates and cleans isolated worker worktrees. V2 requires Node, current authenticated CLIs, Git for workers, and macOS/Linux for standalone asynchronous control. Use legacy `use-subagents` only when V2 is unavailable; never load both.
 - **`agent-browser` remains external.** Install it from [skills.sh](https://www.skills.sh/vercel-labs/agent-browser/agent-browser) when browser interaction or UI verification is needed:
 
   ```sh
@@ -74,11 +74,11 @@ Executes an existing Markdown plan in verified dependency-ready batches. It stro
 
 ### `use-subagents`
 
-Decides whether delegation is worthwhile, splits work into independent fan-out, staged, fresh-review, or isolated-writer lanes, and defines bounded assignments with least privilege, monitored handoffs, parent verification, and owned-resource cleanup. Exact launch, status, stop, worktree, and cleanup mechanics belong to a runtime-specific adapter when available; otherwise the skill uses only inspected native capabilities or a suitably controlled non-interactive CLI, and fails closed when neither is safe.
+Provides legacy decision, decomposition, assignment, supervision, and verification guidance only when `use-subagents-v2` is unavailable. It must not co-activate with V2.
 
 ### `use-subagents-v2`
 
-Executes the lifecycle designed by `use-subagents`: capability-probes current Pi, Claude Code, Codex, Grok, Kimi, and Herdr installations; runs readers synchronously, asynchronously, or in bounded parallel; gives every worker an isolated Git worktree; and records exact ownership. Integration and cleanup are separate dry-run-first operations. Parent review and worker checks precede merge, parent validation follows merge, ancestry gates non-force worktree removal, and only the exact generated branch is deleted with `git branch -d`. Unsupported or ambiguous permissions, runtime identity, dirty work, conflicts, and unintegrated commits are retained rather than forced.
+Decides whether delegation helps, splits work into bounded scout, research, or worker lanes, and runs supported Pi, Claude Code, Codex, Grok, Kimi, and verified Herdr environments through one script. Readers remain read-only; workers receive isolated Git worktrees. The parent reviews and validates every result. Integration and cleanup are dry-run-first, ancestry-gated, non-force operations; unsafe or unverifiable resources are retained.
 
 ### `web-research`
 

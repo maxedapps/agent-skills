@@ -50,7 +50,7 @@ Do not implement the change. When writes permit, save only the Markdown plan und
 
 ### 2. Run dedicated exploration and research
 
-For every non-trivial plan, launch **multiple dedicated subagents** before drafting. Load `use-subagents` when available; otherwise follow the runtime's reviewed subagent guidance.
+For every non-trivial plan, launch **multiple dedicated subagents** before drafting. Load `use-subagents-v2` directly when available; only when V2 is unavailable, load the legacy `use-subagents` fallback. Never load both.
 
 | Required lane | Reasonable split |
 |---|---|

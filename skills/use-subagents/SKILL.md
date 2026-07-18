@@ -1,23 +1,23 @@
 ---
 name: use-subagents
 description: >-
-  Plans and coordinates bounded subagent work across coding agents. Use this
-  skill whenever considering delegation, decomposition, parallel research,
-  review or implementation, independent validation, or an explicit request to
-  spawn or manage subagents. Do not use for ordinary background shell, server,
-  or process work.
+  Provides legacy guidance for planning and coordinating bounded subagent work.
+  Use this skill when delegation, decomposition, parallel research or review,
+  isolated implementation, or independent validation may help, but only if
+  `use-subagents-v2` is unavailable. Do not use when `use-subagents-v2` is
+  available, for recursive delegation, or for ordinary background processes.
 license: MIT
 compatibility: >-
   Decision and coordination guidance is instruction-only. Launching requires a
   runtime-specific adapter, a native subagent capability, or a suitably
   controlled non-interactive agent CLI.
 metadata:
-  short-description: Plan and coordinate bounded subagent work
+  short-description: Legacy fallback for bounded subagent work
 ---
 
-# Use Subagents
+# Use Subagents (Legacy Fallback)
 
-Follow higher-priority instructions for scope, privacy, tools, cost, and latency. This skill is for parent coordination.
+Use this legacy guidance only when `use-subagents-v2` is unavailable. Never co-activate both skills; if V2 is available, stop and use it instead. Follow higher-priority instructions for scope, privacy, tools, cost, and latency.
 
 ## Scope and runtime handoff
 
