@@ -82,9 +82,11 @@ test('help is JSON and usage/unsupported errors have stable distinct exits', { t
   try {
     const help = await cli(['--help'], f);
     assert.equal(help.status, 0); assert.equal(help.json.ok, true); assert.match(help.json.help.usage, /doctor.*clean/);
+    assert.ok(help.json.help.launch.includes('--backend standalone|herdr'));
+    assert.ok(help.json.help.launch.includes('--harness pi|claude|codex|grok|kimi'));
     const usage = await cli(['wat'], f); assert.equal(usage.status, 2); assert.equal(usage.json.category, 'usage');
     fakePi(f);
-    const kimi = await cli(['doctor', '--backend', 'kimi', '--role', 'scout'], f);
+    const kimi = await cli(['doctor', '--harness', 'kimi', '--role', 'scout'], f);
     assert.equal(kimi.status, 3); assert.equal(kimi.json.category, 'unsupported');
   } finally { rmSync(f.root, { recursive: true }); }
 });
@@ -93,10 +95,11 @@ test('doctor probes current help and fails closed when a capability token is mis
   const f = temp();
   try {
     fakePi(f);
-    const okay = await cli(['doctor', '--backend', 'pi', '--role', 'scout'], f);
+    const okay = await cli(['doctor', '--harness', 'pi', '--role', 'scout'], f);
     assert.equal(okay.status, 0, okay.stderr); assert.equal(okay.json.executable, realpathSync(path.join(f.bin, 'pi')));
+    assert.equal(okay.json.backend, 'standalone'); assert.equal(okay.json.harness, 'pi');
     executable(path.join(f.bin, 'claude'), `case "\${1:-}" in --help) echo '-p only';; --version) echo fake;; esac`);
-    const blocked = await cli(['doctor', '--backend', 'claude', '--role', 'scout'], f);
+    const blocked = await cli(['doctor', '--harness', 'claude', '--role', 'scout'], f);
     assert.equal(blocked.status, 3); assert.match(blocked.json.error, /required token|reader token/);
   } finally { rmSync(f.root, { recursive: true }); }
 });
@@ -105,8 +108,9 @@ test('standalone reader uses stdin, reader flags, durable logs, and the no-deleg
   const f = temp();
   try {
     fakePi(f); const trace = path.join(f.root, 'trace'), prompt = path.join(f.root, 'prompt');
-    const result = await cli(['run', '--backend', 'pi', '--role', 'scout', '--prompt', 'inspect one thing', '--state-root', f.state, '--timeout', '5000'], f, { FAKE_TRACE: trace, FAKE_PROMPT: prompt });
+    const result = await cli(['run', '--harness', 'pi', '--role', 'scout', '--prompt', 'inspect one thing', '--state-root', f.state, '--timeout', '5000'], f, { FAKE_TRACE: trace, FAKE_PROMPT: prompt });
     const id = runId(result);
+    assert.equal(result.json.manifest.backend, 'standalone'); assert.equal(result.json.manifest.harness, 'pi');
     assert.match(readFileSync(trace, 'utf8'), /^-p --no-session --no-extensions --no-skills --no-prompt-templates --no-context-files --tools read,grep,find,ls$/m);
     const assignment = readFileSync(prompt, 'utf8');
     assert.match(assignment, /Assignment type: scout/); assert.match(assignment, /SUBAGENTS_NO_DELEGATION=1/); assert.doesNotMatch(assignment, /<[^>]+>/);
@@ -123,12 +127,12 @@ test('Claude, Codex, Grok, and Kimi standalone adapters construct only proven on
     executable(path.join(f.bin, 'codex'), `if [ "\${1:-}" = exec ] && [ "\${2:-}" = --help ]; then echo 'exec --sandbox read-only workspace-write --ephemeral -C'; exit; fi; case "\${1:-}" in --help) echo 'exec --sandbox'; exit;; --version) echo fake; exit;; esac; echo "codex $*" >>"$ADAPTER_TRACE"; cat >/dev/null`);
     executable(path.join(f.bin, 'grok'), `case "\${1:-}" in --help) echo '--single --permission-mode --no-subagents --no-memory --output-format --prompt-file plan auto'; exit;; --version) echo fake; exit;; esac; echo "grok $*" >>"$ADAPTER_TRACE"`);
     executable(path.join(f.bin, 'kimi'), `case "\${1:-}" in --help) echo '-p'; exit;; --version) echo fake; exit;; esac; echo "kimi $*:$PWD" >>"$ADAPTER_TRACE"; cat >/dev/null`);
-    for (const backend of ['claude', 'codex', 'grok']) {
-      const result = await cli(['run', '--backend', backend, '--role', 'scout', '--prompt', `${backend} task`, '--state-root', f.state], f, { ADAPTER_TRACE: trace });
+    for (const harness of ['claude', 'codex', 'grok']) {
+      const result = await cli(['run', '--harness', harness, '--role', 'scout', '--prompt', `${harness} task`, '--state-root', f.state], f, { ADAPTER_TRACE: trace });
       assert.equal(result.status, 0, result.stderr);
     }
     const repository = repo(f);
-    const kimi = await cli(['run', '--backend', 'kimi', '--role', 'worker', '--prompt', 'kimi task', '--cwd', repository, '--state-root', f.state], f, { ADAPTER_TRACE: trace });
+    const kimi = await cli(['run', '--harness', 'kimi', '--role', 'worker', '--prompt', 'kimi task', '--cwd', repository, '--state-root', f.state], f, { ADAPTER_TRACE: trace });
     assert.equal(kimi.status, 0, kimi.stderr); assert.notEqual(kimi.json.manifest.worktree.path, repository);
     const calls = readFileSync(trace, 'utf8');
     assert.match(calls, /^claude -p --no-session-persistence --permission-mode plan --tools Read,Grep,Glob$/m);
@@ -142,7 +146,7 @@ test('bounded parallel standalone readers receive distinct owned runs and can be
   const f = temp();
   try {
     fakePi(f);
-    const launches = await Promise.all(['one', 'two'].map((prompt) => cli(['start', '--backend', 'pi', '--role', 'scout', '--prompt', prompt, '--state-root', f.state, '--timeout', '10000'], f, { FAKE_ACTION: 'sleep' })));
+    const launches = await Promise.all(['one', 'two'].map((prompt) => cli(['start', '--harness', 'pi', '--role', 'scout', '--prompt', prompt, '--state-root', f.state, '--timeout', '10000'], f, { FAKE_ACTION: 'sleep' })));
     const ids = launches.map(runId);
     assert.equal(new Set(ids).size, 2);
     const stopped = await Promise.all(ids.map((id) => cli(['stop', '--run', id, '--state-root', f.state], f)));
@@ -154,7 +158,7 @@ test('copied manifests cannot grant control from another state root', { concurre
   const f = temp();
   try {
     fakePi(f);
-    const started = await cli(['run', '--backend', 'pi', '--role', 'scout', '--prompt', 'x', '--state-root', f.state], f);
+    const started = await cli(['run', '--harness', 'pi', '--role', 'scout', '--prompt', 'x', '--state-root', f.state], f);
     const id = runId(started), copied = path.join(f.root, 'copied');
     cpSync(f.state, copied, { recursive: true }); chmodSync(copied, 0o700);
     const rejected = await cli(['status', '--run', id, '--state-root', copied], f);
@@ -166,7 +170,7 @@ test('crashed standalone readers are retained without blind signaling and can re
   const f = temp();
   try {
     fakePi(f);
-    const started = await cli(['start', '--backend', 'pi', '--role', 'scout', '--prompt', 'crash', '--state-root', f.state, '--timeout', '10000'], f, { FAKE_ACTION: 'sleep' });
+    const started = await cli(['start', '--harness', 'pi', '--role', 'scout', '--prompt', 'crash', '--state-root', f.state, '--timeout', '10000'], f, { FAKE_ACTION: 'sleep' });
     const id = runId(started), pgid = started.json.runtime.pgid;
     process.kill(-pgid, 'SIGKILL');
     let observed;
@@ -185,9 +189,9 @@ test('standalone timeout and exact stop use distinct lifecycle outcomes', { conc
   const f = temp();
   try {
     fakePi(f); const repository = repo(f);
-    const timed = await cli(['run', '--backend', 'pi', '--role', 'worker', '--prompt', 'sleep', '--cwd', repository, '--state-root', f.state, '--timeout', '100'], f, { FAKE_ACTION: 'sleep' });
+    const timed = await cli(['run', '--harness', 'pi', '--role', 'worker', '--prompt', 'sleep', '--cwd', repository, '--state-root', f.state, '--timeout', '100'], f, { FAKE_ACTION: 'sleep' });
     assert.equal(timed.status, 4); assert.equal(timed.json.category, 'timeout');
-    const started = await cli(['start', '--backend', 'pi', '--role', 'worker', '--prompt', 'sleep', '--cwd', repository, '--state-root', f.state, '--timeout', '10000'], f, { FAKE_ACTION: 'sleep' });
+    const started = await cli(['start', '--harness', 'pi', '--role', 'worker', '--prompt', 'sleep', '--cwd', repository, '--state-root', f.state, '--timeout', '10000'], f, { FAKE_ACTION: 'sleep' });
     const id = runId(started), manifestFile = path.join(f.state, 'runs', id, 'manifest.json');
     const original = JSON.parse(readFileSync(manifestFile, 'utf8'));
     const altered = structuredClone(original); altered.runtime.startIdentity.start = 'mismatched-start';
@@ -204,7 +208,7 @@ test('worker gets a distinct worktree; provenance, ff integration, and cleanup g
   const f = temp();
   try {
     fakePi(f); const repository = repo(f);
-    const result = await cli(['run', '--backend', 'pi', '--role', 'worker', '--prompt', 'make worker file', '--cwd', repository, '--state-root', f.state], f, { FAKE_ACTION: 'commit' });
+    const result = await cli(['run', '--harness', 'pi', '--role', 'worker', '--prompt', 'make worker file', '--cwd', repository, '--state-root', f.state], f, { FAKE_ACTION: 'commit' });
     const id = runId(result), manifest = result.json.manifest;
     assert.notEqual(manifest.worktree.path, repository); assert.match(manifest.worktree.branch, /^subagent\//);
     await waitForGone(f, id);
@@ -245,7 +249,7 @@ test('clean committed no-change workers skip merge but still require attested va
   const f = temp();
   try {
     fakePi(f); const repository = repo(f), before = git(repository, ['rev-parse', 'HEAD']);
-    const result = await cli(['run', '--backend', 'pi', '--role', 'worker', '--prompt', 'inspect only', '--cwd', repository, '--state-root', f.state], f);
+    const result = await cli(['run', '--harness', 'pi', '--role', 'worker', '--prompt', 'inspect only', '--cwd', repository, '--state-root', f.state], f);
     const id = runId(result); await waitForGone(f, id);
     const applied = await cli(['integrate', '--run', id, '--reviewed', '--checks', 'none-needed', '--apply', '--state-root', f.state], f);
     assert.equal(applied.status, 0, applied.stderr); assert.equal(applied.json.noChange, true); assert.equal(git(repository, ['rev-parse', 'HEAD']), before);
@@ -260,7 +264,7 @@ test('dirty and untracked worker state is retained and blocks integration', { co
   const f = temp();
   try {
     fakePi(f); const repository = repo(f);
-    const result = await cli(['run', '--backend', 'pi', '--role', 'worker', '--prompt', 'leave dirt', '--cwd', repository, '--state-root', f.state], f, { FAKE_ACTION: 'untracked' });
+    const result = await cli(['run', '--harness', 'pi', '--role', 'worker', '--prompt', 'leave dirt', '--cwd', repository, '--state-root', f.state], f, { FAKE_ACTION: 'untracked' });
     const id = runId(result); await waitForGone(f, id);
     const blocked = await cli(['integrate', '--run', id, '--reviewed', '--checks', 'observed', '--state-root', f.state], f);
     assert.equal(blocked.status, 5); assert.match(blocked.json.error, /dirty/);
@@ -276,7 +280,7 @@ test('diverged parent refuses default ff and permits explicit merge after non-mu
   const f = temp();
   try {
     fakePi(f); const repository = repo(f);
-    const result = await cli(['run', '--backend', 'pi', '--role', 'worker', '--prompt', 'worker', '--cwd', repository, '--state-root', f.state], f, { FAKE_ACTION: 'commit' });
+    const result = await cli(['run', '--harness', 'pi', '--role', 'worker', '--prompt', 'worker', '--cwd', repository, '--state-root', f.state], f, { FAKE_ACTION: 'commit' });
     const id = runId(result); await waitForGone(f, id);
     writeFileSync(path.join(repository, 'parent.txt'), 'parent\n'); git(repository, ['add', '.']); git(repository, ['commit', '-m', 'parent']);
     const refused = await cli(['integrate', '--run', id, '--reviewed', '--checks', 'pass', '--state-root', f.state], f);
@@ -292,7 +296,7 @@ test('merge conflicts are preflighted without mutating the parent and retained f
   const f = temp();
   try {
     fakePi(f); const repository = repo(f);
-    const result = await cli(['run', '--backend', 'pi', '--role', 'worker', '--prompt', 'conflicting edit', '--cwd', repository, '--state-root', f.state], f, { FAKE_ACTION: 'conflict' });
+    const result = await cli(['run', '--harness', 'pi', '--role', 'worker', '--prompt', 'conflicting edit', '--cwd', repository, '--state-root', f.state], f, { FAKE_ACTION: 'conflict' });
     const id = runId(result); await waitForGone(f, id);
     writeFileSync(path.join(repository, 'base.txt'), 'parent version\n'); git(repository, ['add', '.']); git(repository, ['commit', '-m', 'parent-conflict']);
     const parentHead = git(repository, ['rev-parse', 'HEAD']);
@@ -342,8 +346,9 @@ case "$1 \${2:-}" in
   *) echo '{}';;
 esac`);
     const env = { HERDR_ENV: '1', HERDR_SOCKET_PATH: 'sock', HERDR_WORKSPACE_ID: 'ws-parent', HERDR_TAB_ID: 'tab-parent', HERDR_PANE_ID: 'pane-parent', HERDR_TRACE: trace, HERDR_PARENT: repository };
-    const started = await cli(['start', '--backend', 'pi', '--harness', 'herdr', '--role', 'scout', '--prompt', 'atomic assignment', '--cwd', repository, '--state-root', f.state], f, env);
+    const started = await cli(['start', '--harness', 'pi', '--backend', 'herdr', '--role', 'scout', '--prompt', 'atomic assignment', '--cwd', repository, '--state-root', f.state], f, env);
     assert.equal(started.status, 0, started.stderr);
+    assert.equal(started.json.backend, 'herdr'); assert.equal(started.json.harness, 'pi');
     const calls = readFileSync(trace, 'utf8').split(/\r?\n/);
     const launch = calls.find((line) => line.startsWith('agent start'));
     assert.match(launch, /--no-focus -- .*\/pi --tools read,grep,find,ls$/); assert.doesNotMatch(launch, / -p |atomic assignment/);
@@ -361,7 +366,7 @@ esac`);
 
     const workerRoot = path.join(f.root, 'herdr-worker');
     const workerEnv = { ...env, HERDR_WORKTREE: workerRoot };
-    const worker = await cli(['start', '--backend', 'pi', '--harness', 'herdr', '--role', 'worker', '--prompt', 'worker assignment', '--cwd', repository, '--state-root', f.state], f, workerEnv);
+    const worker = await cli(['start', '--harness', 'pi', '--backend', 'herdr', '--role', 'worker', '--prompt', 'worker assignment', '--cwd', repository, '--state-root', f.state], f, workerEnv);
     assert.equal(worker.status, 0, worker.stderr); assert.equal(worker.json.worktree.manager, 'herdr');
     const workerCalls = readFileSync(trace, 'utf8').split(/\r?\n/);
     const workerLaunch = workerCalls.find((line) => line.startsWith('pane run pane-worker ') && line.includes('/pi'));

@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 const SCHEMA = 1;
 const EX = Object.freeze({ usage: 2, unsupported: 3, timeout: 4, safety: 5, runtime: 6 });
 const TERMINAL = new Set(['completed', 'failed', 'timedout', 'stopped', 'cleaned']);
-const BACKENDS = new Set(['pi', 'claude', 'codex', 'grok', 'kimi']);
+const HARNESSES = new Set(['pi', 'claude', 'codex', 'grok', 'kimi']);
 const ROLES = new Set(['scout', 'research', 'worker']);
 const COMMANDS = new Set(['doctor', 'run', 'start', 'status', 'wait', 'logs', 'send', 'stop', 'integrate', 'clean']);
 const SCRIPT = fileURLToPath(import.meta.url);
@@ -19,9 +19,9 @@ const MAX_CAPTURE = 1024 * 1024;
 const HELP = {
   usage: 'subagents.mjs <doctor|run|start|status|wait|logs|send|stop|integrate|clean> [options]',
   common: ['--state-root PATH', '--help'],
-  launch: ['--backend pi|claude|codex|grok|kimi', '--harness standalone|herdr', '--role scout|research|worker', '--assignment FILE|--prompt TEXT', '--cwd PATH', '--timeout MS', '--async'],
+  launch: ['--backend standalone|herdr', '--harness pi|claude|codex|grok|kimi', '--role scout|research|worker', '--assignment FILE|--prompt TEXT', '--cwd PATH', '--timeout MS', '--async'],
   lifecycle: ['--run ID', 'integrate: --reviewed --checks TEXT [--strategy ff-only|merge] [--apply]', 'clean worker: --validated TEXT [--apply]'],
-  prerequisites: ['Node.js 20+ on macOS/Linux for standalone async control', 'Git repository and clean parent checkout for workers', 'authenticated supported agent CLI', 'verified in-pane Herdr environment for --harness herdr'],
+  prerequisites: ['Node.js 20+ on macOS/Linux for standalone async control', 'Git repository and clean parent checkout for workers', 'authenticated supported agent CLI', 'verified in-pane Herdr environment for --backend herdr'],
   state: 'owned mode-0700 runs live under --state-root or the OS temporary directory; retain ambiguous runs',
   exits: { 0: 'success', 2: 'usage', 3: 'unsupported capability', 4: 'timeout', 5: 'blocked safety gate', 6: 'runtime failure' },
   safety: 'integrate and clean are dry-run by default and mutate only with --apply; cleanup is never forced',
@@ -191,9 +191,9 @@ const ADAPTERS = {
   },
   kimi: { executable: 'kimi', help: [['--help']], tokens: ['-p'], readerTokens: ['--plan'], build(_role, _promptFile, _runtime, prompt) { return ['-p', prompt]; }, interactive(role) { return [role === 'worker' ? '--auto' : '--plan']; } },
 };
-function probeBackend(name, role, harness = 'standalone') {
-  if (!BACKENDS.has(name)) fail(`unsupported backend: ${name}`, EX.unsupported);
-  if (harness === 'standalone' && name === 'kimi' && role !== 'worker') fail('standalone Kimi readers are unsupported', EX.unsupported);
+function probeHarness(name, role, backend = 'standalone') {
+  if (!HARNESSES.has(name)) fail(`unsupported harness: ${name}`, EX.unsupported);
+  if (backend === 'standalone' && name === 'kimi' && role !== 'worker') fail('standalone Kimi readers are unsupported', EX.unsupported);
   const adapter = ADAPTERS[name];
   const executable = commandPath(adapter.executable);
   let combined = '';
@@ -326,11 +326,11 @@ function assignment(options, role, cwd, base) {
 }
 function childEnv() { return { ...process.env, SUBAGENTS_NO_DELEGATION: '1', PI_HERDR_SUBAGENT: '1', HERDR_SUBAGENT: '1' }; }
 
-function createManifest(options, root, parent, worktree, runId, runDir, harness) {
+function createManifest(options, root, parent, worktree, runId, runDir, backend) {
   const runIdentity = directoryIdentity(runDir);
   return {
     schema: SCHEMA, runId, nonce: randomBytes(16).toString('hex'), correlationOnly: true,
-    backend: options.backend, harness, role: options.role, state: 'starting', createdAt: now(), updatedAt: now(),
+    backend, harness: options.harness, role: options.role, state: 'starting', createdAt: now(), updatedAt: now(),
     stateRoot: root, runDir: runIdentity.realpath, runDirIdentity: runIdentity,
     parent: { checkout: parent.checkout, commonDir: parent.commonDir, branch: parent.branch, baseHead: parent.baseHead, cleanAtLaunch: parent.clean },
     worktree,
@@ -338,8 +338,8 @@ function createManifest(options, root, parent, worktree, runId, runDir, harness)
     runtime: {}, integration: null, cleanup: null,
   };
 }
-function newRun(options, harness) {
-  if (!BACKENDS.has(options.backend)) fail('--backend is required and must be supported', EX.usage);
+function newRun(options, backend) {
+  if (!HARNESSES.has(options.harness)) fail('--harness is required and must be supported', EX.usage);
   if (!ROLES.has(options.role)) fail('--role is required and must be scout, research, or worker', EX.usage);
   const root = getStateRoot(options);
   const parent = repository(path.resolve(options.cwd ?? process.cwd()));
@@ -347,8 +347,8 @@ function newRun(options, harness) {
   const runDir = path.join(runsRoot(root), runId);
   mkdirSync(runDir, { mode: 0o700 });
   let worktree = { manager: null, path: parent.checkout, branch: null, base: parent.baseHead, head: parent.baseHead, workspace: null };
-  if (options.role === 'worker' && harness === 'standalone') worktree = createGitWorktree(parent, root, runId);
-  const manifest = createManifest(options, root, parent, worktree, runId, runDir, harness);
+  if (options.role === 'worker' && backend === 'standalone') worktree = createGitWorktree(parent, root, runId);
+  const manifest = createManifest(options, root, parent, worktree, runId, runDir, backend);
   saveManifest(manifest);
   return manifest;
 }
@@ -416,13 +416,13 @@ function reconcileStandalone(manifest) {
 
 function startStandalone(options) {
   if (!['linux', 'darwin'].includes(process.platform)) fail('detached standalone mode is supported only on tested Linux/macOS', EX.unsupported);
-  if (!BACKENDS.has(options.backend) || !ROLES.has(options.role)) fail('launch requires a supported --backend and --role', EX.usage);
-  if (options.backend === 'kimi' && options.role !== 'worker') fail('standalone Kimi readers are unsupported', EX.unsupported);
+  if (!HARNESSES.has(options.harness) || !ROLES.has(options.role)) fail('launch requires a supported --harness and --role', EX.usage);
+  if (options.harness === 'kimi' && options.role !== 'worker') fail('standalone Kimi readers are unsupported', EX.unsupported);
   taskInput(options);
-  const probe = probeBackend(options.backend, options.role);
+  const probe = probeHarness(options.harness, options.role);
   const manifest = newRun(options, 'standalone');
   const cwd = manifest.worktree.path;
-  if (options.backend === 'kimi' && options.role === 'worker' && (!manifest.worktree.branch || cwd === manifest.parent.checkout)) fail('Kimi worker requires an isolated worktree', EX.safety);
+  if (options.harness === 'kimi' && options.role === 'worker' && (!manifest.worktree.branch || cwd === manifest.parent.checkout)) fail('Kimi worker requires an isolated worktree', EX.safety);
   const prompt = assignment(options, options.role, cwd, manifest.parent.baseHead);
   writeFileSync(manifest.logs.prompt, prompt, { mode: 0o600 });
   const marker = `subagents-wrapper:${manifest.runId}:${manifest.nonce}`;
@@ -456,14 +456,14 @@ function wrapper(options) {
   const pgid = snapshot.pgid;
   manifest.runtime.pid = process.pid; manifest.runtime.pgid = pgid; manifest.runtime.startIdentity = snapshot.startIdentity;
   manifest.runtime.startedAt = now(); manifest.state = 'running'; saveManifest(manifest);
-  const adapter = ADAPTERS[manifest.backend];
+  const adapter = ADAPTERS[manifest.harness];
   const promptFile = manifest.logs.prompt;
   const prompt = readFileSync(promptFile, 'utf8');
   const argv = adapter.build(manifest.role, promptFile, manifest.runtime, prompt, manifest.worktree.path);
   manifest.runtime.argv = argv;
   saveManifest(manifest);
   const stdoutFd = openSync(manifest.logs.stdout, 'a', 0o600), stderrFd = openSync(manifest.logs.stderr, 'a', 0o600);
-  const input = ['pi', 'claude', 'codex'].includes(manifest.backend) ? prompt : undefined;
+  const input = ['pi', 'claude', 'codex'].includes(manifest.harness) ? prompt : undefined;
   const result = spawnSync(manifest.runtime.executable, argv, { cwd: manifest.worktree.path, env: childEnv(), input, stdio: ['pipe', stdoutFd, stderrFd], timeout: manifest.runtime.timeoutMs });
   closeSync(stdoutFd); closeSync(stderrFd);
   const state = result.error?.code === 'ETIMEDOUT' ? 'timedout' : result.status === 0 ? 'completed' : 'failed';
@@ -481,18 +481,18 @@ function herdrRead(manifest, lines = 200) {
   const target = manifest.runtime.terminalId ?? manifest.runtime.paneId;
   return mustCmd(manifest.runtime.herdr, ['agent', 'read', target, '--source', 'recent-unwrapped', '--lines', String(lines)], {}, EX.runtime).stdout;
 }
-function requireHerdrIntegration(herdr, backend) {
-  if (backend === 'grok') fail('Herdr does not currently provide a Grok state integration', EX.unsupported);
-  const line = herdr.integration.split(/\r?\n/).find((entry) => entry.startsWith(`${backend}:`));
-  if (!line || !/: current\b/.test(line)) fail(`Herdr ${backend} integration is not current`, EX.unsupported, { integration: bounded(herdr.integration, 8192) });
+function requireHerdrIntegration(herdr, harness) {
+  if (harness === 'grok') fail('Herdr does not currently provide a Grok state integration', EX.unsupported);
+  const line = herdr.integration.split(/\r?\n/).find((entry) => entry.startsWith(`${harness}:`));
+  if (!line || !/: current\b/.test(line)) fail(`Herdr ${harness} integration is not current`, EX.unsupported, { integration: bounded(herdr.integration, 8192) });
 }
 function shellQuote(value) { return `'${String(value).replace(/'/g, `'"'"'`)}'`; }
 function startHerdr(options) {
-  if (!BACKENDS.has(options.backend) || !ROLES.has(options.role)) fail('launch requires a supported --backend and --role', EX.usage);
+  if (!HARNESSES.has(options.harness) || !ROLES.has(options.role)) fail('launch requires a supported --harness and --role', EX.usage);
   taskInput(options);
   const herdr = probeHerdr();
-  requireHerdrIntegration(herdr, options.backend);
-  const backend = probeBackend(options.backend, options.role, 'herdr');
+  requireHerdrIntegration(herdr, options.harness);
+  const harness = probeHarness(options.harness, options.role, 'herdr');
   const manifest = newRun(options, 'herdr');
   if (options.role === 'worker' && !manifest.parent.cleanAtLaunch) fail('Herdr worker launch requires a clean parent checkout', EX.safety);
   let created;
@@ -511,24 +511,24 @@ function startHerdr(options) {
   const prompt = assignment(options, options.role, manifest.worktree.path, manifest.parent.baseHead);
   writeFileSync(manifest.logs.prompt, prompt, { mode: 0o600 });
   let paneId, terminalId, tabId, workspaceId;
-  const interactiveArgs = backend.adapter.interactive(options.role);
+  const interactiveArgs = harness.adapter.interactive(options.role);
   if (options.role === 'worker') {
     paneId = pick(created, ['rootPaneId', 'root_pane_id', 'paneId', 'pane_id']);
     tabId = pick(created, ['tabId', 'tab_id']);
     workspaceId = manifest.worktree.workspace;
     if (!paneId || !tabId || !workspaceId) fail('Herdr worktree did not return complete workspace/tab/root-pane IDs', EX.runtime);
-    manifest.runtime = { herdr: herdr.executable, executable: backend.executable, probes: [...herdr.probes, ...backend.probes], socketPath: process.env.HERDR_SOCKET_PATH, parentWorkspaceId: process.env.HERDR_WORKSPACE_ID, parentTabId: process.env.HERDR_TAB_ID, parentPaneId: process.env.HERDR_PANE_ID, paneId, tabId, workspaceId, commandMarker: `herdr-pane:${paneId}`, timeoutMs: integerOption(options, 'timeout', 900000), startedAt: now() };
+    manifest.runtime = { herdr: herdr.executable, executable: harness.executable, probes: [...herdr.probes, ...harness.probes], socketPath: process.env.HERDR_SOCKET_PATH, parentWorkspaceId: process.env.HERDR_WORKSPACE_ID, parentTabId: process.env.HERDR_TAB_ID, parentPaneId: process.env.HERDR_PANE_ID, paneId, tabId, workspaceId, commandMarker: `herdr-pane:${paneId}`, timeoutMs: integerOption(options, 'timeout', 900000), startedAt: now() };
     saveManifest(manifest);
-    const launchCommand = [backend.executable, ...interactiveArgs].map(shellQuote).join(' ');
+    const launchCommand = [harness.executable, ...interactiveArgs].map(shellQuote).join(' ');
     mustCmd(herdr.executable, ['pane', 'run', paneId, launchCommand], { env: childEnv() });
     const pane = herdrJson(herdr.executable, ['pane', 'get', paneId], 'herdr pane get');
     terminalId = pick(pane, ['terminalId', 'terminal_id']);
   } else {
     const name = `subagent-${slug(manifest.runId)}`;
-    const result = herdrJson(herdr.executable, ['agent', 'start', name, '--cwd', manifest.parent.checkout, '--tab', process.env.HERDR_TAB_ID, '--split', 'right', '--no-focus', '--', backend.executable, ...interactiveArgs], 'herdr agent start');
+    const result = herdrJson(herdr.executable, ['agent', 'start', name, '--cwd', manifest.parent.checkout, '--tab', process.env.HERDR_TAB_ID, '--split', 'right', '--no-focus', '--', harness.executable, ...interactiveArgs], 'herdr agent start');
     paneId = pick(result, ['paneId', 'pane_id']); terminalId = pick(result, ['terminalId', 'terminal_id']); tabId = pick(result, ['tabId', 'tab_id']) ?? process.env.HERDR_TAB_ID; workspaceId = pick(result, ['workspaceId', 'workspace_id']) ?? process.env.HERDR_WORKSPACE_ID;
   }
-  manifest.runtime = { herdr: herdr.executable, executable: backend.executable, probes: [...herdr.probes, ...backend.probes], socketPath: process.env.HERDR_SOCKET_PATH, parentWorkspaceId: process.env.HERDR_WORKSPACE_ID, parentTabId: process.env.HERDR_TAB_ID, parentPaneId: process.env.HERDR_PANE_ID, paneId, terminalId, tabId, workspaceId, commandMarker: paneId ? `herdr-pane:${paneId}` : null, timeoutMs: integerOption(options, 'timeout', 900000), startedAt: now() };
+  manifest.runtime = { herdr: herdr.executable, executable: harness.executable, probes: [...herdr.probes, ...harness.probes], socketPath: process.env.HERDR_SOCKET_PATH, parentWorkspaceId: process.env.HERDR_WORKSPACE_ID, parentTabId: process.env.HERDR_TAB_ID, parentPaneId: process.env.HERDR_PANE_ID, paneId, terminalId, tabId, workspaceId, commandMarker: paneId ? `herdr-pane:${paneId}` : null, timeoutMs: integerOption(options, 'timeout', 900000), startedAt: now() };
   saveManifest(manifest);
   if (!paneId || !terminalId || !tabId || !workspaceId) fail('Herdr did not return complete owned workspace/tab/pane/terminal IDs; retained recorded partial topology', EX.runtime);
   herdrRead(manifest);
@@ -578,22 +578,22 @@ function statusHerdr(manifest) {
 }
 
 function start(options) {
-  const harness = options.harness ?? 'standalone';
-  if (!['standalone', 'herdr'].includes(harness)) fail('--harness must be standalone or herdr', EX.usage);
-  return harness === 'standalone' ? startStandalone(options) : startHerdr(options);
+  const backend = options.backend ?? 'standalone';
+  if (!['standalone', 'herdr'].includes(backend)) fail('--backend must be standalone or herdr', EX.usage);
+  return backend === 'standalone' ? startStandalone(options) : startHerdr(options);
 }
 function status(options) {
   const tombstone = loadTombstone(options);
   if (tombstone) return { runId: tombstone.runId, state: 'cleaned', live: false, idempotent: true, tombstone };
   const manifest = loadManifest(options);
   if (manifest.state === 'cleaned') return { manifest, live: false, idempotent: true };
-  if (manifest.harness === 'standalone') return reconcileStandalone(manifest);
+  if (manifest.backend === 'standalone') return reconcileStandalone(manifest);
   return statusHerdr(manifest);
 }
 function waitRun(options) {
   const timeout = integerOption(options, 'timeout', 900000), deadline = Date.now() + timeout;
   const initial = loadManifest(options);
-  if (initial.harness === 'herdr') {
+  if (initial.backend === 'herdr') {
     let last;
     while (Date.now() < deadline) {
       last = statusHerdr(loadManifest(options));
@@ -619,13 +619,13 @@ function waitRun(options) {
 }
 function readLogs(options) {
   const manifest = loadManifest(options), lines = integerOption(options, 'lines', 200, 1, 5000);
-  if (manifest.harness === 'herdr') return { runId: manifest.runId, output: bounded(herdrRead(manifest, lines)) };
+  if (manifest.backend === 'herdr') return { runId: manifest.runId, output: bounded(herdrRead(manifest, lines)) };
   const tail = (file) => { try { return readFileSync(file, 'utf8').split(/\r?\n/).slice(-lines).join('\n'); } catch { return ''; } };
   return { runId: manifest.runId, stdout: bounded(tail(manifest.logs.stdout)), stderr: bounded(tail(manifest.logs.stderr)) };
 }
 function send(options) {
   const manifest = loadManifest(options);
-  if (manifest.harness !== 'herdr') fail('send is supported only for live Herdr children', EX.unsupported);
+  if (manifest.backend !== 'herdr') fail('send is supported only for live Herdr children', EX.unsupported);
   if (!options.message) fail('--message is required', EX.usage);
   const verified = verifyHerdr(manifest);
   if (!verified.live) fail('Herdr child identity is not live and exact', EX.safety, verified);
@@ -635,12 +635,12 @@ function send(options) {
 function stop(options) {
   const manifest = loadManifest(options);
   if (manifest.state === 'cleaned' || manifest.state === 'stopped') return { runId: manifest.runId, state: manifest.state, idempotent: true };
-  if (manifest.harness === 'standalone' && TERMINAL.has(manifest.state)) {
+  if (manifest.backend === 'standalone' && TERMINAL.has(manifest.state)) {
     const terminalIdentity = verifyProcess(manifest);
     if (!terminalIdentity.live && !terminalIdentity.ambiguous) return { runId: manifest.runId, state: manifest.state, idempotent: true };
     if (terminalIdentity.ambiguous || terminalIdentity.teardown) fail('terminal process group identity is ambiguous; retained', EX.safety, terminalIdentity);
   }
-  if (manifest.harness === 'herdr') {
+  if (manifest.backend === 'herdr') {
     const verified = verifyHerdr(manifest); if (!verified.live) fail('Herdr identity is ambiguous; retained', EX.safety, verified);
     mustCmd(manifest.runtime.herdr, ['pane', 'send-keys', manifest.runtime.paneId, 'ctrl+c']);
     herdrRead(manifest);
@@ -661,7 +661,7 @@ function workerEvidence(manifest) {
   if (manifest.role !== 'worker') fail('operation requires a worker run', EX.unsupported);
   if (!TERMINAL.has(manifest.state) || manifest.state === 'cleaned') fail('worker child is not terminal', EX.safety);
   if (!manifest.parent.cleanAtLaunch) fail('recorded parent checkout was not clean at worker launch', EX.safety);
-  if (manifest.harness === 'standalone') {
+  if (manifest.backend === 'standalone') {
     const runtimeIdentity = verifyProcess(manifest);
     if (runtimeIdentity.live || runtimeIdentity.ambiguous) fail('standalone worker process group is live or ambiguous', EX.safety, runtimeIdentity);
   } else {
@@ -724,7 +724,7 @@ function clean(options) {
   const manifest = loadManifest(options);
   if (manifest.state === 'cleaned') return { runId: manifest.runId, state: 'cleaned', idempotent: true };
   if (manifest.role !== 'worker') {
-    const live = manifest.harness === 'standalone' ? verifyProcess(manifest) : verifyHerdr(manifest);
+    const live = manifest.backend === 'standalone' ? verifyProcess(manifest) : verifyHerdr(manifest);
     if (live.live || live.ambiguous) fail('reader runtime is live or ambiguous; retained', EX.safety, live);
     if (!options.apply) return { runId: manifest.runId, dryRun: true, reader: true };
     const disposition = { reader: true, appliedAt: now() };
@@ -738,7 +738,7 @@ function clean(options) {
   if (!integration || integration.state !== 'integrated' || integration.workerHead !== evidence.workerHead) fail('successful recorded integration/no-change attestation is required', EX.safety);
   const currentParentHead = git(evidence.parent.checkout, ['rev-parse', 'HEAD']);
   if (gitResult(evidence.parent.checkout, ['merge-base', '--is-ancestor', evidence.workerHead, currentParentHead]).status !== 0) fail('worker HEAD is not an ancestor of validated parent HEAD', EX.safety);
-  const live = manifest.harness === 'standalone' ? verifyProcess(manifest) : verifyHerdr(manifest);
+  const live = manifest.backend === 'standalone' ? verifyProcess(manifest) : verifyHerdr(manifest);
   if (live.live || live.ambiguous) fail('child liveness is not safely absent', EX.safety, live);
   if (!options.apply) return { runId: manifest.runId, dryRun: true, workerHead: evidence.workerHead, parentHead: currentParentHead, manager: manifest.worktree.manager };
   let removed;
@@ -755,14 +755,14 @@ function clean(options) {
   return { runId: manifest.runId, state: 'cleaned', branchDeleted: manifest.worktree.branch, stateRetired: true };
 }
 function doctor(options) {
-  const role = options.role ?? 'worker', harness = options.harness ?? 'standalone';
-  if (!['standalone', 'herdr'].includes(harness)) fail('--harness must be standalone or herdr', EX.usage);
+  const role = options.role ?? 'worker', backend = options.backend ?? 'standalone';
+  if (!['standalone', 'herdr'].includes(backend)) fail('--backend must be standalone or herdr', EX.usage);
   if (!ROLES.has(role)) fail('--role must be scout, research, or worker', EX.usage);
-  if (!options.backend) fail('--backend is required', EX.usage);
-  const backend = probeBackend(options.backend, role, harness);
-  const herdr = harness === 'herdr' ? probeHerdr() : null;
-  if (herdr) requireHerdrIntegration(herdr, options.backend);
-  return { ok: true, backend: options.backend, harness, role, executable: backend.executable, version: backend.version, herdr: herdr ? { executable: herdr.executable } : null };
+  if (!options.harness) fail('--harness is required', EX.usage);
+  const harness = probeHarness(options.harness, role, backend);
+  const herdr = backend === 'herdr' ? probeHerdr() : null;
+  if (herdr) requireHerdrIntegration(herdr, options.harness);
+  return { ok: true, backend, harness: options.harness, role, executable: harness.executable, version: harness.version, herdr: herdr ? { executable: herdr.executable } : null };
 }
 
 async function main() {
@@ -779,7 +779,7 @@ async function main() {
       else {
         const lifecycle = { ...options, run: started.runId, 'state-root': started.stateRoot.realpath };
         result = waitRun(lifecycle);
-        if (started.harness === 'standalone') {
+        if (started.backend === 'standalone') {
           await new Promise((resolve) => setTimeout(resolve, 50));
           result = status(lifecycle);
         }

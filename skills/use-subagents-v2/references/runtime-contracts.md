@@ -12,6 +12,13 @@ Use this reference to prove that a runtime can enforce the assignment before lau
 
 ## Capability gate
 
+Resolve `scripts/subagents.mjs` relative to the skill directory. Its `--backend` selects `standalone|herdr`; `--harness` selects `pi|claude|codex|grok|kimi`. Inspect its help, then probe the exact pair without launching a model prompt:
+
+```sh
+node scripts/subagents.mjs --help
+node scripts/subagents.mjs doctor --backend standalone --harness pi --role scout
+```
+
 From the parent-controlled environment, verify the executable path and current help:
 
 ```sh
