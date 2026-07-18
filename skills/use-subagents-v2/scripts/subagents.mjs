@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { accessSync, closeSync, constants, mkdirSync, openSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { accessSync, closeSync, constants, mkdirSync, openSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { spawn, spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { tmpdir } from 'node:os';
@@ -13,15 +13,16 @@ const EX = Object.freeze({ usage: 2, unsupported: 3, timeout: 4, safety: 5, runt
 const TERMINAL = new Set(['completed', 'failed', 'timedout', 'stopped', 'cleaned']);
 const HARNESSES = new Set(['pi', 'claude', 'codex', 'grok', 'kimi']);
 const ROLES = new Set(['scout', 'research', 'worker']);
-const COMMANDS = new Set(['info', 'run', 'start', 'status', 'wait', 'logs', 'send', 'stop', 'integrate', 'clean']);
+const COMMANDS = new Set(['info', 'run', 'status', 'send', 'stop', 'integrate', 'clean']);
 const HERDR_MARKERS = ['HERDR_ENV', 'HERDR_SOCKET_PATH', 'HERDR_WORKSPACE_ID', 'HERDR_TAB_ID', 'HERDR_PANE_ID'];
 const SCRIPT = fileURLToPath(import.meta.url);
 const MAX_CAPTURE = 1024 * 1024;
 const HELP = {
-  usage: 'subagents.mjs <info|run|start|status|wait|logs|send|stop|integrate|clean> [options]',
+  usage: 'subagents.mjs <info|run|status|send|stop|integrate|clean> [options]',
+  commands: [...COMMANDS],
   common: ['--state-root PATH', '--help'],
-  launch: ['--harness pi|claude|codex|grok|kimi', '--role scout|research|worker', '--assignment FILE|--prompt TEXT', '--cwd PATH', '--timeout MS', '--async'],
-  lifecycle: ['--run ID', 'integrate: --reviewed --checks TEXT [--strategy ff-only|merge] [--apply]', 'clean worker: --validated TEXT [--apply]'],
+  launch: ['run: --harness pi|claude|codex|grok|kimi --role scout|research|worker (--assignment FILE|--prompt TEXT) [--cwd PATH] [--timeout MS] [--async]'],
+  lifecycle: ['status: [--run ID] [--wait] [--lines 1..5000] [--timeout MS]', 'send: --run ID --message TEXT', 'stop: --run ID', 'integrate: --run ID --reviewed --checks TEXT [--strategy ff-only|merge] [--apply]', 'clean: --run ID [--validated TEXT] [--apply]'],
   prerequisites: ['Node.js 20+ on macOS/Linux for standalone async control', 'Git repository and clean parent checkout for workers', 'authenticated supported agent CLI', 'complete and verified in-pane Herdr markers for automatic Herdr selection'],
   state: 'owned mode-0700 runs live under --state-root or the OS temporary directory; retain ambiguous runs',
   exits: { 0: 'success', 2: 'usage', 3: 'unsupported capability', 4: 'timeout', 5: 'blocked safety gate', 6: 'runtime failure' },
@@ -111,7 +112,11 @@ function retireRun(manifest, disposition) {
   if (!sameIdentity(manifest.runDirIdentity, currentRunDir)) fail('run state identity changed before retirement', EX.safety);
   const directory = path.join(manifest.stateRoot.realpath, 'cleaned');
   mkdirSync(directory, { recursive: true, mode: 0o700 });
-  atomicJson(cleanedPath(manifest.stateRoot, manifest.runId), { schema: SCHEMA, runId: manifest.runId, state: 'cleaned', cleanedAt: now(), disposition });
+  const raw = manifest.backend === 'standalone' ? { identity: { live: false } } : { live: false };
+  atomicJson(cleanedPath(manifest.stateRoot, manifest.runId), {
+    schema: SCHEMA, runId: manifest.runId, state: 'cleaned', backend: manifest.backend,
+    harness: manifest.harness, role: manifest.role, runtime: runtimeSummary(manifest, raw), cleanedAt: now(), disposition,
+  });
   rmSync(manifest.runDir, { recursive: true });
 }
 function loadManifest(options) {
@@ -130,10 +135,11 @@ function loadManifest(options) {
 }
 
 function parseArgs(argv) {
-  if (argv.length === 0 || argv.includes('--help') || argv.includes('-h')) return { help: true, command: argv[0] };
+  if (argv.length === 0 || argv[0] === '--help' || argv[0] === '-h') return { help: true };
   const command = argv.shift();
   if (!COMMANDS.has(command) && command !== '__wrapper') fail(`unknown command: ${command}`, EX.usage);
-  const booleans = new Set(['apply', 'reviewed', 'async']);
+  if (argv.includes('--help') || argv.includes('-h')) return { help: true, command };
+  const booleans = new Set(['apply', 'reviewed', 'async', 'wait']);
   const options = { command };
   while (argv.length) {
     const token = argv.shift();
@@ -144,7 +150,7 @@ function parseArgs(argv) {
     if (options[key] !== undefined) fail(`duplicate option: ${token}`, EX.usage);
     options[key] = argv.shift();
   }
-  const allowed = new Set(['state-root', 'harness', 'role', 'assignment', 'prompt', 'cwd', 'timeout', 'run', 'lines', 'message', 'reviewed', 'checks', 'strategy', 'apply', 'validated', 'async']);
+  const allowed = new Set(['state-root', 'harness', 'role', 'assignment', 'prompt', 'cwd', 'timeout', 'run', 'lines', 'message', 'reviewed', 'checks', 'strategy', 'apply', 'validated', 'async', 'wait']);
   for (const key of Object.keys(options)) if (key !== 'command' && !allowed.has(key)) fail(`unknown option: --${key}`, EX.usage);
   return options;
 }
@@ -642,7 +648,7 @@ function statusHerdr(manifest) {
   return { manifest, ...identity, advisoryState: state === 'working' ? 'running' : state };
 }
 
-function start(options) {
+function launch(options) {
   if (!HARNESSES.has(options.harness)) fail('--harness is required and must be supported', EX.usage);
   if (!ROLES.has(options.role)) fail('--role is required and must be scout, research, or worker', EX.usage);
   taskInput(options);
@@ -651,7 +657,7 @@ function start(options) {
   const harness = probeHarness(options.harness, options.role, resolved.backend);
   return resolved.backend === 'standalone' ? startStandalone(options, resolved, harness) : startHerdr(options, resolved, harness);
 }
-function status(options) {
+function rawStatus(options) {
   const tombstone = loadTombstone(options);
   if (tombstone) return { runId: tombstone.runId, state: 'cleaned', live: false, idempotent: true, tombstone };
   const manifest = loadManifest(options);
@@ -675,7 +681,7 @@ function waitRun(options) {
   }
   let result;
   while (Date.now() < deadline) {
-    result = status(options);
+    result = rawStatus(options);
     if (TERMINAL.has(result.manifest.state)) {
       if (result.manifest.state === 'timedout') fail('child execution timed out', EX.timeout, result);
       if (result.manifest.state === 'failed') fail('child execution failed', EX.runtime, result);
@@ -686,11 +692,133 @@ function waitRun(options) {
   }
   fail('wait timed out', EX.timeout, result);
 }
-function readLogs(options) {
-  const manifest = loadManifest(options), lines = integerOption(options, 'lines', 200, 1, 5000);
-  if (manifest.backend === 'herdr') return { runId: manifest.runId, output: bounded(herdrRead(manifest, lines)) };
-  const tail = (file) => { try { return readFileSync(file, 'utf8').split(/\r?\n/).slice(-lines).join('\n'); } catch { return ''; } };
-  return { runId: manifest.runId, stdout: bounded(tail(manifest.logs.stdout)), stderr: bounded(tail(manifest.logs.stderr)) };
+function recentOutput(manifest, lines, raw) {
+  if (manifest.backend === 'herdr') {
+    try { return bounded(herdrRead(manifest, lines)); }
+    catch (error) { if (error instanceof CliError && raw.live === false) return ''; throw error; }
+  }
+  const readLines = (file) => {
+    try {
+      const entries = readFileSync(file, 'utf8').split(/\r?\n/);
+      if (entries.at(-1) === '') entries.pop();
+      return entries;
+    } catch { return []; }
+  };
+  const stdout = readLines(manifest.logs.stdout), stderr = readLines(manifest.logs.stderr);
+  return bounded([...stdout, ...(stderr.length ? ['[stderr]', ...stderr] : [])].slice(-lines).join('\n'));
+}
+function normalizedState(manifest, raw = {}) {
+  if (manifest?.state === 'cleaned' || raw.state === 'cleaned') return 'cleaned';
+  if (manifest?.integration?.state === 'integrated') return 'integrated';
+  if (manifest?.state === 'stopped') return 'stopped';
+  if (raw.advisoryState === 'blocked' || raw.advisoryState === 'unknown' || raw.ambiguous || raw.identity?.ambiguous) return 'blocked';
+  if (manifest?.state === 'failed' || manifest?.state === 'timedout') return 'blocked';
+  if (!raw.live && manifest?.state === 'running' && (raw.advisory || raw.absent)) return 'blocked';
+  if (manifest?.state === 'completed') return 'completed';
+  return 'running';
+}
+function runtimeSummary(manifest, raw) {
+  if (manifest.backend === 'herdr') return {
+    workspaceId: manifest.runtime.workspaceId, tabId: manifest.runtime.tabId, paneId: manifest.runtime.paneId,
+    terminalId: manifest.runtime.terminalId, live: raw.live === true, ambiguous: raw.ambiguous === true,
+    agentState: raw.agentState ?? raw.advisoryState,
+  };
+  const identity = raw.identity ?? {};
+  return {
+    pid: manifest.runtime.pid, pgid: manifest.runtime.pgid, live: identity.live === true,
+    ambiguous: identity.ambiguous === true, teardown: identity.teardown === true,
+  };
+}
+function workerStatus(manifest) {
+  const wt = manifest.worktree ?? {};
+  let head = null, branch = null, status = null, commits = '', diff = '';
+  if (typeof wt.path === 'string' && path.isAbsolute(wt.path)) {
+    const headResult = gitResult(wt.path, ['rev-parse', 'HEAD']);
+    if (headResult.status === 0) head = headResult.stdout.trim();
+    const branchResult = gitResult(wt.path, ['branch', '--show-current']);
+    if (branchResult.status === 0) branch = branchResult.stdout.trim();
+    const statusResult = gitResult(wt.path, ['status', '--porcelain=v1']);
+    if (statusResult.status === 0) status = statusResult.stdout.trim();
+    if (head) {
+      const commitResult = gitResult(wt.path, ['log', '--oneline', `${wt.base}..${head}`]);
+      const diffResult = gitResult(wt.path, ['diff', '--stat', `${wt.base}..${head}`]);
+      if (commitResult.status === 0) commits = bounded(commitResult.stdout.trim(), 16384);
+      if (diffResult.status === 0) diff = bounded(diffResult.stdout.trim(), 16384);
+    }
+  }
+  let ready = false, blockedReason;
+  try { workerEvidence(manifest); ready = true; }
+  catch (error) { blockedReason = error instanceof CliError ? error.message : 'worker evidence could not be verified'; }
+  return {
+    path: wt.path, branch, head, clean: status === '' ? true : status === null ? null : false,
+    ...(status ? { status: bounded(status, 16384) } : {}), commits, diff,
+    integration: manifest.integration?.state ?? 'pending', readiness: ready ? 'ready' : 'blocked',
+    ...(blockedReason ? { blockedReason } : {}),
+  };
+}
+function nextAction(state, manifest, runtime, worker) {
+  if (state === 'cleaned') return 'retain';
+  if (state === 'running') return 'wait';
+  if (manifest.role === 'worker') {
+    if (state === 'integrated') return 'validate';
+    if (/^conflict/.test(manifest.integration?.state ?? '')) return 'retain';
+    if (worker?.readiness === 'ready') return 'integrate';
+    if (manifest.backend === 'herdr' && state === 'completed' && !worker) return 'stop';
+    if (manifest.backend === 'herdr' && runtime.live && /explicitly stopped/.test(worker?.blockedReason ?? '')) return 'stop';
+    return 'retain';
+  }
+  if (state === 'stopped') return 'clean';
+  if (state === 'completed') return 'review';
+  return runtime.live ? 'stop' : 'retain';
+}
+function normalizedStatus(raw, lines = 200) {
+  if (!raw.manifest) return {
+    runId: raw.runId, state: 'cleaned', backend: raw.tombstone?.backend, harness: raw.tombstone?.harness,
+    role: raw.tombstone?.role, output: '', runtime: raw.tombstone?.runtime, next: 'retain',
+  };
+  const manifest = raw.manifest, state = normalizedState(manifest, raw), runtime = runtimeSummary(manifest, raw);
+  const worker = manifest.role === 'worker' ? workerStatus(manifest) : undefined;
+  return {
+    runId: manifest.runId, state, backend: manifest.backend, harness: manifest.harness, role: manifest.role,
+    output: recentOutput(manifest, lines, raw), runtime, ...(worker ? { worker } : {}),
+    next: nextAction(state, manifest, runtime, worker),
+  };
+}
+function listRuns(options) {
+  const requested = path.resolve(options['state-root'] ?? process.env.SUBAGENTS_STATE_ROOT ?? defaultStateRoot());
+  try { accessSync(requested); } catch { return { runs: [] }; }
+  const root = getStateRoot(options, false), directory = path.join(root.realpath, 'runs');
+  let entries;
+  try { entries = readdirSync(directory, { withFileTypes: true }); } catch { return { runs: [] }; }
+  const runs = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const lifecycle = { ...options, run: entry.name, 'state-root': root.realpath };
+    let manifest;
+    try { manifest = loadManifest(lifecycle); }
+    catch { continue; /* only provenance-verified owned runs are listed */ }
+    let state = 'blocked', next = 'retain';
+    try {
+      const raw = rawStatus(lifecycle);
+      if (!raw.manifest) continue;
+      manifest = raw.manifest;
+      state = normalizedState(manifest, raw);
+      const runtime = runtimeSummary(manifest, raw);
+      const worker = manifest.role === 'worker' ? workerStatus(manifest) : undefined;
+      next = nextAction(state, manifest, runtime, worker);
+    } catch { /* retain owned runs whose current state cannot be safely reconciled */ }
+    runs.push({ runId: manifest.runId, state, backend: manifest.backend, harness: manifest.harness, role: manifest.role, next });
+  }
+  runs.sort((a, b) => a.runId.localeCompare(b.runId));
+  return { runs };
+}
+function status(options) {
+  if (!options.run) {
+    if (options.wait || options.lines !== undefined || options.timeout !== undefined) fail('--wait, --lines, and --timeout require --run', EX.usage);
+    return listRuns(options);
+  }
+  const lines = integerOption(options, 'lines', 200, 1, 5000);
+  return normalizedStatus(options.wait ? waitRun(options) : rawStatus(options), lines);
 }
 function send(options) {
   const manifest = loadManifest(options);
@@ -830,23 +958,17 @@ async function main() {
   let result;
   switch (options.command) {
     case 'info': result = info(options); break;
-    case 'start': result = start(options); break;
     case 'run': {
-      const started = start(options);
-      if (options.async) result = started;
-      else {
-        const lifecycle = { ...options, run: started.runId, 'state-root': started.stateRoot.realpath };
-        result = waitRun(lifecycle);
-        if (started.backend === 'standalone') {
-          await new Promise((resolve) => setTimeout(resolve, 50));
-          result = status(lifecycle);
-        }
+      const started = launch(options);
+      const lifecycle = { ...options, run: started.runId, 'state-root': started.stateRoot.realpath };
+      if (!options.async) {
+        waitRun(lifecycle);
+        if (started.backend === 'standalone') await new Promise((resolve) => setTimeout(resolve, 50));
       }
+      result = status(lifecycle);
       break;
     }
     case 'status': result = status(options); break;
-    case 'wait': result = waitRun(options); break;
-    case 'logs': result = readLogs(options); break;
     case 'send': result = send(options); break;
     case 'stop': result = stop(options); break;
     case 'integrate': result = integrate(options); break;
