@@ -9,9 +9,9 @@ description: >-
   background processes.
 license: MIT
 compatibility: >-
-  Requires Git worktrees plus either an inspected interactive Herdr installation
-  or a standalone agent CLI with a proven one-shot headless and permission-safe
-  invocation.
+  Requires Node.js and a current authenticated Pi, Claude Code, Codex, Grok, or
+  Kimi CLI. Workers require Git; Herdr mode requires a verified in-pane session;
+  standalone asynchronous control supports tested macOS/Linux process APIs.
 metadata:
   short-description: Run isolated subagents and integrate verified work
 ---

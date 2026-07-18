@@ -7,6 +7,7 @@
 - `create-skill` — create, rewrite, and review concise, actionable Agent Skills.
 - `implement-plan` — execute existing Markdown implementation plans with delegation-first tracking and verification.
 - `use-subagents` — plan and coordinate portable, bounded subagent work with runtime-specific lifecycle adapters.
+- `use-subagents-v2` — launch and safely manage CLI subagents, isolated worker worktrees, integration, and cleanup.
 - `web-research` — perform current, source-backed research across web content and repositories.
 
 ## Install
@@ -29,7 +30,7 @@ Or use the explicit option:
 npx skills add maxedapps/agent-skills --skill code-review
 ```
 
-Install all six skills explicitly:
+Install all seven skills explicitly:
 
 ```sh
 npx skills add maxedapps/agent-skills \
@@ -38,6 +39,7 @@ npx skills add maxedapps/agent-skills \
   --skill create-skill \
   --skill implement-plan \
   --skill use-subagents \
+  --skill use-subagents-v2 \
   --skill web-research
 ```
 
@@ -45,7 +47,7 @@ Review each skill and its compatibility requirements before use. `code-review` a
 
 ## Runtime and related skills
 
-- **Subagent coordination is portable.** The generic `use-subagents` strategy can pair with a runtime-specific adapter for exact lifecycle mechanics, or use an inspected native capability or suitably controlled non-interactive CLI when no adapter exists. Planning and coordination do not themselves require delegation.
+- **Subagent coordination is portable.** The generic `use-subagents` strategy owns delegation decisions and assignment design. Pair it with `use-subagents-v2` when the parent must actually launch or supervise Pi, Claude Code, Codex, Grok, or Kimi CLI children, manage Herdr panes, or integrate and clean isolated worker worktrees. V2 requires Node, current authenticated CLIs, Git for workers, and macOS/Linux for standalone asynchronous control.
 - **`agent-browser` remains external.** Install it from [skills.sh](https://www.skills.sh/vercel-labs/agent-browser/agent-browser) when browser interaction or UI verification is needed:
 
   ```sh
@@ -73,6 +75,10 @@ Executes an existing Markdown plan in verified dependency-ready batches. It stro
 ### `use-subagents`
 
 Decides whether delegation is worthwhile, splits work into independent fan-out, staged, fresh-review, or isolated-writer lanes, and defines bounded assignments with least privilege, monitored handoffs, parent verification, and owned-resource cleanup. Exact launch, status, stop, worktree, and cleanup mechanics belong to a runtime-specific adapter when available; otherwise the skill uses only inspected native capabilities or a suitably controlled non-interactive CLI, and fails closed when neither is safe.
+
+### `use-subagents-v2`
+
+Executes the lifecycle designed by `use-subagents`: capability-probes current Pi, Claude Code, Codex, Grok, Kimi, and Herdr installations; runs readers synchronously, asynchronously, or in bounded parallel; gives every worker an isolated Git worktree; and records exact ownership. Integration and cleanup are separate dry-run-first operations. Parent review and worker checks precede merge, parent validation follows merge, ancestry gates non-force worktree removal, and only the exact generated branch is deleted with `git branch -d`. Unsupported or ambiguous permissions, runtime identity, dirty work, conflicts, and unintegrated commits are retained rather than forced.
 
 ### `web-research`
 

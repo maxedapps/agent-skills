@@ -2,6 +2,14 @@
 
 Use this reference to prove that a runtime can enforce the assignment before launch. Help output is version-specific evidence; remembered flags are not.
 
+## Contents
+
+- Capability gate
+- Interactive Herdr
+- Standalone one-shot mode
+- Kimi readers
+- Runtime evidence to retain
+
 ## Capability gate
 
 From the parent-controlled environment, verify the executable path and current help:
@@ -77,9 +85,17 @@ grok --help
 kimi --help
 ```
 
-Current entry points are Pi `--print`, Claude `--print`, Codex `exec`, Grok `--single`/`--prompt-file`, and Kimi `--prompt`. They do not share permission, cwd, prompt-input, or output syntax; use only the exact adapter form proven by current help. Run readers in the parent checkout under an enforced read-only mode and workers in the isolated worktree under explicitly authorized write permissions. Pass the complete assignment once through stdin or a prompt file when supported so large prompts and secrets do not enter argv.
+After `doctor` proves the required tokens, the script constructs these current conservative forms; it sets the process cwd to the parent checkout for readers and the owned worktree for workers:
 
-The invocation must expose a non-interactive completion result and enforce the assignment's permissions without a dangerous bypass. Capture output and exit status under a timeout. After it exits, inspect Git independently; exit zero is evidence, not acceptance.
+| CLI | Current standalone form | Prompt transport and role policy |
+|---|---|---|
+| Pi | `pi -p --no-session ... --tools <allowlist>` | stdin; scout is filesystem-read-only, research adds named web tools, worker gets the explicit write allowlist; non-research runs disable extensions |
+| Claude | `claude -p --no-session-persistence --permission-mode <plan|dontAsk> --tools <allowlist>` | stdin; readers use `plan`, workers use the explicit write tool set |
+| Codex | `codex [--search] exec -C <cwd> --sandbox <read-only|workspace-write> --ephemeral -` | stdin; research enables current `--search` |
+| Grok | `grok --prompt-file <file> --permission-mode <plan|auto> --no-subagents --no-memory --output-format json` | owned prompt file; readers use `plan`, isolated workers use `auto` |
+| Kimi | `kimi -p <prompt>` | argv because current help exposes no prompt-file/stdin form; standalone readers remain blocked and only isolated workers are allowed |
+
+The exact argv is also stored in the owned manifest. Do not copy these forms around the script or bypass `doctor`; current help remains the authority. The invocation must expose a non-interactive completion result and enforce the assignment's permissions without a dangerous bypass. Capture output and exit status under a timeout. After it exits, inspect Git independently; exit zero is evidence, not acceptance.
 
 Standalone follow-up is unsupported. If the result is incomplete or ambiguous, retain the worktree and branch and return control to the parent; do not resume a session or silently start a replacement worker.
 
