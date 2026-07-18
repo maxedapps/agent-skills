@@ -13,15 +13,16 @@ const EX = Object.freeze({ usage: 2, unsupported: 3, timeout: 4, safety: 5, runt
 const TERMINAL = new Set(['completed', 'failed', 'timedout', 'stopped', 'cleaned']);
 const HARNESSES = new Set(['pi', 'claude', 'codex', 'grok', 'kimi']);
 const ROLES = new Set(['scout', 'research', 'worker']);
-const COMMANDS = new Set(['doctor', 'run', 'start', 'status', 'wait', 'logs', 'send', 'stop', 'integrate', 'clean']);
+const COMMANDS = new Set(['info', 'run', 'start', 'status', 'wait', 'logs', 'send', 'stop', 'integrate', 'clean']);
+const HERDR_MARKERS = ['HERDR_ENV', 'HERDR_SOCKET_PATH', 'HERDR_WORKSPACE_ID', 'HERDR_TAB_ID', 'HERDR_PANE_ID'];
 const SCRIPT = fileURLToPath(import.meta.url);
 const MAX_CAPTURE = 1024 * 1024;
 const HELP = {
-  usage: 'subagents.mjs <doctor|run|start|status|wait|logs|send|stop|integrate|clean> [options]',
+  usage: 'subagents.mjs <info|run|start|status|wait|logs|send|stop|integrate|clean> [options]',
   common: ['--state-root PATH', '--help'],
-  launch: ['--backend standalone|herdr', '--harness pi|claude|codex|grok|kimi', '--role scout|research|worker', '--assignment FILE|--prompt TEXT', '--cwd PATH', '--timeout MS', '--async'],
+  launch: ['--harness pi|claude|codex|grok|kimi', '--role scout|research|worker', '--assignment FILE|--prompt TEXT', '--cwd PATH', '--timeout MS', '--async'],
   lifecycle: ['--run ID', 'integrate: --reviewed --checks TEXT [--strategy ff-only|merge] [--apply]', 'clean worker: --validated TEXT [--apply]'],
-  prerequisites: ['Node.js 20+ on macOS/Linux for standalone async control', 'Git repository and clean parent checkout for workers', 'authenticated supported agent CLI', 'verified in-pane Herdr environment for --backend herdr'],
+  prerequisites: ['Node.js 20+ on macOS/Linux for standalone async control', 'Git repository and clean parent checkout for workers', 'authenticated supported agent CLI', 'complete and verified in-pane Herdr markers for automatic Herdr selection'],
   state: 'owned mode-0700 runs live under --state-root or the OS temporary directory; retain ambiguous runs',
   exits: { 0: 'success', 2: 'usage', 3: 'unsupported capability', 4: 'timeout', 5: 'blocked safety gate', 6: 'runtime failure' },
   safety: 'integrate and clean are dry-run by default and mutate only with --apply; cleanup is never forced',
@@ -143,7 +144,7 @@ function parseArgs(argv) {
     if (options[key] !== undefined) fail(`duplicate option: ${token}`, EX.usage);
     options[key] = argv.shift();
   }
-  const allowed = new Set(['state-root', 'backend', 'harness', 'role', 'assignment', 'prompt', 'cwd', 'timeout', 'run', 'lines', 'message', 'reviewed', 'checks', 'strategy', 'apply', 'validated', 'async']);
+  const allowed = new Set(['state-root', 'harness', 'role', 'assignment', 'prompt', 'cwd', 'timeout', 'run', 'lines', 'message', 'reviewed', 'checks', 'strategy', 'apply', 'validated', 'async']);
   for (const key of Object.keys(options)) if (key !== 'command' && !allowed.has(key)) fail(`unknown option: --${key}`, EX.usage);
   return options;
 }
@@ -238,6 +239,68 @@ function probeHerdr() {
   const integration = mustCmd(executable, ['integration', 'status'], {}, EX.unsupported).stdout;
   return { executable, probes, ...context, integration };
 }
+function herdrResolutionReason(error) {
+  const message = error?.message ?? '';
+  if (/executable not found/.test(message)) return 'herdr-executable-missing';
+  if (/valid JSON/.test(message)) return 'herdr-json-invalid';
+  if (/help/.test(message)) return 'herdr-help-unproven';
+  if (/version/.test(message)) return 'herdr-version-unproven';
+  if (/compatibility|socket identity/.test(message)) return 'herdr-socket-or-compatibility-unproven';
+  if (/topology/.test(message)) return 'herdr-topology-mismatch';
+  if (/integration status/.test(message)) return 'herdr-integration-unverifiable';
+  return 'herdr-context-invalid';
+}
+function resolveBackend() {
+  const present = HERDR_MARKERS.filter((key) => Object.prototype.hasOwnProperty.call(process.env, key));
+  if (present.length === 0) return { backend: 'standalone', reason: 'no-herdr-context' };
+  if (present.length !== HERDR_MARKERS.length) {
+    fail('Herdr marker state is partial; automatic fallback is denied', EX.unsupported, { reason: 'herdr-markers-partial' });
+  }
+  if (process.env.HERDR_ENV !== '1') fail('Herdr marker state is invalid; automatic fallback is denied', EX.unsupported, { reason: 'herdr-context-invalid' });
+  try {
+    return { backend: 'herdr', reason: 'verified-herdr', herdr: probeHerdr() };
+  } catch (error) {
+    if (!(error instanceof CliError)) throw error;
+    throw new CliError(error.message, error.code, { reason: herdrResolutionReason(error) });
+  }
+}
+function capabilityReason(error) {
+  const message = error?.message ?? '';
+  if (/standalone Kimi readers/.test(message)) return 'read-only-unproven';
+  if (/Grok state integration/.test(message)) return 'herdr-integration-unsupported';
+  if (/integration is not current/.test(message)) return 'herdr-integration-stale';
+  if (/executable not found/.test(message)) return 'executable-missing';
+  if (/help probe failed/.test(message)) return 'help-probe-failed';
+  if (/reader token/.test(message)) return 'reader-capability-unproven';
+  if (/research token/.test(message)) return 'research-capability-unproven';
+  if (/required token/.test(message)) return 'required-capability-unproven';
+  if (/version probe failed/.test(message)) return 'version-probe-failed';
+  return 'unsupported-capability';
+}
+function probeCapability(name, role, resolved) {
+  try {
+    if (resolved.backend === 'herdr') requireHerdrIntegration(resolved.herdr, name);
+    probeHarness(name, role, resolved.backend);
+    return null;
+  } catch (error) {
+    if (!(error instanceof CliError)) throw error;
+    return capabilityReason(error);
+  }
+}
+function info() {
+  const resolved = resolveBackend();
+  const harnesses = [];
+  for (const name of HARNESSES) {
+    const roles = [], blocked = {};
+    for (const role of ROLES) {
+      const reason = probeCapability(name, role, resolved);
+      if (reason) blocked[role] = reason;
+      else roles.push(role);
+    }
+    harnesses.push({ name, roles, ...(Object.keys(blocked).length ? { blocked } : {}) });
+  }
+  return { backend: resolved.backend, reason: resolved.reason, harnesses };
+}
 
 function repository(cwd) {
   const checkout = canonicalDirectory(git(cwd, ['rev-parse', '--show-toplevel'], EX.usage));
@@ -325,6 +388,16 @@ function assignment(options, role, cwd, base) {
   return `${fill(rawShared)}\n\n${fill(rawRole)}${guard}`;
 }
 function childEnv() { return { ...process.env, SUBAGENTS_NO_DELEGATION: '1', PI_HERDR_SUBAGENT: '1', HERDR_SUBAGENT: '1' }; }
+function backendEvidence(resolved) {
+  if (resolved.backend === 'standalone') return { reason: resolved.reason, markers: 'none' };
+  return {
+    reason: resolved.reason,
+    executable: resolved.herdr.executable,
+    status: resolved.herdr.status,
+    current: resolved.herdr.current,
+    integration: bounded(resolved.herdr.integration, 8192),
+  };
+}
 
 function createManifest(options, root, parent, worktree, runId, runDir, backend) {
   const runIdentity = directoryIdentity(runDir);
@@ -414,19 +487,15 @@ function reconcileStandalone(manifest) {
   return { manifest, identity };
 }
 
-function startStandalone(options) {
+function startStandalone(options, resolved, probe) {
   if (!['linux', 'darwin'].includes(process.platform)) fail('detached standalone mode is supported only on tested Linux/macOS', EX.unsupported);
-  if (!HARNESSES.has(options.harness) || !ROLES.has(options.role)) fail('launch requires a supported --harness and --role', EX.usage);
-  if (options.harness === 'kimi' && options.role !== 'worker') fail('standalone Kimi readers are unsupported', EX.unsupported);
-  taskInput(options);
-  const probe = probeHarness(options.harness, options.role);
   const manifest = newRun(options, 'standalone');
   const cwd = manifest.worktree.path;
   if (options.harness === 'kimi' && options.role === 'worker' && (!manifest.worktree.branch || cwd === manifest.parent.checkout)) fail('Kimi worker requires an isolated worktree', EX.safety);
   const prompt = assignment(options, options.role, cwd, manifest.parent.baseHead);
   writeFileSync(manifest.logs.prompt, prompt, { mode: 0o600 });
   const marker = `subagents-wrapper:${manifest.runId}:${manifest.nonce}`;
-  manifest.runtime = { executable: probe.executable, version: probe.version, probes: probe.probes, promptFile: probe.promptFile, commandMarker: marker, timeoutMs: integerOption(options, 'timeout', 900000) };
+  manifest.runtime = { executable: probe.executable, version: probe.version, probes: probe.probes, backendEvidence: backendEvidence(resolved), promptFile: probe.promptFile, commandMarker: marker, timeoutMs: integerOption(options, 'timeout', 900000) };
   saveManifest(manifest);
   const stdoutFd = openSync(path.join(manifest.runDir, 'wrapper.out'), 'a', 0o600);
   const stderrFd = openSync(path.join(manifest.runDir, 'wrapper.err'), 'a', 0o600);
@@ -487,12 +556,8 @@ function requireHerdrIntegration(herdr, harness) {
   if (!line || !/: current\b/.test(line)) fail(`Herdr ${harness} integration is not current`, EX.unsupported, { integration: bounded(herdr.integration, 8192) });
 }
 function shellQuote(value) { return `'${String(value).replace(/'/g, `'"'"'`)}'`; }
-function startHerdr(options) {
-  if (!HARNESSES.has(options.harness) || !ROLES.has(options.role)) fail('launch requires a supported --harness and --role', EX.usage);
-  taskInput(options);
-  const herdr = probeHerdr();
-  requireHerdrIntegration(herdr, options.harness);
-  const harness = probeHarness(options.harness, options.role, 'herdr');
+function startHerdr(options, resolved, harness) {
+  const herdr = resolved.herdr;
   const manifest = newRun(options, 'herdr');
   if (options.role === 'worker' && !manifest.parent.cleanAtLaunch) fail('Herdr worker launch requires a clean parent checkout', EX.safety);
   let created;
@@ -517,7 +582,7 @@ function startHerdr(options) {
     tabId = pick(created, ['tabId', 'tab_id']);
     workspaceId = manifest.worktree.workspace;
     if (!paneId || !tabId || !workspaceId) fail('Herdr worktree did not return complete workspace/tab/root-pane IDs', EX.runtime);
-    manifest.runtime = { herdr: herdr.executable, executable: harness.executable, probes: [...herdr.probes, ...harness.probes], socketPath: process.env.HERDR_SOCKET_PATH, parentWorkspaceId: process.env.HERDR_WORKSPACE_ID, parentTabId: process.env.HERDR_TAB_ID, parentPaneId: process.env.HERDR_PANE_ID, paneId, tabId, workspaceId, commandMarker: `herdr-pane:${paneId}`, timeoutMs: integerOption(options, 'timeout', 900000), startedAt: now() };
+    manifest.runtime = { herdr: herdr.executable, executable: harness.executable, probes: [...herdr.probes, ...harness.probes], backendEvidence: backendEvidence(resolved), socketPath: process.env.HERDR_SOCKET_PATH, parentWorkspaceId: process.env.HERDR_WORKSPACE_ID, parentTabId: process.env.HERDR_TAB_ID, parentPaneId: process.env.HERDR_PANE_ID, paneId, tabId, workspaceId, commandMarker: `herdr-pane:${paneId}`, timeoutMs: integerOption(options, 'timeout', 900000), startedAt: now() };
     saveManifest(manifest);
     const launchCommand = [harness.executable, ...interactiveArgs].map(shellQuote).join(' ');
     mustCmd(herdr.executable, ['pane', 'run', paneId, launchCommand], { env: childEnv() });
@@ -528,7 +593,7 @@ function startHerdr(options) {
     const result = herdrJson(herdr.executable, ['agent', 'start', name, '--cwd', manifest.parent.checkout, '--tab', process.env.HERDR_TAB_ID, '--split', 'right', '--no-focus', '--', harness.executable, ...interactiveArgs], 'herdr agent start');
     paneId = pick(result, ['paneId', 'pane_id']); terminalId = pick(result, ['terminalId', 'terminal_id']); tabId = pick(result, ['tabId', 'tab_id']) ?? process.env.HERDR_TAB_ID; workspaceId = pick(result, ['workspaceId', 'workspace_id']) ?? process.env.HERDR_WORKSPACE_ID;
   }
-  manifest.runtime = { herdr: herdr.executable, executable: harness.executable, probes: [...herdr.probes, ...harness.probes], socketPath: process.env.HERDR_SOCKET_PATH, parentWorkspaceId: process.env.HERDR_WORKSPACE_ID, parentTabId: process.env.HERDR_TAB_ID, parentPaneId: process.env.HERDR_PANE_ID, paneId, terminalId, tabId, workspaceId, commandMarker: paneId ? `herdr-pane:${paneId}` : null, timeoutMs: integerOption(options, 'timeout', 900000), startedAt: now() };
+  manifest.runtime = { herdr: herdr.executable, executable: harness.executable, probes: [...herdr.probes, ...harness.probes], backendEvidence: backendEvidence(resolved), socketPath: process.env.HERDR_SOCKET_PATH, parentWorkspaceId: process.env.HERDR_WORKSPACE_ID, parentTabId: process.env.HERDR_TAB_ID, parentPaneId: process.env.HERDR_PANE_ID, paneId, terminalId, tabId, workspaceId, commandMarker: paneId ? `herdr-pane:${paneId}` : null, timeoutMs: integerOption(options, 'timeout', 900000), startedAt: now() };
   saveManifest(manifest);
   if (!paneId || !terminalId || !tabId || !workspaceId) fail('Herdr did not return complete owned workspace/tab/pane/terminal IDs; retained recorded partial topology', EX.runtime);
   herdrRead(manifest);
@@ -578,9 +643,13 @@ function statusHerdr(manifest) {
 }
 
 function start(options) {
-  const backend = options.backend ?? 'standalone';
-  if (!['standalone', 'herdr'].includes(backend)) fail('--backend must be standalone or herdr', EX.usage);
-  return backend === 'standalone' ? startStandalone(options) : startHerdr(options);
+  if (!HARNESSES.has(options.harness)) fail('--harness is required and must be supported', EX.usage);
+  if (!ROLES.has(options.role)) fail('--role is required and must be scout, research, or worker', EX.usage);
+  taskInput(options);
+  const resolved = resolveBackend();
+  if (resolved.backend === 'herdr') requireHerdrIntegration(resolved.herdr, options.harness);
+  const harness = probeHarness(options.harness, options.role, resolved.backend);
+  return resolved.backend === 'standalone' ? startStandalone(options, resolved, harness) : startHerdr(options, resolved, harness);
 }
 function status(options) {
   const tombstone = loadTombstone(options);
@@ -754,24 +823,13 @@ function clean(options) {
   retireRun(manifest, disposition);
   return { runId: manifest.runId, state: 'cleaned', branchDeleted: manifest.worktree.branch, stateRetired: true };
 }
-function doctor(options) {
-  const role = options.role ?? 'worker', backend = options.backend ?? 'standalone';
-  if (!['standalone', 'herdr'].includes(backend)) fail('--backend must be standalone or herdr', EX.usage);
-  if (!ROLES.has(role)) fail('--role must be scout, research, or worker', EX.usage);
-  if (!options.harness) fail('--harness is required', EX.usage);
-  const harness = probeHarness(options.harness, role, backend);
-  const herdr = backend === 'herdr' ? probeHerdr() : null;
-  if (herdr) requireHerdrIntegration(herdr, options.harness);
-  return { ok: true, backend, harness: options.harness, role, executable: harness.executable, version: harness.version, herdr: herdr ? { executable: herdr.executable } : null };
-}
-
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   if (options.help) { out({ ok: true, help: HELP }); return 0; }
   if (options.command === '__wrapper') { wrapper(options); return 0; }
   let result;
   switch (options.command) {
-    case 'doctor': result = doctor(options); break;
+    case 'info': result = info(options); break;
     case 'start': result = start(options); break;
     case 'run': {
       const started = start(options);

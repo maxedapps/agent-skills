@@ -1,6 +1,6 @@
 import test, { describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { spawn, spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -18,9 +18,10 @@ function temp() {
 function executable(file, body) { writeFileSync(file, `#!/bin/sh\nset -eu\n${body}\n`); chmodSync(file, 0o755); }
 function cli(args, fixture, extraEnv = {}, timeout = 60000) {
   return new Promise((resolve) => {
-    const child = spawn(node, [script, ...args], {
-      env: { ...process.env, PATH: `${fixture.bin}:${process.env.PATH}`, ...extraEnv },
-    });
+    const env = { ...process.env, PATH: `${fixture.bin}:${process.env.PATH}` };
+    for (const key of ['HERDR_ENV', 'HERDR_SOCKET_PATH', 'HERDR_WORKSPACE_ID', 'HERDR_TAB_ID', 'HERDR_PANE_ID']) delete env[key];
+    Object.assign(env, extraEnv);
+    const child = spawn(node, [script, ...args], { env });
     let stdout = '', stderr = '', timedOut = false;
     child.stdout.setEncoding('utf8').on('data', (chunk) => { stdout += chunk; });
     child.stderr.setEncoding('utf8').on('data', (chunk) => { stderr += chunk; });
@@ -62,6 +63,28 @@ case "\${FAKE_ACTION:-none}" in
 esac
 echo agent-ok`);
 }
+function herdrEnv(overrides = {}) {
+  return {
+    HERDR_ENV: '1', HERDR_SOCKET_PATH: 'sock', HERDR_WORKSPACE_ID: 'ws-parent',
+    HERDR_TAB_ID: 'tab-parent', HERDR_PANE_ID: 'pane-parent', ...overrides,
+  };
+}
+function fakeResolverHerdr(fixture, { status = '{"server":{"compatible":true,"socket":"sock"}}', current = '{"workspace_id":"ws-parent","tab_id":"tab-parent","pane_id":"pane-parent"}', integration = 'pi: current (v5)' } = {}) {
+  executable(path.join(fixture.bin, 'herdr'), `
+printf '%s\\n' "$*" >>"\${HERDR_TRACE:-/dev/null}"
+case "$1 \${2:-}" in
+  '--help ') echo 'agent pane wait worktree --no-focus current run send-keys close agent-status create remove';;
+  '--version ') echo 'herdr 0.7.4';;
+  'agent --help') echo 'start get read --no-focus';;
+  'pane --help') echo 'current get run send-keys close';;
+  'wait --help') echo 'agent-status';;
+  'worktree --help') echo 'create remove --no-focus';;
+  'status --json') echo '${status}';;
+  'pane current') echo '${current}';;
+  'integration status') echo '${integration}';;
+  *) echo 'unexpected launch' >&2; exit 91;;
+esac`);
+}
 function runId(result) {
   assert.equal(result.status, 0, result.stderr);
   return result.json.manifest?.runId ?? result.json.runId;
@@ -77,30 +100,105 @@ async function waitForGone(fixture, id) {
 }
 
 describe('subagents CLI', { concurrency: 3 }, async () => {
-test('help is JSON and usage/unsupported errors have stable distinct exits', { timeout: 300000 }, async () => {
+test('help removes doctor and the public backend option while run requires an explicit pair', { timeout: 300000 }, async () => {
   const f = temp();
   try {
     const help = await cli(['--help'], f);
-    assert.equal(help.status, 0); assert.equal(help.json.ok, true); assert.match(help.json.help.usage, /doctor.*clean/);
-    assert.ok(help.json.help.launch.includes('--backend standalone|herdr'));
+    assert.equal(help.status, 0); assert.equal(help.json.ok, true); assert.match(help.json.help.usage, /info.*clean/);
+    assert.doesNotMatch(JSON.stringify(help.json.help), /doctor|--backend/);
     assert.ok(help.json.help.launch.includes('--harness pi|claude|codex|grok|kimi'));
-    const usage = await cli(['wat'], f); assert.equal(usage.status, 2); assert.equal(usage.json.category, 'usage');
-    fakePi(f);
-    const kimi = await cli(['doctor', '--harness', 'kimi', '--role', 'scout'], f);
-    assert.equal(kimi.status, 3); assert.equal(kimi.json.category, 'unsupported');
+    const doctor = await cli(['doctor'], f); assert.equal(doctor.status, 2); assert.equal(doctor.json.category, 'usage');
+    const backend = await cli(['run', '--backend', 'standalone'], f); assert.equal(backend.status, 2); assert.match(backend.json.error, /unknown option/);
+    const noHarness = await cli(['run', '--role', 'scout', '--prompt', 'x'], f); assert.equal(noHarness.status, 2); assert.match(noHarness.json.error, /harness/);
+    const noRole = await cli(['run', '--harness', 'pi', '--prompt', 'x'], f); assert.equal(noRole.status, 2); assert.match(noRole.json.error, /role/);
+    const unsupported = await cli(['run', '--harness', 'kimi', '--role', 'scout', '--prompt', 'x', '--state-root', f.state], f);
+    assert.equal(unsupported.status, 3); assert.match(unsupported.json.error, /Kimi readers/); assert.equal(existsSync(path.join(f.state, 'runs')), false);
   } finally { rmSync(f.root, { recursive: true }); }
 });
 
-test('doctor probes current help and fails closed when a capability token is missing', { concurrency: true, timeout: 300000 }, async () => {
+test('info is no-model, isolates pair probes, and reports concise standalone capability reasons', { concurrency: true, timeout: 300000 }, async () => {
+  const f = temp();
+  try {
+    const trace = path.join(f.root, 'probe.trace');
+    executable(path.join(f.bin, 'pi'), `printf '%s\\n' "$*" >>"$PROBE_TRACE"; case "\${1:-}" in --help) echo '-p --tools --no-session';; --version) echo 'pi fake 1';; *) exit 90;; esac`);
+    executable(path.join(f.bin, 'kimi'), `printf '%s\\n' "$*" >>"$PROBE_TRACE"; case "\${1:-}" in --help) echo '-p';; --version) echo 'kimi fake 1';; *) exit 90;; esac`);
+    executable(path.join(f.bin, 'claude'), `printf '%s\\n' "$*" >>"$PROBE_TRACE"; case "\${1:-}" in --help) echo '-p only';; --version) echo fake;; *) exit 90;; esac`);
+    const result = await cli(['info'], f, { PATH: f.bin, PROBE_TRACE: trace });
+    assert.equal(result.status, 0, result.stderr); assert.equal(result.json.backend, 'standalone'); assert.equal(result.json.reason, 'no-herdr-context');
+    const byName = Object.fromEntries(result.json.harnesses.map((entry) => [entry.name, entry]));
+    assert.deepEqual(byName.pi.roles, ['scout', 'research', 'worker']);
+    assert.deepEqual(byName.kimi.roles, ['worker']); assert.equal(byName.kimi.blocked.scout, 'read-only-unproven'); assert.equal(byName.kimi.blocked.research, 'read-only-unproven');
+    assert.deepEqual(byName.claude.roles, []); assert.equal(byName.claude.blocked.worker, 'required-capability-unproven');
+    assert.equal(byName.codex.blocked.worker, 'executable-missing');
+    assert.doesNotMatch(JSON.stringify(result.json), /pi fake|"stdout"|"probes"|"executable":/);
+    const calls = readFileSync(trace, 'utf8').trim().split(/\r?\n/);
+    assert.ok(calls.every((call) => call === '--help' || call === '--version'));
+    assert.equal(existsSync(path.join(f.state, 'runs')), false);
+  } finally { rmSync(f.root, { recursive: true }); }
+});
+
+test('automatic resolution chooses standalone with no markers even when Herdr is installed', { concurrency: true, timeout: 300000 }, async () => {
+  const f = temp();
+  try {
+    fakePi(f); fakeResolverHerdr(f); const trace = path.join(f.root, 'herdr.trace');
+    const result = await cli(['run', '--harness', 'pi', '--role', 'scout', '--prompt', 'standalone', '--state-root', f.state], f, { HERDR_TRACE: trace });
+    assert.equal(result.status, 0, result.stderr); assert.equal(result.json.manifest.backend, 'standalone');
+    assert.deepEqual(result.json.manifest.runtime.backendEvidence, { reason: 'no-herdr-context', markers: 'none' });
+    assert.equal(existsSync(trace), false);
+  } finally { rmSync(f.root, { recursive: true }); }
+});
+
+test('partial or invalid Herdr evidence blocks before state, Git, or runtime creation', { concurrency: true, timeout: 300000 }, async (t) => {
+  const cases = [
+    { name: 'partial markers', env: { HERDR_ENV: '1' }, fake: false, reason: 'herdr-markers-partial' },
+    { name: 'empty marker', env: { HERDR_ENV: '' }, fake: false, reason: 'herdr-markers-partial' },
+    { name: 'missing executable', env: herdrEnv(), fake: false, reason: 'herdr-executable-missing' },
+    { name: 'malformed status JSON', env: herdrEnv(), config: { status: 'not-json' }, reason: 'herdr-json-invalid' },
+    { name: 'socket mismatch', env: herdrEnv(), config: { status: '{"server":{"compatible":true,"socket":"other"}}' }, reason: 'herdr-socket-or-compatibility-unproven' },
+    { name: 'version compatibility mismatch', env: herdrEnv(), config: { status: '{"server":{"compatible":false,"socket":"sock"}}' }, reason: 'herdr-socket-or-compatibility-unproven' },
+    { name: 'topology mismatch', env: herdrEnv(), config: { current: '{"workspace_id":"other","tab_id":"tab-parent","pane_id":"pane-parent"}' }, reason: 'herdr-topology-mismatch' },
+    { name: 'stale integration', env: herdrEnv(), config: { integration: 'pi: stale (v4)' }, reason: null },
+  ];
+  for (const entry of cases) await t.test(entry.name, async () => {
+    const f = temp();
+    try {
+      fakePi(f); if (entry.fake !== false) fakeResolverHerdr(f, entry.config);
+      const repository = repo(f), trace = path.join(f.root, 'herdr.trace');
+      const beforeBranches = git(repository, ['branch', '--format=%(refname)']);
+      const beforeWorktrees = git(repository, ['worktree', 'list', '--porcelain']);
+      const env = { ...entry.env, HERDR_TRACE: trace };
+      if (entry.name === 'missing executable') env.PATH = f.bin;
+      const result = await cli(['run', '--harness', 'pi', '--role', 'worker', '--prompt', 'must not launch', '--cwd', repository, '--state-root', f.state], f, env);
+      assert.ok([3, 5].includes(result.status), result.stderr); assert.equal(result.json.ok, false);
+      if (entry.reason) assert.equal(result.json.details?.reason, entry.reason);
+      else assert.match(result.json.error, /integration is not current/);
+      assert.equal(existsSync(path.join(f.state, 'runs')), false);
+      assert.equal(git(repository, ['branch', '--format=%(refname)']), beforeBranches);
+      assert.equal(git(repository, ['worktree', 'list', '--porcelain']), beforeWorktrees);
+      const calls = existsSync(trace) ? readFileSync(trace, 'utf8') : '';
+      assert.doesNotMatch(calls, /^(agent start|worktree create|pane run)/m);
+    } finally { rmSync(f.root, { recursive: true }); }
+  });
+});
+
+test('Herdr info keeps stale integrations and unsupported Grok pair-specific', { concurrency: true, timeout: 300000 }, async () => {
   const f = temp();
   try {
     fakePi(f);
-    const okay = await cli(['doctor', '--harness', 'pi', '--role', 'scout'], f);
-    assert.equal(okay.status, 0, okay.stderr); assert.equal(okay.json.executable, realpathSync(path.join(f.bin, 'pi')));
-    assert.equal(okay.json.backend, 'standalone'); assert.equal(okay.json.harness, 'pi');
-    executable(path.join(f.bin, 'claude'), `case "\${1:-}" in --help) echo '-p only';; --version) echo fake;; esac`);
-    const blocked = await cli(['doctor', '--harness', 'claude', '--role', 'scout'], f);
-    assert.equal(blocked.status, 3); assert.match(blocked.json.error, /required token|reader token/);
+    executable(path.join(f.bin, 'kimi'), `case "\${1:-}" in --help) echo '-p';; --version) echo kimi-fake;; *) exit 90;; esac`);
+    fakeResolverHerdr(f, { integration: `pi: current (v5)
+claude: current (v5)
+codex: current (v5)
+grok: current (v5)
+kimi: stale (v4)` });
+    const result = await cli(['info'], f, { ...herdrEnv(), PATH: f.bin, HERDR_TRACE: path.join(f.root, 'herdr.trace') });
+    assert.equal(result.status, 0, result.stderr); assert.equal(result.json.backend, 'herdr'); assert.equal(result.json.reason, 'verified-herdr');
+    const byName = Object.fromEntries(result.json.harnesses.map((entry) => [entry.name, entry]));
+    assert.deepEqual(byName.pi.roles, ['scout', 'research', 'worker']);
+    assert.equal(byName.claude.blocked.worker, 'executable-missing');
+    assert.equal(byName.grok.blocked.worker, 'herdr-integration-unsupported');
+    assert.equal(byName.kimi.blocked.worker, 'herdr-integration-stale');
+    assert.equal(existsSync(path.join(f.state, 'runs')), false);
   } finally { rmSync(f.root, { recursive: true }); }
 });
 
@@ -345,13 +443,17 @@ case "$1 \${2:-}" in
   'pane run'|'pane send-keys'|'pane close') :;;
   *) echo '{}';;
 esac`);
-    const env = { HERDR_ENV: '1', HERDR_SOCKET_PATH: 'sock', HERDR_WORKSPACE_ID: 'ws-parent', HERDR_TAB_ID: 'tab-parent', HERDR_PANE_ID: 'pane-parent', HERDR_TRACE: trace, HERDR_PARENT: repository };
-    const started = await cli(['start', '--harness', 'pi', '--backend', 'herdr', '--role', 'scout', '--prompt', 'atomic assignment', '--cwd', repository, '--state-root', f.state], f, env);
+    const env = { ...herdrEnv(), HERDR_TRACE: trace, HERDR_PARENT: repository };
+    const started = await cli(['start', '--harness', 'pi', '--role', 'scout', '--prompt', 'atomic assignment', '--cwd', repository, '--state-root', f.state], f, env);
     assert.equal(started.status, 0, started.stderr);
     assert.equal(started.json.backend, 'herdr'); assert.equal(started.json.harness, 'pi');
+    assert.equal(started.json.runtime.backendEvidence.reason, 'verified-herdr');
+    assert.equal(started.json.runtime.backendEvidence.status.server.socket, 'sock');
+    assert.equal(started.json.runtime.backendEvidence.current.pane_id, 'pane-parent');
     const calls = readFileSync(trace, 'utf8').split(/\r?\n/);
     const launch = calls.find((line) => line.startsWith('agent start'));
     assert.match(launch, /--no-focus -- .*\/pi --tools read,grep,find,ls$/); assert.doesNotMatch(launch, / -p |atomic assignment/);
+    assert.equal(calls.filter((line) => line === '--version').length, 1, 'resolved Herdr proof is reused by launch');
     const firstRead = calls.findIndex((line) => line.startsWith('agent read'));
     const idle = calls.findIndex((line) => line.startsWith('wait agent-status') && line.includes('--status idle'));
     const submit = calls.findIndex((line) => line.startsWith('pane run pane-child Role:'));
@@ -366,7 +468,7 @@ esac`);
 
     const workerRoot = path.join(f.root, 'herdr-worker');
     const workerEnv = { ...env, HERDR_WORKTREE: workerRoot };
-    const worker = await cli(['start', '--harness', 'pi', '--backend', 'herdr', '--role', 'worker', '--prompt', 'worker assignment', '--cwd', repository, '--state-root', f.state], f, workerEnv);
+    const worker = await cli(['start', '--harness', 'pi', '--role', 'worker', '--prompt', 'worker assignment', '--cwd', repository, '--state-root', f.state], f, workerEnv);
     assert.equal(worker.status, 0, worker.stderr); assert.equal(worker.json.worktree.manager, 'herdr');
     const workerCalls = readFileSync(trace, 'utf8').split(/\r?\n/);
     const workerLaunch = workerCalls.find((line) => line.startsWith('pane run pane-worker ') && line.includes('/pi'));
