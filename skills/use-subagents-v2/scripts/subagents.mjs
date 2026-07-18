@@ -434,7 +434,7 @@ function startStandalone(options) {
     cwd, detached: true, stdio: ['ignore', stdoutFd, stderrFd], env: childEnv(),
   });
   child.unref(); closeSync(stdoutFd); closeSync(stderrFd);
-  const deadline = Date.now() + 5000;
+  const deadline = Date.now() + 15000;
   let loaded;
   while (Date.now() < deadline) {
     sleep(25);
@@ -664,6 +664,10 @@ function workerEvidence(manifest) {
   if (manifest.harness === 'standalone') {
     const runtimeIdentity = verifyProcess(manifest);
     if (runtimeIdentity.live || runtimeIdentity.ambiguous) fail('standalone worker process group is live or ambiguous', EX.safety, runtimeIdentity);
+  } else {
+    if (manifest.state !== 'stopped') fail('Herdr worker must be explicitly stopped before integration', EX.safety);
+    const runtimeIdentity = verifyHerdr(manifest);
+    if (runtimeIdentity.live || runtimeIdentity.ambiguous) fail('Herdr worker pane is live or ambiguous; retained', EX.safety, runtimeIdentity);
   }
   const parent = assertParentFresh(manifest);
   const wt = manifest.worktree;

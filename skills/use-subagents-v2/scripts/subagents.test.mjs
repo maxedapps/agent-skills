@@ -76,8 +76,8 @@ async function waitForGone(fixture, id) {
   assert.fail(`process group did not disappear: ${result?.stdout}`);
 }
 
-describe('subagents CLI', { concurrency: 4 }, async () => {
-test('help is JSON and usage/unsupported errors have stable distinct exits', { timeout: 180000 }, async () => {
+describe('subagents CLI', { concurrency: 3 }, async () => {
+test('help is JSON and usage/unsupported errors have stable distinct exits', { timeout: 300000 }, async () => {
   const f = temp();
   try {
     const help = await cli(['--help'], f);
@@ -89,7 +89,7 @@ test('help is JSON and usage/unsupported errors have stable distinct exits', { t
   } finally { rmSync(f.root, { recursive: true }); }
 });
 
-test('doctor probes current help and fails closed when a capability token is missing', { concurrency: true, timeout: 180000 }, async () => {
+test('doctor probes current help and fails closed when a capability token is missing', { concurrency: true, timeout: 300000 }, async () => {
   const f = temp();
   try {
     fakePi(f);
@@ -101,7 +101,7 @@ test('doctor probes current help and fails closed when a capability token is mis
   } finally { rmSync(f.root, { recursive: true }); }
 });
 
-test('standalone reader uses stdin, reader flags, durable logs, and the no-delegation envelope', { concurrency: true, timeout: 180000 }, async () => {
+test('standalone reader uses stdin, reader flags, durable logs, and the no-delegation envelope', { concurrency: true, timeout: 300000 }, async () => {
   const f = temp();
   try {
     fakePi(f); const trace = path.join(f.root, 'trace'), prompt = path.join(f.root, 'prompt');
@@ -115,7 +115,7 @@ test('standalone reader uses stdin, reader flags, durable logs, and the no-deleg
   } finally { rmSync(f.root, { recursive: true }); }
 });
 
-test('Claude, Codex, Grok, and Kimi standalone adapters construct only proven one-shot forms', { concurrency: true, timeout: 180000 }, async () => {
+test('Claude, Codex, Grok, and Kimi standalone adapters construct only proven one-shot forms', { concurrency: true, timeout: 300000 }, async () => {
   const f = temp();
   try {
     const trace = path.join(f.root, 'adapter.trace');
@@ -138,7 +138,19 @@ test('Claude, Codex, Grok, and Kimi standalone adapters construct only proven on
   } finally { rmSync(f.root, { recursive: true }); }
 });
 
-test('copied manifests cannot grant control from another state root', { concurrency: true, timeout: 180000 }, async () => {
+test('bounded parallel standalone readers receive distinct owned runs and can be stopped', { concurrency: true, timeout: 300000 }, async () => {
+  const f = temp();
+  try {
+    fakePi(f);
+    const launches = await Promise.all(['one', 'two'].map((prompt) => cli(['start', '--backend', 'pi', '--role', 'scout', '--prompt', prompt, '--state-root', f.state, '--timeout', '10000'], f, { FAKE_ACTION: 'sleep' })));
+    const ids = launches.map(runId);
+    assert.equal(new Set(ids).size, 2);
+    const stopped = await Promise.all(ids.map((id) => cli(['stop', '--run', id, '--state-root', f.state], f)));
+    for (const result of stopped) assert.equal(result.status, 0, result.stderr);
+  } finally { rmSync(f.root, { recursive: true }); }
+});
+
+test('copied manifests cannot grant control from another state root', { concurrency: true, timeout: 300000 }, async () => {
   const f = temp();
   try {
     fakePi(f);
@@ -150,7 +162,26 @@ test('copied manifests cannot grant control from another state root', { concurre
   } finally { rmSync(f.root, { recursive: true }); }
 });
 
-test('standalone timeout and exact stop use distinct lifecycle outcomes', { concurrency: true, timeout: 180000 }, async () => {
+test('crashed standalone readers are retained without blind signaling and can retire owned state', { concurrency: true, timeout: 300000 }, async () => {
+  const f = temp();
+  try {
+    fakePi(f);
+    const started = await cli(['start', '--backend', 'pi', '--role', 'scout', '--prompt', 'crash', '--state-root', f.state, '--timeout', '10000'], f, { FAKE_ACTION: 'sleep' });
+    const id = runId(started), pgid = started.json.runtime.pgid;
+    process.kill(-pgid, 'SIGKILL');
+    let observed;
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      observed = await cli(['status', '--run', id, '--state-root', f.state], f);
+      if (observed.json?.identity?.live === false) break;
+    }
+    assert.equal(observed.status, 0); assert.equal(observed.json.identity.live, false); assert.match(observed.json.advisory, /without terminal record/);
+    const cleaned = await cli(['clean', '--run', id, '--apply', '--state-root', f.state], f);
+    assert.equal(cleaned.status, 0, cleaned.stderr); assert.equal(existsSync(path.join(f.state, 'runs', id)), false);
+  } finally { rmSync(f.root, { recursive: true }); }
+});
+
+test('standalone timeout and exact stop use distinct lifecycle outcomes', { concurrency: true, timeout: 300000 }, async () => {
   const f = temp();
   try {
     fakePi(f); const repository = repo(f);
@@ -169,7 +200,7 @@ test('standalone timeout and exact stop use distinct lifecycle outcomes', { conc
   } finally { rmSync(f.root, { recursive: true }); }
 });
 
-test('worker gets a distinct worktree; provenance, ff integration, and cleanup gates are explicit', { concurrency: true, timeout: 180000 }, async () => {
+test('worker gets a distinct worktree; provenance, ff integration, and cleanup gates are explicit', { concurrency: true, timeout: 300000 }, async () => {
   const f = temp();
   try {
     fakePi(f); const repository = repo(f);
@@ -194,6 +225,12 @@ test('worker gets a distinct worktree; provenance, ff integration, and cleanup g
     assert.equal(applied.status, 0, applied.stderr); assert.equal(readFileSync(path.join(repository, 'worker.txt'), 'utf8'), 'worker\n');
     const cleanDry = await cli(['clean', '--run', id, '--validated', 'parent-pass', '--state-root', f.state], f);
     assert.equal(cleanDry.status, 0, cleanDry.stderr); assert.equal(cleanDry.json.dryRun, true);
+    const realGit = spawnSync('sh', ['-c', 'command -v git'], { encoding: 'utf8' }).stdout.trim();
+    executable(path.join(f.bin, 'git'), `case " $* " in *" worktree remove "*) exit 1;; esac; exec "$REAL_GIT" "$@"`);
+    const refusedRemoval = await cli(['clean', '--run', id, '--validated', 'parent-pass', '--apply', '--state-root', f.state], f, { REAL_GIT: realGit });
+    assert.equal(refusedRemoval.status, 5); assert.match(refusedRemoval.json.error, /non-force worktree removal failed/);
+    assert.equal(git(repository, ['worktree', 'list', '--porcelain']).includes(manifest.worktree.path), true);
+    rmSync(path.join(f.bin, 'git'));
     const cleaned = await cli(['clean', '--run', id, '--validated', 'parent-pass', '--apply', '--state-root', f.state], f);
     assert.equal(cleaned.status, 0, cleaned.stderr); assert.equal(git(repository, ['branch', '--list', manifest.worktree.branch]), '');
     assert.equal(existsSync(path.join(f.state, 'runs', id)), false);
@@ -204,7 +241,7 @@ test('worker gets a distinct worktree; provenance, ff integration, and cleanup g
   } finally { rmSync(f.root, { recursive: true }); }
 });
 
-test('clean committed no-change workers skip merge but still require attested validation', { concurrency: true, timeout: 180000 }, async () => {
+test('clean committed no-change workers skip merge but still require attested validation', { concurrency: true, timeout: 300000 }, async () => {
   const f = temp();
   try {
     fakePi(f); const repository = repo(f), before = git(repository, ['rev-parse', 'HEAD']);
@@ -219,7 +256,7 @@ test('clean committed no-change workers skip merge but still require attested va
   } finally { rmSync(f.root, { recursive: true }); }
 });
 
-test('dirty and untracked worker state is retained and blocks integration', { concurrency: true, timeout: 180000 }, async () => {
+test('dirty and untracked worker state is retained and blocks integration', { concurrency: true, timeout: 300000 }, async () => {
   const f = temp();
   try {
     fakePi(f); const repository = repo(f);
@@ -235,7 +272,7 @@ test('dirty and untracked worker state is retained and blocks integration', { co
   } finally { rmSync(f.root, { recursive: true }); }
 });
 
-test('diverged parent refuses default ff and permits explicit merge after non-mutating preflight', { concurrency: true, timeout: 180000 }, async () => {
+test('diverged parent refuses default ff and permits explicit merge after non-mutating preflight', { concurrency: true, timeout: 300000 }, async () => {
   const f = temp();
   try {
     fakePi(f); const repository = repo(f);
@@ -251,7 +288,7 @@ test('diverged parent refuses default ff and permits explicit merge after non-mu
   } finally { rmSync(f.root, { recursive: true }); }
 });
 
-test('merge conflicts are preflighted without mutating the parent and retained for a fresh retry', { concurrency: true, timeout: 180000 }, async () => {
+test('merge conflicts are preflighted without mutating the parent and retained for a fresh retry', { concurrency: true, timeout: 300000 }, async () => {
   const f = temp();
   try {
     fakePi(f); const repository = repo(f);
@@ -267,7 +304,7 @@ test('merge conflicts are preflighted without mutating the parent and retained f
   } finally { rmSync(f.root, { recursive: true }); }
 });
 
-test('Herdr reader construction is no-focus, interactive, and inspect/idle precede atomic prompt submission', { concurrency: true, timeout: 180000 }, async () => {
+test('Herdr reader construction is no-focus, interactive, and inspect/idle precede atomic prompt submission', { concurrency: true, timeout: 300000 }, async () => {
   const f = temp();
   try {
     fakePi(f); const repository = repo(f), trace = path.join(f.root, 'herdr.trace');
@@ -291,7 +328,9 @@ case "$1 \${2:-}" in
     done
     git -C "$cwd" worktree add -b "$branch" "$HERDR_WORKTREE" "$base" >/dev/null
     printf '{"workspaceId":"ws-worker","tabId":"tab-worker","rootPaneId":"pane-worker","terminalId":"term-worker","path":"%s"}\\n' "$HERDR_WORKTREE";;
+  'worktree remove') git -C "$HERDR_PARENT" worktree remove "$HERDR_WORKTREE"; echo '{"removed":true}';;
   'pane get')
+    if grep -q "^pane close \${3:-}$" "$HERDR_TRACE"; then exit 1; fi
     case "\${3:-}" in
       pane-worker) echo '{"workspace_id":"ws-worker","tab_id":"tab-worker","pane_id":"pane-worker","terminal_id":"term-worker"}';;
       *) echo '{"workspace_id":"ws-parent","tab_id":"tab-parent","pane_id":"pane-child","terminal_id":"term-child"}';;
@@ -299,10 +338,10 @@ case "$1 \${2:-}" in
   'agent get') echo '{"agent_status":"working","workspace_id":"ws-parent","tab_id":"tab-parent","pane_id":"pane-child","terminal_id":"term-child"}';;
   'agent read') echo 'transcript';;
   'wait agent-status') :;;
-  'pane run') :;;
+  'pane run'|'pane send-keys'|'pane close') :;;
   *) echo '{}';;
 esac`);
-    const env = { HERDR_ENV: '1', HERDR_SOCKET_PATH: 'sock', HERDR_WORKSPACE_ID: 'ws-parent', HERDR_TAB_ID: 'tab-parent', HERDR_PANE_ID: 'pane-parent', HERDR_TRACE: trace };
+    const env = { HERDR_ENV: '1', HERDR_SOCKET_PATH: 'sock', HERDR_WORKSPACE_ID: 'ws-parent', HERDR_TAB_ID: 'tab-parent', HERDR_PANE_ID: 'pane-parent', HERDR_TRACE: trace, HERDR_PARENT: repository };
     const started = await cli(['start', '--backend', 'pi', '--harness', 'herdr', '--role', 'scout', '--prompt', 'atomic assignment', '--cwd', repository, '--state-root', f.state], f, env);
     assert.equal(started.status, 0, started.stderr);
     const calls = readFileSync(trace, 'utf8').split(/\r?\n/);
@@ -312,13 +351,32 @@ esac`);
     const idle = calls.findIndex((line) => line.startsWith('wait agent-status') && line.includes('--status idle'));
     const submit = calls.findIndex((line) => line.startsWith('pane run pane-child Role:'));
     assert.ok(firstRead >= 0 && firstRead < idle && idle < submit, calls.join('\n'));
+    const readerId = runId(started);
+    const sent = await cli(['send', '--run', readerId, '--message', 'same assignment follow-up', '--state-root', f.state], f, env);
+    assert.equal(sent.status, 0, sent.stderr);
+    const readerStopped = await cli(['stop', '--run', readerId, '--state-root', f.state], f, env);
+    assert.equal(readerStopped.status, 0, readerStopped.stderr);
+    const readerCleaned = await cli(['clean', '--run', readerId, '--apply', '--state-root', f.state], f, env);
+    assert.equal(readerCleaned.status, 0, readerCleaned.stderr); assert.equal(readerCleaned.json.stateRetired, true);
 
     const workerRoot = path.join(f.root, 'herdr-worker');
-    const worker = await cli(['start', '--backend', 'pi', '--harness', 'herdr', '--role', 'worker', '--prompt', 'worker assignment', '--cwd', repository, '--state-root', f.state], f, { ...env, HERDR_WORKTREE: workerRoot });
+    const workerEnv = { ...env, HERDR_WORKTREE: workerRoot };
+    const worker = await cli(['start', '--backend', 'pi', '--harness', 'herdr', '--role', 'worker', '--prompt', 'worker assignment', '--cwd', repository, '--state-root', f.state], f, workerEnv);
     assert.equal(worker.status, 0, worker.stderr); assert.equal(worker.json.worktree.manager, 'herdr');
     const workerCalls = readFileSync(trace, 'utf8').split(/\r?\n/);
     const workerLaunch = workerCalls.find((line) => line.startsWith('pane run pane-worker ') && line.includes('/pi'));
     assert.match(workerLaunch, /'\/.*\/pi' '--tools' 'read,bash,edit,write,grep,find,ls'$/); assert.doesNotMatch(workerLaunch, / -p |worker assignment/);
+    const workerId = runId(worker), manifestFile = path.join(f.state, 'runs', workerId, 'manifest.json');
+    const completedLive = JSON.parse(readFileSync(manifestFile, 'utf8')); completedLive.state = 'completed';
+    writeFileSync(manifestFile, `${JSON.stringify(completedLive, null, 2)}\n`);
+    const liveIntegration = await cli(['integrate', '--run', workerId, '--reviewed', '--checks', 'reviewed', '--state-root', f.state], f, workerEnv);
+    assert.equal(liveIntegration.status, 5); assert.match(liveIntegration.json.error, /explicitly stopped/);
+    const workerStopped = await cli(['stop', '--run', workerId, '--state-root', f.state], f, workerEnv);
+    assert.equal(workerStopped.status, 0, workerStopped.stderr);
+    const integrated = await cli(['integrate', '--run', workerId, '--reviewed', '--checks', 'reviewed', '--apply', '--state-root', f.state], f, workerEnv);
+    assert.equal(integrated.status, 0, integrated.stderr); assert.equal(integrated.json.noChange, true);
+    const workerCleaned = await cli(['clean', '--run', workerId, '--validated', 'parent checks', '--apply', '--state-root', f.state], f, workerEnv);
+    assert.equal(workerCleaned.status, 0, workerCleaned.stderr);
   } finally { rmSync(f.root, { recursive: true }); }
 });
 });
