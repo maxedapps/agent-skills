@@ -1,128 +1,45 @@
 # [Plan title]
 
 > **Status:** Ready for implementation | Blocked on [decision]
-> **Planning memory:** Included in this plan | [existing evidence location]
 
-## Problems
+## Outcome and boundaries
 
-- [Current problem, affected outcome, and evidence.]
+- **Problem and target:** [Evidence-backed current problem and observable desired outcome.]
+- **In scope:** [Required behavior and integration surfaces.]
+- **Out of scope:** [Material exclusions only; omit when none.]
+- **Approach:** [Chosen design and dependency order.]
 
-## Implementation summary
+## Key files, evidence, and decisions
 
-- [Chosen approach and dependency order.]
-- [Why this approach solves the problems.]
-
-## Conducted research and relevant sources
-
-| Source or artifact | Material finding | Plan impact |
+| File or source | Why it matters | Decision or plan impact |
 |---|---|---|
-| `[inspected path and symbol]` | [Observed contract or constraint.] | [Decision, task, safeguard, or check.] |
-| [Authoritative source] | [Version-matched finding.] | [Required action or non-goal.] |
+| `[key planning file and symbol/search target]` | [Observed behavior, contract, or constraint.] | [Task, safeguard, check, or non-goal.] |
+| `[key implementation starting file and symbol/search target]` | [Role in the change.] | [Required change or behavior to preserve.] |
+| [Authoritative external source] | [Version-matched finding.] | [Decision or constraint.] |
 
-- **Exploration/research lanes:** [At least two dedicated subagents, their bounded questions, and inspected paths/sources.]
-- **Parent verification:** [Material claims checked, conflicts resolved, and coverage gaps filled.]
+- **Open gate:** [Unresolved approval or assumption that can change implementation; omit when none.]
 
-## Scope and non-goals
+<!-- For a small plan, rename the next heading to `## Tasks`. Use numbered phases only for real dependencies, migrations, rollout, delivery boundaries, or independently verifiable outcomes. -->
 
-- **In scope:** [Outcomes and integration surfaces.]
-- **Non-goals:** [Excluded adjacent work and reason.]
-
-## Decisions and constraints
-
-| Approach or constraint | Result | Reason and consequence |
-|---|---|---|
-| [Chosen approach] | Chosen | [Correctness, fit, risk, and testability rationale.] |
-| [Viable alternative] | Rejected | [Material trade-off.] |
-| [Invariant, assumption, or approval gate] | Confirmed / reversible / blocked | [Implementation consequence or fallback.] |
-
-## Plan review
-
-- **Complexity prevention:** [Decomplex report path, or the unavailable/report-write fallback and independence limit. For a tiny draft, state that a separate pass was disproportionate and the built-in gate was applied.]
-
-| Decomplex item | Planner evaluation | Disposition | Plan change, validation, or user decision |
-|---|---|---|---|
-| [Every DEX ID and its Act / Validate / Ask user recommendation, or `No recommendations` / `Pass not run` with reason.] | [Evidence, current need, scope, behavior, and proportionality.] | Accept / Validate / Reject / Ask user | [Accepted simplification, bounded validation and result, rejection reason, or material decision needed.] |
-
-- **Reviewer:** [Fresh read-only subagent and review scope, including the decomplex report and dispositions or fallback.]
-
-| Finding | Parent evaluation | Disposition | Plan change or user decision |
-|---|---|---|---|
-| [Evidence-backed reviewer finding.] | [Evidence, scope, impact, and complexity assessment.] | Accept / Validate / Reject / Ask user | [Proportionate update, validation result, rejection reason, or decision needed.] |
-
-- **Focused follow-up:** [Result for accepted changes, or `Not needed`.]
-
-## Phase 1 — [Independently verifiable outcome]
-
-### Problems addressed
-
-- [Problems resolved or reduced by this phase.]
-
-### Implementation summary
-
-- [Phase approach, dependency boundary, and observable end state.]
-
-### Tasks
+## Phase 1 — [Verifiable outcome]
 
 #### T1.1 — [Task title]
 
-**Description**
+- **Change:** [Required behavior, target component, integration/control flow, and exact contract or shape when needed.]
+- **Starts at:** `[path]` — `[symbol or narrow search target]`; `[test path or narrow search target]`.
+- **Depends on:** [Task ID or gate; omit when none.]
+- **Verify:**
+  - Run `[exact check]`; expect [observable signal] and retain [evidence].
+  - Verify [material failure, regression, or manual behavior] with [evidence].
+- **Risk/recovery:** [Material task-specific safeguard, rollback, cleanup, or operator action; omit when none.]
 
-- [Behavior to implement, target symbol or component, and intended control/data flow.]
-- [Integration and compatibility requirements.]
-- Inspect and update all coupled artifacts discovered during implementation.
+<!-- Repeat stable-ID tasks as needed. Starting paths are not allowlists: implementation must inspect coupled callers, tests, fixtures, config, schemas, generated outputs, docs, and consumers. Do not repeat task checks below. -->
 
-**Relevant files — non-exhaustive starting points**
+- **Phase exit:** [Only cross-task integration, migration, rollout, or phase-wide check not already covered by tasks; omit for a flat plan or when task checks are sufficient.]
+- **Exceptional review checkpoint:** [Only when this boundary needs review beyond the implement-plan defaults; omit otherwise.]
 
-- `[path]` — `[symbol or search target]`: [purpose].
-- `[test path or narrow search pattern]`: [behavior to protect or file to resolve before editing].
+## Final acceptance
 
-**Dependencies**
-
-- [Task IDs, approval, migration state, or `None`.]
-
-**Contract or shape** *(only when exact shape matters)*
-
-```text
-[Small API, type, schema, query, config, protocol, CLI, or state-transition shape.]
-```
-
-**Acceptance and verification**
-
-- [Observable result] — run `[exact check]`; expect [signal] and retain [evidence].
-- [Failure or regression boundary] — verify [behavior] with [evidence].
-
-**Task-local risks** *(only when material)*
-
-- [Failure mode, safeguard, and recovery.]
-
-<!-- Repeat stable-ID tasks as needed. Keep IDs stable if tasks move or change. -->
-
-### Risks, safeguards, and recovery
-
-- **Risk:** [Material failure, migration, or rollback risk.]
-- **Safeguard:** [Prevention, compatibility, observability, or fail-closed behavior.]
-- **Recovery:** [Rollback, retry, cleanup, or operator action and its check.]
-
-Use exactly `None material for this phase` only when investigation found no material risk or recovery concern.
-
-### Phase validation and review
-
-- **Checks:** [Focused and phase-wide checks, expected signals, and retained evidence.]
-- **Review focus:** [Task IDs, risky behavior, callers, and integration boundaries.]
-- **Exit and rerun:** [Finding disposition, required fixes, and checks to rerun.]
-
-<!-- Add phases only for real dependency, migration, rollout, delivery, or independently verifiable boundaries. Repeat the full phase structure. -->
-
-## Final validation and review
-
-- **Checks:** [Authoritative repository and applicable integration/manual checks, expected signals, and justified skips.]
-- **Review focus:** [Complete implementation, coupled artifacts, highest-risk decisions, and cross-phase behavior.]
-- **Evidence:** [Diff, check results, runtime artifacts, deviations, skipped checks, and known risks.]
-- **Exit and rerun:** [Finding disposition, fixes, final reruns, and independent-review fallback if applicable.]
-
-## Definition of Done
-
-- [Each problem and in-scope outcome is resolved with observable evidence.]
-- [Every task, decision, source-driven requirement, and accepted review finding is complete or explicitly deferred.]
-- [Tests, integrations, migration or rollout, docs, generated outputs, cleanup, and recovery work are complete where applicable.]
-- [Remaining blockers and operator steps are explicit.]
+- **Checks:** [Authoritative repository-wide and applicable integration/manual checks, expected signals, and justified skips.]
+- **End state:** [Observable end-to-end outcome, including material migration, rollout, cleanup, documentation, or operator requirements.]
+- **Deferrals or blockers:** [Explicitly approved deferrals or remaining gate; omit when none.]

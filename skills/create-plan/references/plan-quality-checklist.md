@@ -1,40 +1,34 @@
 # Plan Quality Checklist
 
-Complete before final review and again after material revisions.
+Complete before final delivery and again after material revisions.
 
-## Evidence and decisions
+## Evidence and scope
 
-- [ ] Local exploration traced relevant definitions, callers, consumers, tests, fixtures, config, schemas, migrations, generated artifacts, docs, and repository conventions.
-- [ ] Decision-relevant external claims use inspected, authoritative, version-matched sources.
-- [ ] Sources, paths, symbols, commands, and observed behavior are exact. Unknown paths use a narrow discovery instruction.
-- [ ] Viable approaches were compared deliberately. The choice, material trade-offs, assumptions, and approval gates are explicit.
-- [ ] Every material finding maps to a decision, task, safeguard, check, non-goal, or unresolved gate.
-- [ ] At least two dedicated exploration/research subagents produced bounded, sourced handoffs.
-- [ ] The parent verified material claims, resolved conflicts, filled coverage gaps, and owns all decisions.
+- [ ] The requested outcome, current problem, in-scope behavior, material non-goals, and chosen approach are concise and unambiguous.
+- [ ] Every key local file that materially informed planning appears briefly in `Key files, evidence, and decisions` with an exact path, why it matters, and its plan impact.
+- [ ] Key implementation starting files or narrow search targets are included without turning the table or task lists into exhaustive inventories.
+- [ ] Decision-relevant external claims use inspected, authoritative, version-matched sources; paths, symbols, commands, contracts, and observed behavior are exact.
+- [ ] Material findings map to a decision, task, safeguard, check, non-goal, or unresolved gate. Rejected alternatives appear only when consequential.
+- [ ] Exploration and research were proportionate. Any subagent handoff was bounded and verified by the parent; unavailable or disproportionate independence is reported at delivery rather than disguised.
 
 ## Implementation readiness
 
-- [ ] The current template was copied and adapted. All guidance, examples, and placeholders were replaced without removing required headings or task fields.
-- [ ] Problems are evidence-backed; scope, non-goals, dependency order, and intended outcomes are unambiguous.
-- [ ] Every task directly advances the requested outcome or preserves required current behavior; each was challenged for a simpler, narrower alternative, and no unjustified complexity or speculative scope remains.
-- [ ] Every non-trivial draft with meaningful structural choices received a decomplex Prevention pass before independent review, or records the unavailable/report-write fallback and independence limit; tiny drafts use the built-in gate without a disproportionate artifact.
-- [ ] Each stable-ID task states behavior, integration boundaries, dependencies, non-exhaustive file starts, and observable acceptance evidence.
-- [ ] File starts do not act as allowlists. Implementation-time discovery covers coupled code, tests, config, schemas, generated outputs, docs, and consumers.
-- [ ] Exact target shapes appear only where they prevent ambiguity.
-- [ ] Tests sit with the behavior they protect and cover material success, failure, regression, compatibility, migration, and recovery boundaries.
-- [ ] Each phase can finish green. Risks, safeguards, recovery, validation, review focus, exit conditions, and reruns are specific.
-- [ ] Final validation covers authoritative repository gates and applicable integration, manual, security, performance, migration, cleanup, documentation, and no-drift checks. Material skips are justified.
-- [ ] Definition of Done is observable and includes decisions, accepted findings, coupled work, operator steps, and explicit deferrals.
+- [ ] The current template was loaded and adapted. Required semantic content remains; all guidance, comments, placeholders, empty optional fields, and `None` boilerplate were removed.
+- [ ] Every stable-ID task directly advances the requested outcome or preserves required behavior and states the change, non-exhaustive starting points, and observable verification.
+- [ ] Task checks name exact automated or manual commands/actions, expected signals, and material success, failure, or regression evidence.
+- [ ] Tests sit with the behavior they protect. Exact contracts, dependencies, compatibility, migration, rollout, risks, recovery, security, observability, and operator actions appear only where material.
+- [ ] A flat task list is used when sufficient. Every phase that remains represents a real boundary, can finish green, and adds only phase-wide checks not already covered by tasks.
+- [ ] The plan does not repeat the same problem, approach, check, risk, coupled-file policy, review protocol, or completion rule across sections.
+- [ ] Final acceptance covers authoritative repository gates and applicable end-to-end integration/manual behavior, expected signals, justified skips, operator steps, and explicit deferrals or blockers.
+- [ ] Every task and phase was challenged for a simpler, narrower alternative; no unjustified complexity, speculative scope, or future-facing machinery remains.
 
 ## Review and delivery
 
-- [ ] A fresh read-only subagent reviewed the full draft independently and did not delegate; it received any decomplex report and planner dispositions or the recorded fallback.
-- [ ] The planner recorded and dispositioned every decomplex recommendation; only accepted evidence-backed simplifications changed the plan, validations were bounded, and material ambiguity was asked of the user.
-- [ ] The parent critically evaluated every reviewer finding as `Accept`, `Validate`, `Reject`, or `Ask user`.
-- [ ] Accepted changes are evidence-backed, in scope, and proportionate. Rejected complexity-increasing findings include a reason.
-- [ ] Unclear scope, behavior, architecture, risk, migration, or complexity choices were asked of the user rather than guessed.
+- [ ] A proportionate decomplex Prevention pass covered meaningful structural choices when available, or the built-in gate was used and the fallback is reported outside the plan.
+- [ ] A fresh read-only reviewer assessed every consequential draft when safe and proportionate, or direct review and its independence limit are reported.
+- [ ] Every material recommendation or reviewer finding was evaluated as `Accept`, `Validate`, `Reject`, or `Ask user`; only accepted evidence-backed changes entered the plan.
 - [ ] At most one focused follow-up checked accepted changes without reopening broad review.
-- [ ] The checklist was repeated after review changes.
-- [ ] The plan is concise: short sentences, useful bullets and tables, no transcript, repeated policy, generic advice, or unsupported detail.
+- [ ] Planning provenance and routine review ledgers stay outside the implementation handoff unless they create a material decision, task, safeguard, check, or gate.
+- [ ] The plan is concise: short sentences, useful tables or bullets, no transcript, generic advice, repeated policy, unsupported detail, or unnecessary file inventory.
 - [ ] The final artifact is Markdown under `.plans/` when writes permit; otherwise the no-write reason is stated.
-- [ ] Remaining assumptions, user decisions, unresolved gates, skipped work, and known risks are visible.
+- [ ] Delivery reports research/review used, user decisions, rejected or deferred findings, skipped work, remaining assumptions, unresolved gates, and known risks.

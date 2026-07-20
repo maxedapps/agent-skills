@@ -1,8 +1,8 @@
 ---
 name: create-plan
 description: >-
-  Creates, reviews, and improves research-backed implementation plans with
-  problem-led phases and stable, actionable tasks. Use this skill when the user
+  Creates, reviews, and improves lean, research-backed implementation plans with
+  key-file evidence and stable, actionable tasks. Use this skill when the user
   asks to plan a feature or change, create an implementation handoff, or review
   or improve an unimplemented plan before coding. Do not use to implement a plan,
   audit completed implementation against a plan, or answer a small conceptual
@@ -10,18 +10,18 @@ description: >-
 license: MIT
 compatibility: >-
   Requires project file access. Saving requires write access. Current external
-  research requires suitable retrieval access. Non-trivial planning requires a
-  safely available subagent capability.
+  research requires suitable retrieval access. Delegation and independent review
+  require a safely available subagent capability.
 metadata:
-  short-description: Create or improve actionable implementation plans
+  short-description: Create or improve lean implementation plans
 ---
 
 # Create Plan
 
 ## Mandatory resources and output
 
-1. Before drafting or revising, load, copy, and adapt [`assets/implementation-plan-template.md`](assets/implementation-plan-template.md). Keep every required heading and task field. Replace all guidance and examples. Never plan from a remembered format.
-2. Before finalizing, load and complete [`references/plan-quality-checklist.md`](references/plan-quality-checklist.md). Repeat the semantic review after material edits.
+1. Before drafting or revising, load and adapt [`assets/implementation-plan-template.md`](assets/implementation-plan-template.md). Preserve its required semantic core: outcome and boundaries, key files/evidence/decisions, stable tasks, and final acceptance. Remove guidance, comments, placeholders, and every optional field that adds no information. Never plan from a remembered format.
+2. Before finalizing, load and complete [`references/plan-quality-checklist.md`](references/plan-quality-checklist.md). Repeat it after material edits.
 3. If either resource cannot be loaded, stop. Do not invent a substitute.
 
 Do not implement the change. When writes permit, save only the Markdown plan under `.plans/<descriptive-kebab-case-name>.md` and, when the focused checkpoint below runs, its distinct `.reviews/<descriptive-slug>-decomplex.md` report. Do not write implementation artifacts or overwrite unrelated work. For chat-only or no-write work, return the plan in chat and state why it was not saved.
@@ -29,89 +29,59 @@ Do not implement the change. When writes permit, save only the Markdown plan und
 ## Planning standard
 
 - Create a distilled handoff that a fresh implementer can execute without repeating core research.
-- Cite only inspected files, symbols, tests, documents, and authoritative external sources. Never invent paths, commands, contracts, or evidence.
-- Keep file lists as non-exhaustive starting points. Require implementation-time discovery of coupled callers, tests, fixtures, config, schemas, generated files, docs, and consumers.
-- Keep task IDs stable when tasks move or gain detail.
-- Put tests beside the behavior they protect. Give exact checks, expected signals, and evidence to retain.
-- Include short contract snippets only when an API, schema, query, config, protocol, CLI, type, or state transition needs an exact target shape.
-- Cover compatibility, failure behavior, migration, rollback, cleanup, security, observability, and operator actions where material.
-- Keep the user’s requested outcome at the center. Research and review may broaden understanding, but must not broaden scope without a current, evidenced need.
-- Before adding any task, phase, abstraction, safeguard, or test, ask whether it is necessary to deliver that outcome now and whether a simpler, narrower option would suffice. Omit or simplify it when not justified.
-- Plan for the project’s observed requirements, not hypothetical scale, future flexibility, or niche scenarios unless the user or repository makes them relevant.
-- **Avoid complexity at all cost. If in doubt, ask the user.**
+- Cite only inspected files, symbols, tests, documents, and authoritative external sources. Include every key local file used during planning briefly in the plan's key-files table, together with why it matters and its plan impact.
+- Treat task file lists as non-exhaustive starting points. Require implementation-time discovery of coupled callers, tests, fixtures, config, schemas, generated files, docs, and consumers once, without repeating that policy in every task.
+- Keep stable task IDs. Every task must state the required change, starting paths or narrow search targets, and observable verification with exact checks and expected signals.
+- Put tests beside the behavior they protect. Include exact contracts, dependencies, risks, recovery, migration, rollout, security, observability, and operator actions only where material.
+- Keep the requested outcome central. Prefer the smallest design that solves the evidenced problem; omit speculative scope, abstractions, packages, compatibility layers, phases, safeguards, and tests.
+- Ask the user when evidence cannot resolve a material scope, behavior, architecture, migration, risk, or complexity choice.
 
 ## Workflow
 
-### 1. Establish scope
+### 1. Establish scope and inspect the repository
 
-- Read repository instructions and existing plans.
-- Inventory requested outcomes, current problems, constraints, non-goals, open decisions, risks, and validation expectations.
-- Identify the code, tests, configuration, documentation, and runtime surfaces that may participate.
+- Read repository instructions, relevant existing plans, source, tests, config, schemas, docs, migrations, generated artifacts, and nearby patterns.
+- Inventory the requested outcome, current problem, scope, non-goals, decisions, risks, and validation expectations.
+- Record the key local files that materially informed planning. Do not turn the plan into a complete file inventory.
 
-### 2. Run dedicated exploration and research
+### 2. Research proportionately
 
-For every non-trivial plan, launch **multiple dedicated subagents** before drafting. Load `use-subagents-dynamic` directly when available; only when the dynamic skill is unavailable, load the legacy `use-subagents` fallback. Never load both.
+Use direct inspection for small or tightly coupled work. Use one or more bounded subagents when fresh context, independence, expertise, or parallel exploration materially improves the plan; use multiple lanes only for genuinely separable questions. Load `use-subagents-dynamic` when available, otherwise the legacy `use-subagents` fallback, and never load both.
 
-| Required lane | Reasonable split |
-|---|---|
-| Local code exploration | Subsystems, call paths, data flow, tests, migrations, runtime or operational boundaries |
-| Decision-relevant research | External API/framework versions, standards, security contracts, compatibility or deployment behavior |
+- Give each lane one question, exact scope, evidence requirements, and stop condition; prohibit edits and recursive delegation.
+- Research external behavior only when it is decision-relevant, current, version-sensitive, security-sensitive, or not established locally. Prefer authoritative, version-matched sources.
+- Verify material handoff claims directly. Keep synthesis, scope, design choices, and acceptance in the parent.
+- If independent work is unavailable or disproportionate, proceed directly and report the limitation; do not manufacture lanes.
 
-- Use at least two exploration/research lanes. Split local exploration further when external research is not relevant.
-- Give each lane one bounded question, exact scope, constraints, evidence requirements, and stop condition.
-- Require inspected paths or authoritative sources, findings, uncertainty, and skipped work.
-- Prohibit edits and recursive delegation.
-- Keep synthesis, scope, design choices, and final acceptance in the parent.
+### 3. Synthesize the smallest viable plan
 
-If safe subagents are unavailable, prohibited, or cannot cover the required work, stop and ask the user whether to proceed with reduced independence. Do not silently replace required lanes with direct work.
-
-### 3. Synthesize and decide
-
-- Read every handoff. Verify material claims against local code or authoritative sources.
-- Fill coverage gaps across definitions, callers, consumers, tests, fixtures, config, schemas, migrations, generated artifacts, docs, and nearby patterns.
-- Resolve integration boundaries, data/control flow, failure behavior, compatibility, rollout, recovery, and repository checks.
-- Compare viable approaches for correctness, project fit, simplicity, risk, migration cost, and testability.
-- Prefer the smallest design that solves the evidenced problems.
+- Resolve data/control flow, integration boundaries, compatibility, failure behavior, migration or rollout, recovery, and repository checks.
+- Compare viable approaches only when the choice changes implementation. Preserve rejected alternatives only when they prevent reopening a consequential decision.
 - Map each material finding to a decision, task, safeguard, check, non-goal, or unresolved gate.
-- Ask the user when alternatives change scope, behavior, architecture, risk, migration, or long-term complexity and evidence does not decide clearly.
+- Re-evaluate every task and phase. Remove, merge, or simplify work whose value does not justify its complexity.
 
-Unavailable credentials or live services do not justify vague planning. Use documented contracts, fail-closed configuration, fakes, and explicit operator steps where appropriate.
+Unavailable credentials or live services do not justify vague planning. Use inspected contracts, fail-closed configuration, fakes, and explicit operator steps where appropriate.
 
-### 4. Draft the fixed plan
+### 4. Draft the lean handoff
 
-Load and copy the template again. Preserve its required order and fields.
+Load and adapt the template again.
 
-- Use one phase when sufficient. Add phases only for real dependencies, migrations, rollout, delivery boundaries, or independently verifiable outcomes.
-- Make every phase executable and green, including discovered integrations.
-- State phase risks, safeguards, and concrete recovery. Use the template's exact no-material-risk wording only after investigation.
-- Before finalizing, re-evaluate every planned task against the assigned outcome. Remove, merge, or simplify tasks whose value does not justify their complexity.
-- Keep essential evidence and decisions in the plan, not only in chat or research notes.
-- Use short sentences, bullets, and useful tables. Remove investigation narrative and generic advice.
+- Use a flat `Tasks` section for small plans. Add phases only for real dependencies, migrations, rollout, delivery boundaries, or independently verifiable outcomes; each phase must finish green.
+- Keep the key-files table brief but include key implementation starting points and every key local file that informed planning. Include external sources only when they impose a decision or constraint.
+- Omit `Depends on`, exact shapes, risks/recovery, phase exits, exceptional review checkpoints, deferrals, and non-goals when they add no information.
+- Do not repeat the same problem, approach, check, risk, or completion rule across plan, phase, task, and final sections.
+- Keep planning provenance—lane IDs, parent-verification narrative, review ledgers, and routine finding dispositions—out of the implementation handoff. Report it at delivery unless it changes implementation.
 
-### 5. Run complexity prevention
+### 5. Prevent complexity when proportionate
 
-After drafting and before the fresh plan reviewer, run `decomplex` in Prevention mode for every non-trivial draft that makes meaningful architecture, dependency, configuration, fallback, concurrency, rollout, compatibility, or abstraction choices, when the skill and its required report write are available. Tiny plans and drafts without meaningful structural choices do not warrant a separate artifact; still apply the built-in simplicity gate.
+For a non-trivial draft with meaningful architecture, dependency, configuration, fallback, concurrency, rollout, compatibility, or abstraction choices, use `decomplex` in Prevention mode when available and its required report can be written. The planner owns every recommendation and accepts only evidence-backed, in-scope simplifications.
 
-The planner owns every recommendation. Record each `Act`, `Validate`, or `Ask user` item and disposition it as `Accept`, `Validate`, `Reject`, or `Ask user`: edit the draft only for an accepted, evidence-backed simplification; run a bounded check before deciding a validation item; and ask the user when behavior, architecture, migration, risk, or complexity remains materially ambiguous. A decomplex recommendation never edits the plan or creates work by itself.
-
-If `decomplex` is unavailable or its report cannot be written, continue ordinary planning with the built-in gate. Record the fallback reason and reduced independence/confidence; never claim that the pass ran. Record a disproportionate-pass decision for a tiny draft without creating a report.
+For a tiny draft, unavailable skill, or unavailable report write, apply the built-in simplicity gate and record the fallback at delivery. Do not add a plan section or fake report merely to document that the pass did not run.
 
 ### 6. Review and deliver
 
-Use a **fresh read-only reviewer subagent** for every non-trivial plan. The reviewer must not be an exploration/research lane and must not delegate.
+Use a fresh read-only reviewer for consequential plans when safe and proportionate. Give it the request, draft, key evidence, decisions, constraints, risks, unresolved questions, and any decomplex report. For small plans or unavailable independent review, perform the checklist directly and report the independence limit.
 
-Give it the request, full draft, lane handoffs, sources, decisions, constraints, risks, unresolved questions, and any decomplex report plus planner dispositions or recorded fallback. Require evidence-backed findings and the smallest proportionate improvement.
+Evaluate each finding as `Accept`, `Validate`, `Reject`, or `Ask user`. Update the plan only for accepted, evidence-backed, proportionate findings; use at most one focused follow-up on accepted changes. Keep the review ledger outside the plan unless a finding creates an implementation decision, task, or gate.
 
-| Parent disposition | Action |
-|---|---|
-| **Accept** | Evidence-backed, in scope, and simpler or proportionate; update the plan. |
-| **Validate** | Check a claim before changing the plan. |
-| **Reject** | Unsupported, out of scope, duplicate, or complexity-increasing. Record why. |
-| **Ask user** | Scope, behavior, architecture, risk, migration, or complexity choice remains unclear. |
-
-- Evaluate every finding critically. Reviewer output is advice, not authority.
-- Do not add speculative abstractions, packages, phases, compatibility layers, or future scope.
-- After accepted changes, allow one focused follow-up on those changes only. Do not reopen broad review.
-- Complete the semantic checklist after review changes.
-- Plan focused phase and final validation without duplicating the implementation workflow.
-- Save or return the Markdown plan. Report its path or no-write reason, user decisions, rejected/deferred findings, skipped work, and remaining risks.
+Complete the checklist, save or return the plan, and report its path or no-write reason, research/review used, material decisions, rejected or deferred findings, skipped work, and remaining risks.
