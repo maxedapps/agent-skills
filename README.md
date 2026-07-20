@@ -6,8 +6,8 @@
 - `create-plan` — create, review, and improve researched, implementation-ready plans before coding.
 - `create-skill` — create, rewrite, and review concise, actionable Agent Skills.
 - `implement-plan` — execute existing Markdown implementation plans with delegation-first tracking and verification.
-- `use-subagents` — provide legacy delegation guidance only when V2 is unavailable.
-- `use-subagents-v2` — decide, split, launch, supervise, integrate, and clean bounded CLI subagent work.
+- `use-subagents` — provide legacy delegation guidance only when the dynamic skill is unavailable.
+- `use-subagents-dynamic` — decide, split, launch, supervise, integrate, and clean bounded CLI subagent work.
 - `web-research` — perform current, source-backed research across web content and repositories.
 
 ## Install
@@ -39,7 +39,7 @@ npx skills add maxedapps/agent-skills \
   --skill create-skill \
   --skill implement-plan \
   --skill use-subagents \
-  --skill use-subagents-v2 \
+  --skill use-subagents-dynamic \
   --skill web-research
 ```
 
@@ -47,7 +47,7 @@ Review each skill and its compatibility requirements before use. `code-review` a
 
 ## Runtime and related skills
 
-- **`use-subagents-v2` owns subagent coordination and runtime execution.** It decides and decomposes bounded work, then launches and supervises supported Pi, Claude Code, Codex, Grok, or Kimi CLI children through verified Herdr or standalone execution. It also integrates and cleans isolated worker worktrees. V2 requires Node, current authenticated CLIs, Git for workers, and macOS/Linux for standalone asynchronous control. Use legacy `use-subagents` only when V2 is unavailable; never load both.
+- **`use-subagents-dynamic` owns subagent coordination and runtime execution.** It decides and decomposes bounded work, then launches and supervises supported Pi, Claude Code, Codex, Grok, or Kimi CLI children through verified Herdr or standalone execution. It also integrates and cleans isolated worker worktrees. The dynamic skill requires Node, current authenticated CLIs, Git for workers, and macOS/Linux for standalone asynchronous control. Use legacy `use-subagents` only when the dynamic skill is unavailable; never load both.
 - **`agent-browser` remains external.** Install it from [skills.sh](https://www.skills.sh/vercel-labs/agent-browser/agent-browser) when browser interaction or UI verification is needed:
 
   ```sh
@@ -74,9 +74,9 @@ Executes an existing Markdown plan in verified dependency-ready batches. It stro
 
 ### `use-subagents`
 
-Provides legacy decision, decomposition, assignment, supervision, and verification guidance only when `use-subagents-v2` is unavailable. It must not co-activate with V2.
+Provides legacy decision, decomposition, assignment, supervision, and verification guidance only when `use-subagents-dynamic` is unavailable. It must not co-activate with the dynamic skill.
 
-### `use-subagents-v2`
+### `use-subagents-dynamic`
 
 Decides whether delegation helps, splits work into bounded scout, research, or worker lanes, and runs supported Pi, Claude Code, Codex, Grok, Kimi, and verified Herdr environments through one script. Readers remain read-only; workers receive isolated Git worktrees. The parent reviews and validates every result. Integration and cleanup are dry-run-first, ancestry-gated, non-force operations; unsafe or unverifiable resources are retained.
 

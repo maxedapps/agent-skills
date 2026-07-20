@@ -4,8 +4,9 @@ description: >-
   Provides legacy guidance for planning and coordinating bounded subagent work.
   Use this skill when delegation, decomposition, parallel research or review,
   isolated implementation, or independent validation may help, but only if
-  `use-subagents-v2` is unavailable. Do not use when `use-subagents-v2` is
-  available, for recursive delegation, or for ordinary background processes.
+  `use-subagents-dynamic` is unavailable. Do not use when
+  `use-subagents-dynamic` is available, for recursive delegation, or for
+  ordinary background processes.
 license: MIT
 compatibility: >-
   Decision and coordination guidance is instruction-only. Launching requires a
@@ -17,7 +18,7 @@ metadata:
 
 # Use Subagents (Legacy Fallback)
 
-Use this legacy guidance only when `use-subagents-v2` is unavailable. Never co-activate both skills; if V2 is available, stop and use it instead. Follow higher-priority instructions for scope, privacy, tools, cost, and latency.
+Use this legacy guidance only when `use-subagents-dynamic` is unavailable. Never co-activate both skills; if the dynamic skill is available, stop and use it instead. Follow higher-priority instructions for scope, privacy, tools, cost, and latency.
 
 ## Scope and runtime handoff
 

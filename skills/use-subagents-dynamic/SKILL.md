@@ -1,5 +1,5 @@
 ---
-name: use-subagents-v2
+name: use-subagents-dynamic
 description: >-
   Plans, launches, and manages bounded scout, research, and worker coding agents.
   Use this skill whenever delegation may help, including task decomposition,
@@ -16,7 +16,7 @@ metadata:
   short-description: Coordinate and run bounded isolated subagents
 ---
 
-# Use Subagents V2
+# Use Subagents Dynamic
 
 ## Critical rules
 
