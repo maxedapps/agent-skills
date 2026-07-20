@@ -1,0 +1,7 @@
+interface:
+  display_name: "Set Up and Harden VPS"
+  short_description: "Manually run a safety-gated VPS setup workflow"
+  default_prompt: "Set up and harden the specified VPS using the supplied context."
+
+policy:
+  allow_implicit_invocation: false

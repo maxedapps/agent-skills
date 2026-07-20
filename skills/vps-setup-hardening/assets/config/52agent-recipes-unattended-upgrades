@@ -1,0 +1,5 @@
+// Managed by the vps-setup-hardening skill.
+// Install security updates automatically, but leave reboots to the administrator.
+Unattended-Upgrade::Automatic-Reboot "false";
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+Unattended-Upgrade::Remove-New-Unused-Dependencies "true";
