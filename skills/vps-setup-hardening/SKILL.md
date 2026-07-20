@@ -26,7 +26,7 @@ metadata:
 ## Critical rules
 
 - Before connecting to or changing a server, read [`references/workflow.md`](references/workflow.md) completely and follow its gates in order.
-- Treat invocation arguments and prior conversation as authoritative context. Do not ask the user to repeat a resolved choice or any discoverable fact.
+- Treat invocation arguments and prior conversation as authoritative context. Do not ask the user to repeat a resolved choice or any discoverable fact. Ask only for required non-discoverable information, grouping unresolved choices into one compact question after inspection whenever possible.
 - Never request passwords, private keys, provider API tokens, Tailscale auth keys, or other credentials. Do not expose keys, tokens, authentication URLs, or sensitive configuration in reports.
 - Preserve the current working session through every SSH, Tailscale, firewall, and reboot change. Never remove an access path until its replacement succeeds in a fresh independent test.
 - Stop at every human authentication, independent external test, provider-side change, access-closing action, unsupported-runtime approval, and reboot gate. Continue only from explicit evidence or confirmation for that gate.

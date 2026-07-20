@@ -4,8 +4,8 @@ Read this file completely before connecting to or changing any server. Execute t
 
 ## Contents
 
-1. [Invocation and operating contract](#invocation-and-operating-contract)
-2. [Phase 0 — Resolve invocation context](#phase-0--resolve-invocation-context)
+1. [Operating contract](#operating-contract)
+2. [Phase 0 — Resolve run context](#phase-0--resolve-run-context)
 3. [Phase 1 — Stage and inspect](#phase-1--stage-and-inspect)
 4. [Phase 2 — Establish the base](#phase-2--establish-the-base)
 5. [Phase 3 — Administrator and SSH hardening](#phase-3--administrator-and-ssh-hardening)
@@ -17,20 +17,12 @@ Read this file completely before connecting to or changing any server. Execute t
 11. [Failure and recovery behavior](#failure-and-recovery-behavior)
 12. [Provenance and maintenance](#provenance-and-maintenance)
 
-## Invocation and operating contract
-
-Stop without inspecting or changing a server unless the user explicitly invoked `vps-setup-hardening` by name. Accepted strict manual forms are:
-
-- Pi: `/skill:vps-setup-hardening <context>`
-- Claude Code: `/vps-setup-hardening <context>`
-- Codex: `$vps-setup-hardening <context>`
-
-Other harnesses may expose a different explicit command and may ignore manual-only metadata. Do not claim deterministic prevention there; apply the in-body manual-only gate.
+## Operating contract
 
 Follow these rules throughout:
 
-- Treat invocation arguments and established conversation context as the run record. Carry resolved choices across later turns.
-- Ask one compact question for unresolved choices only. Discover platform facts before asking.
+- Treat the user's request and established conversation context as the run record. Carry resolved choices across later turns.
+- Ask only for required, non-discoverable information. Group unresolved choices into one compact question after inspection whenever possible.
 - Keep the original SSH session open through all access-changing work. A local loopback test is never a replacement for an independent login.
 - Stop for human authentication, fresh-login tests, provider-side changes, exposure scans, access closure, unsupported-runtime approval, and reboot approval.
 - Never request or handle passwords, private keys, provider API tokens, Tailscale auth keys, or secrets in chat or script arguments.
@@ -38,9 +30,9 @@ Follow these rules throughout:
 - Use provider console or rescue mode only for recovery.
 - Use the bundled scripts without weakening confirmation flags or fail-closed checks. If a script rejects the host, preserve the required outcome and ordering while adapting conservatively; do not force past the rejection.
 
-## Phase 0 — Resolve invocation context
+## Phase 0 — Resolve run context
 
-Extract these values from the invocation and prior conversation without asking again:
+Extract these values from the user's request and prior conversation without asking again:
 
 - SSH target, hostname, IP, or configured alias
 - requested administrator name
@@ -51,7 +43,7 @@ Extract these values from the invocation and prior conversation without asking a
 - intended final SSH mode: public key-only or traditional OpenSSH over Tailscale only
 - requested runtime versions
 
-The invocation must identify a VPS or SSH target. If it does not, stop and ask the user to invoke the skill again with the target.
+A VPS or SSH target is required to inspect the server. If it is missing, ask one concise blocking question for the target; do not require the user to restart or repeat the rest of the request.
 
 Infer only safe defaults:
 
@@ -64,9 +56,7 @@ Infer only safe defaults:
 - Without Docker, `host` is the normal firewall strategy unless the user selected provider filtering.
 - With Docker, require `external` provider filtering or a separately reviewed Docker-aware host policy. UFW alone is invalid.
 
-Ask one compact question containing only unresolved operational choices. Include the administrator name when it cannot be inferred safely. When Docker is requested and ingress is unresolved, explain in one sentence that UFW does not control Docker-published traffic.
-
-Record the chosen values for all later script commands and the final report. Do not relitigate an approved choice unless new inspection evidence invalidates it.
+Apply these defaults without asking. Mark any remaining non-discoverable preferences as unresolved and defer them until after read-only inspection. Record resolved values for all later script commands and the final report. Do not relitigate an approved choice unless new inspection evidence invalidates it.
 
 ## Phase 1 — Stage and inspect
 
@@ -125,6 +115,12 @@ Stop before mutation when:
 - the platform is unsupported and no conservative equivalent is clear.
 
 Do not remove provider agents, cloud-init, networking/storage services, or unfamiliar listeners speculatively.
+
+### Resolve remaining choices once
+
+Use the inspection and existing context to eliminate discoverable questions. Then ask one compact grouped question containing only required unresolved preferences. Typical items are the administrator name when no safe existing account can be selected, an ingress strategy when Docker was requested, and any ambiguous public-port or final-access requirement. Do not ask about optional tools that defaulted to none, platform facts, or choices already answered. When Docker is requested and ingress remains unresolved, explain in one sentence that UFW does not control Docker-published traffic.
+
+If the target itself was missing earlier, that necessary connection question may be separate; still group all post-inspection choices into this single question.
 
 ### Establish privilege
 
