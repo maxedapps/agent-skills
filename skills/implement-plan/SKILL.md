@@ -47,10 +47,13 @@ On resume, repeat steps 1–4 and reconcile current state before editing. If the
 
 1. **Inventory:** map implementation, migration, cleanup, docs, rollout, and required validation to stable rows with plan references, dependencies, and acceptance evidence. Split opaque compound rows.
 2. **Select:** enumerate dependency-ready rows. Define the batch's scope, risks, rollback/cleanup, checks, and join point.
-3. **Assign:** strongly consider subagents for every non-trivial batch. Record owner, ownership boundary, isolation, overlap, rationale, and review checkpoint.
-4. **Implement:** stay within assigned ownership. Record deviations immediately.
-5. **Verify:** parent-inspect diffs and claims; run targeted behavior tests plus applicable test, lint, typecheck, build, migration, and browser/manual checks.
-6. **Update:** record concise evidence. Mark rows `Verified`, `Blocked`, or ready for another batch; then repeat.
+3. **Prevent new complexity:** before the batch, run `decomplex` in Prevention mode only when it introduces or materially expands architecture, abstractions, dependencies, configuration, concurrency, caches/queues/retries, compatibility/fallback layers, broad test machinery, or operational safeguards. Otherwise apply the built-in gate without creating a disproportionate report.
+4. **Assign:** strongly consider subagents for every non-trivial batch. Record owner, ownership boundary, isolation, overlap, rationale, and review checkpoint.
+5. **Implement:** stay within assigned ownership. Record deviations immediately.
+6. **Verify:** parent-inspect diffs and claims; run targeted behavior tests plus applicable test, lint, typecheck, build, migration, and browser/manual checks.
+7. **Update:** record concise evidence. Mark rows `Verified`, `Blocked`, or ready for another batch; then repeat.
+
+A prevention report is advisory and does not create tracker work. The parent dispositions its recommendations before changing batch scope, preserving evidenced boundaries and safeguards. If `decomplex` is unavailable or its required report write is prohibited, use the existing parent gate and record the fallback and independence/confidence limit in the batch's existing evidence fields; never claim the pass ran.
 
 `Verified` requires task-specific evidence. `Descoped` requires explicit user approval and rationale. A phase is complete only when all child rows are `Verified` or approved `Descoped`.
 
@@ -93,9 +96,11 @@ Deduplicate checkpoints with the same scope and evidence. Use direct parent revi
 
 Give reviewers the plan/tracker, covered IDs, relevant diff/contracts/tests, validation/manual evidence, skips, deviations, risks, and non-goals. Require read-only work and prohibit recursive delegation. For final review, require plan-backed full scope. Preserve the `code-review` authority matrix and separate baseline, compliance, quality, and validation verdicts when that contract requires them.
 
+At each checkpoint, selectively use `decomplex` Finding triage when a reviewer recommendation would add meaningful complexity, broaden scope, or depends on context-sensitive reachability or scale. Preserve every original finding ID in the triage report. The report is advisory evidence only: neither reviewer nor decomplex creates tracker work automatically. If the skill or report write is unavailable, record the parent-only fallback and independence/confidence limit in the existing review evidence; do not claim triage occurred.
+
 ### Disposition every finding
 
-The parent must critically evaluate **every** finding for evidence, reachability, plan scope, impact, and proportional regression/maintenance cost. Record exactly one disposition:
+The parent must critically evaluate **every** reviewer finding and decomplex recommendation for authority, evidence, reachability, impact, existing safeguards, simpler alternatives, plan scope, proportional regression and maintenance cost, and whether a user decision is required. Record exactly one authoritative disposition:
 
 | Disposition | Use when |
 |---|---|
@@ -105,17 +110,18 @@ The parent must critically evaluate **every** finding for evidence, reachability
 | **Human decision** | A required scope or architectural choice cannot be resolved safely without the user; queue for final presentation. |
 | **Block** | Material and unresolved; overlapping work or completion cannot safely continue. |
 
-Fix simple valid findings. Do not silently implement queued human decisions. After accepted fixes, allow one focused read-only follow-up on those fixes only; do not reopen a broad review. Do not add speculative abstractions, compatibility layers, or test machinery merely to satisfy review.
+Fix simple valid findings. Map a decomplex `Ask user` recommendation to `Human decision` only when the unresolved choice is material; otherwise disposition it from the evidence without escalating. Do not silently implement queued human decisions. After accepted fixes, allow one focused read-only follow-up on those fixes only; do not reopen a broad review. Do not add speculative abstractions, compatibility layers, or test machinery merely to satisfy review.
 
 ## Final reconciliation
 
 1. Reread the complete original plan line by line; add and execute any missed row.
 2. Confirm no row is `Pending`, `In progress`, or `Blocked`; verify approved descopes and all evidence.
 3. Review the diff task by task and remove changes whose scope or complexity is not justified by the assigned outcome.
-4. Run final targeted and repository-wide checks, required browser/manual validation, and safe cleanup.
-5. Run one fresh plan-backed full read-only review; disposition every finding and perform at most one focused follow-up for accepted fixes.
-6. Present the human-decision queue. Any unresolved material issue remains `Blocked`; only evidence-backed unrelated pre-existing failures may be caveats.
-7. Update the tracker and rerun checks covering it when tracked.
+4. When available and proportionate, run a decomplex Audit focused only on complexity introduced by the plan's implementation diff—not unrelated legacy cleanup—and disposition every recommendation. Otherwise apply the parent gate and record the unavailable/report-write fallback and independence limit without claiming an audit.
+5. Run final targeted and repository-wide checks, required browser/manual validation, and safe cleanup.
+6. Run one fresh plan-backed full read-only review; disposition every finding and perform at most one focused follow-up for accepted fixes.
+7. Present the human-decision queue. Any unresolved material issue remains `Blocked`; only evidence-backed unrelated pre-existing failures may be caveats.
+8. Update the tracker and rerun checks covering it when tracked.
 
 ## Final response
 

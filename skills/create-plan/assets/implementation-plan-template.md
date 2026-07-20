@@ -37,7 +37,13 @@
 
 ## Plan review
 
-- **Reviewer:** [Fresh read-only subagent and review scope.]
+- **Complexity prevention:** [Decomplex report path, or the unavailable/report-write fallback and independence limit. For a tiny draft, state that a separate pass was disproportionate and the built-in gate was applied.]
+
+| Decomplex item | Planner evaluation | Disposition | Plan change, validation, or user decision |
+|---|---|---|---|
+| [Every DEX ID and its Act / Validate / Ask user recommendation, or `No recommendations` / `Pass not run` with reason.] | [Evidence, current need, scope, behavior, and proportionality.] | Accept / Validate / Reject / Ask user | [Accepted simplification, bounded validation and result, rejection reason, or material decision needed.] |
+
+- **Reviewer:** [Fresh read-only subagent and review scope, including the decomplex report and dispositions or fallback.]
 
 | Finding | Parent evaluation | Disposition | Plan change or user decision |
 |---|---|---|---|

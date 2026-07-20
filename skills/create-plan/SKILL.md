@@ -24,7 +24,7 @@ metadata:
 2. Before finalizing, load and complete [`references/plan-quality-checklist.md`](references/plan-quality-checklist.md). Repeat the semantic review after material edits.
 3. If either resource cannot be loaded, stop. Do not invent a substitute.
 
-Do not implement the change. When writes permit, save only the Markdown plan under `.plans/<descriptive-kebab-case-name>.md`. Do not overwrite unrelated work. For chat-only or no-write work, return the plan in chat and state why it was not saved.
+Do not implement the change. When writes permit, save only the Markdown plan under `.plans/<descriptive-kebab-case-name>.md` and, when the focused checkpoint below runs, its distinct `.reviews/<descriptive-slug>-decomplex.md` report. Do not write implementation artifacts or overwrite unrelated work. For chat-only or no-write work, return the plan in chat and state why it was not saved.
 
 ## Planning standard
 
@@ -88,11 +88,19 @@ Load and copy the template again. Preserve its required order and fields.
 - Keep essential evidence and decisions in the plan, not only in chat or research notes.
 - Use short sentences, bullets, and useful tables. Remove investigation narrative and generic advice.
 
-### 5. Review and deliver
+### 5. Run complexity prevention
+
+After drafting and before the fresh plan reviewer, run `decomplex` in Prevention mode for every non-trivial draft that makes meaningful architecture, dependency, configuration, fallback, concurrency, rollout, compatibility, or abstraction choices, when the skill and its required report write are available. Tiny plans and drafts without meaningful structural choices do not warrant a separate artifact; still apply the built-in simplicity gate.
+
+The planner owns every recommendation. Record each `Act`, `Validate`, or `Ask user` item and disposition it as `Accept`, `Validate`, `Reject`, or `Ask user`: edit the draft only for an accepted, evidence-backed simplification; run a bounded check before deciding a validation item; and ask the user when behavior, architecture, migration, risk, or complexity remains materially ambiguous. A decomplex recommendation never edits the plan or creates work by itself.
+
+If `decomplex` is unavailable or its report cannot be written, continue ordinary planning with the built-in gate. Record the fallback reason and reduced independence/confidence; never claim that the pass ran. Record a disproportionate-pass decision for a tiny draft without creating a report.
+
+### 6. Review and deliver
 
 Use a **fresh read-only reviewer subagent** for every non-trivial plan. The reviewer must not be an exploration/research lane and must not delegate.
 
-Give it the request, full draft, lane handoffs, sources, decisions, constraints, risks, and unresolved questions. Require evidence-backed findings and the smallest proportionate improvement.
+Give it the request, full draft, lane handoffs, sources, decisions, constraints, risks, unresolved questions, and any decomplex report plus planner dispositions or recorded fallback. Require evidence-backed findings and the smallest proportionate improvement.
 
 | Parent disposition | Action |
 |---|---|

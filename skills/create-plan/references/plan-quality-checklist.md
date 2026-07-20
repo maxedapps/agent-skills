@@ -17,6 +17,7 @@ Complete before final review and again after material revisions.
 - [ ] The current template was copied and adapted. All guidance, examples, and placeholders were replaced without removing required headings or task fields.
 - [ ] Problems are evidence-backed; scope, non-goals, dependency order, and intended outcomes are unambiguous.
 - [ ] Every task directly advances the requested outcome or preserves required current behavior; each was challenged for a simpler, narrower alternative, and no unjustified complexity or speculative scope remains.
+- [ ] Every non-trivial draft with meaningful structural choices received a decomplex Prevention pass before independent review, or records the unavailable/report-write fallback and independence limit; tiny drafts use the built-in gate without a disproportionate artifact.
 - [ ] Each stable-ID task states behavior, integration boundaries, dependencies, non-exhaustive file starts, and observable acceptance evidence.
 - [ ] File starts do not act as allowlists. Implementation-time discovery covers coupled code, tests, config, schemas, generated outputs, docs, and consumers.
 - [ ] Exact target shapes appear only where they prevent ambiguity.
@@ -27,8 +28,9 @@ Complete before final review and again after material revisions.
 
 ## Review and delivery
 
-- [ ] A fresh read-only subagent reviewed the full draft independently and did not delegate.
-- [ ] The parent critically evaluated every finding as `Accept`, `Validate`, `Reject`, or `Ask user`.
+- [ ] A fresh read-only subagent reviewed the full draft independently and did not delegate; it received any decomplex report and planner dispositions or the recorded fallback.
+- [ ] The planner recorded and dispositioned every decomplex recommendation; only accepted evidence-backed simplifications changed the plan, validations were bounded, and material ambiguity was asked of the user.
+- [ ] The parent critically evaluated every reviewer finding as `Accept`, `Validate`, `Reject`, or `Ask user`.
 - [ ] Accepted changes are evidence-backed, in scope, and proportionate. Rejected complexity-increasing findings include a reason.
 - [ ] Unclear scope, behavior, architecture, risk, migration, or complexity choices were asked of the user rather than guessed.
 - [ ] At most one focused follow-up checked accepted changes without reopening broad review.

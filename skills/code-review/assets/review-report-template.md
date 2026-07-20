@@ -19,6 +19,13 @@
 
 <Overall result, highest material risks, and confidence. Say when no material issue was found. If overflow remains, state `not review-ready`.>
 
+## Related decomplex review
+
+<Include only when a focused decomplex pass actually ran; otherwise remove this section.>
+
+- **Report:** `<.reviews/descriptive-slug-decomplex.md>`
+- **Owner disposition summary:** <Account for every recommendation and state only the material consequences admitted into this review or its next steps.>
+
 ## Coverage
 
 ### Inspected

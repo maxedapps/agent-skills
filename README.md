@@ -3,6 +3,7 @@
 ## Available skills
 
 - `code-review` — perform adaptable generic, scoped, and plan-backed implementation reviews.
+- `decomplex` — prevent, audit, and triage unnecessary complexity without editing reviewed targets.
 - `create-plan` — create, review, and improve researched, implementation-ready plans before coding.
 - `create-skill` — create, rewrite, and review concise, actionable Agent Skills.
 - `implement-plan` — execute existing Markdown implementation plans with delegation-first tracking and verification.
@@ -30,11 +31,12 @@ Or use the explicit option:
 npx skills add maxedapps/agent-skills --skill code-review
 ```
 
-Install all seven skills explicitly:
+Install all eight skills explicitly:
 
 ```sh
 npx skills add maxedapps/agent-skills \
   --skill code-review \
+  --skill decomplex \
   --skill create-plan \
   --skill create-skill \
   --skill implement-plan \
@@ -47,6 +49,7 @@ Review each skill and its compatibility requirements before use. `code-review` a
 
 ## Runtime and related skills
 
+- **`decomplex` is a soft integration.** It can provide focused advisory reports to `code-review`, `create-plan`, and `implement-plan` when installed and proportionate. It requires write access for one distinct `.reviews/<descriptive-slug>-decomplex.md` report but never edits reviewed targets. Each owning workflow retains its concise built-in gate and records an honest fallback when the skill or report write is unavailable.
 - **`use-subagents-dynamic` owns subagent coordination and runtime execution.** It decides and decomposes bounded work, then launches and supervises supported Pi, Claude Code, Codex, Grok, or Kimi CLI children through verified Herdr or standalone execution. It also integrates and cleans isolated worker worktrees. The dynamic skill requires Node, current authenticated CLIs, Git for workers, and macOS/Linux for standalone asynchronous control. Use legacy `use-subagents` only when the dynamic skill is unavailable; never load both.
 - **`agent-browser` remains external.** Install it from [skills.sh](https://www.skills.sh/vercel-labs/agent-browser/agent-browser) when browser interaction or UI verification is needed:
 
@@ -59,6 +62,10 @@ Review each skill and its compatibility requirements before use. `code-review` a
 ### `code-review`
 
 Performs evidence-bound generic and plan-backed reviews. It strongly considers bounded read-only subagents for independent review dimensions, while the parent verifies evidence, consolidates handoffs, and owns final findings and verdicts.
+
+### `decomplex`
+
+Reviews proposed or existing source, plans, architecture, tests, configuration, dependencies, and review recommendations for evidenced unnecessary complexity. It supports Prevention, Audit, and Finding triage modes; writes one advisory `.reviews/` report; and never edits reviewed targets.
 
 ### `create-plan`
 

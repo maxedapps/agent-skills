@@ -20,23 +20,23 @@ Map every implementation, migration, cleanup, documentation, rollout, and valida
 
 ## Batches and evidence
 
-Before **every non-trivial batch**, enumerate ready rows and strongly consider subagents. Record a concrete allowed reason for parent ownership. Cap parallel lanes by parent integration/verification capacity; isolate concurrent writers in separate worktrees with non-overlapping ownership. Keep coupled work sequential or parent-owned.
+Before **every non-trivial batch**, enumerate ready rows and strongly consider subagents. Record a concrete allowed reason for parent ownership. Cap parallel lanes by parent integration/verification capacity; isolate concurrent writers in separate worktrees with non-overlapping ownership. Keep coupled work sequential or parent-owned. For a qualifying structural batch, record the decomplex Prevention report path—or the unavailable/report-write fallback and independence limit—inside the existing scope or parent-evidence cell; do not add a column or tracker row.
 
 | Batch / rows | Owner and delegation rationale | Scope / dependencies / join | Ownership / isolation / overlap | Acceptance and review checkpoint | Parent verification / terminal evidence / cleanup |
 |---|---|---|---|---|---|
-| B01 / T01 | `<delegate, or concrete parent reason>` | `<bounded change; deps; join>` | `<files/domain; worktree or sequential; overlap>` | `<checks; review ID or N/A-small>` | `<diff/claim inspection; commands/results; handoff/state; cleanup>` |
+| B01 / T01 | `<delegate, or concrete parent reason>` | `<bounded change; deps; join; prevention report path or fallback when applicable>` | `<files/domain; worktree or sequential; overlap>` | `<checks; review ID or N/A-small>` | `<diff/claim inspection; commands/results; decomplex dispositions; handoff/state; cleanup>` |
 
 For delegated work retain run identity, terminal state/handoff, files changed, decisions, exact checks/results, skips, risks, blockers, and remaining work. Child claims are evidence; parent inspection and reruns establish verification.
 
 ## Reviews and dispositions
 
-Use a fresh read-only subagent after each major coherent boundary—an integration, migration, public contract, security/data invariant, risky dependency, or delivery milestone—and for final full-plan review. Major does not mean “many rows.” Prohibit reviewer recursion. Record direct-review fallbacks and independence limits.
+Use a fresh read-only subagent after each major coherent boundary—an integration, migration, public contract, security/data invariant, risky dependency, or delivery milestone—and for final full-plan review. Major does not mean “many rows.” Prohibit reviewer recursion. Record direct-review fallbacks and independence limits. In the existing method/evidence cell, record any selective decomplex Finding-triage report path and preserved source IDs, plus the scoped final Audit report path; when either pass is unavailable or its report cannot be written, record the fallback and independence limit instead. Add no parallel review tracker.
 
 | Review / covered rows | Boundary and scope | Method / run / evidence | Finding | Disposition and rationale | Fix or validation / rerun / one focused follow-up | Status |
 |---|---|---|---|---|---|---|
-| M01 / T01 | `<why major; bounded or final-full>` | `<fresh read-only run or fallback; inputs>` | `<finding or None>` | `<Fix now, Validate, Reject, Human decision, or Block — why>` | `<row/check/result/follow-up>` | `<Open, Resolved, or Blocked>` |
+| M01 / T01 | `<why major; bounded or final-full>` | `<fresh read-only run or fallback; inputs; triage/audit report path or fallback when applicable>` | `<finding or None; preserve original ID>` | `<Fix now, Validate, Reject, Human decision, or Block — why>` | `<row/check/result/decomplex disposition/follow-up>` | `<Open, Resolved, or Blocked>` |
 
-The parent critically evaluates **every** finding. `Fix now` is valid, in-scope, simple, proportionate, and low-risk. Queue doubtful, architectural, scope-changing, risky, or complexity-increasing findings as `Human decision`. After accepted fixes, allow one focused follow-up only—never a reopened broad review or speculative abstraction, compatibility layer, or test machinery. Preserve required authority-matrix and separate verdict evidence by reference rather than duplicating it here.
+The parent critically evaluates **every** reviewer finding and decomplex recommendation. `Fix now` is valid, in-scope, simple, proportionate, and low-risk. Use `Human decision` only for a material unresolved scope or architectural choice; decomplex `Ask user` does not map automatically. Neither advisory report creates tracker work. After accepted fixes, allow one focused follow-up only—never a reopened broad review or speculative abstraction, compatibility layer, or test machinery. Preserve required authority-matrix and separate verdict evidence by reference rather than duplicating it here.
 
 ## Human-decision queue
 
