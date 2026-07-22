@@ -7,8 +7,8 @@
 - `create-plan` — create, review, and improve researched, implementation-ready plans before coding.
 - `create-skill` — create, rewrite, and review concise, actionable Agent Skills.
 - `implement-plan` — execute existing Markdown implementation plans with delegation-first tracking and verification.
-- `use-subagents` — provide generic delegation-first coordination when no native or dynamic adapter is active.
-- `use-subagents-dynamic` — launch and supervise bounded Pi RPC subagent work when native `subagent_*` tools are inactive.
+- `use-subagents` — provide generic delegation-first coordination when no native or Pi RPC adapter is active.
+- `use-pi-subagents` — launch and supervise bounded Pi RPC subagent work when native `subagent_*` tools are inactive.
 - `web-research` — perform current, source-backed research across web content and repositories.
 - `vps-setup-hardening` — manually run a safety-gated Linux VPS setup and hardening workflow.
 
@@ -44,7 +44,7 @@ npx skills add maxedapps/agent-skills \
   --skill create-skill \
   --skill implement-plan \
   --skill use-subagents \
-  --skill use-subagents-dynamic \
+  --skill use-pi-subagents \
   --skill web-research \
   --skill vps-setup-hardening
 ```
@@ -66,7 +66,7 @@ Pi and Claude Code honor `disable-model-invocation: true`; Codex honors the bund
 ## Runtime and related skills
 
 - **`decomplex` is a soft integration.** It can provide focused advisory reports to `code-review`, `create-plan`, and `implement-plan` when installed and proportionate. It requires write access for one distinct `.reviews/<descriptive-slug>-decomplex.md` report but never edits reviewed targets. Each owning workflow retains its concise built-in gate and records an honest fallback when the skill or report write is unavailable.
-- **Use one subagent runtime path.** Prefer active native `subagent_*` tools plus their runtime skill; otherwise use `use-subagents-dynamic`; otherwise use generic `use-subagents` with the host's actual safe capability. Never co-activate competing runtime adapters. The dynamic adapter launches and supervises isolated Pi RPC children from a parent-supplied cwd. The parent owns workspace isolation and all Git operations; runtime `clean` retires only private run state.
+- **Use one subagent runtime path.** Prefer active native `subagent_*` tools plus their runtime skill; otherwise use `use-pi-subagents`; otherwise use generic `use-subagents` with the host's actual safe capability. Never co-activate competing runtime adapters. The Pi RPC adapter launches and supervises isolated Pi RPC children from a parent-supplied cwd. The parent owns workspace isolation and all Git operations; runtime `clean` retires only private run state.
 - **`agent-browser` remains external.** Install it from [skills.sh](https://www.skills.sh/vercel-labs/agent-browser/agent-browser) when browser interaction or UI verification is needed:
 
   ```sh
@@ -97,9 +97,9 @@ Dispatches every bounded non-trivial dependency-ready research, implementation, 
 
 ### `use-subagents`
 
-Provides delegation-first decomposition, assignment, supervision, and verification guidance only when neither active native `subagent_*` tooling nor the dynamic adapter owns the lane. It never co-activates competing runtime adapters.
+Provides delegation-first decomposition, assignment, supervision, and verification guidance only when neither active native `subagent_*` tooling nor the Pi RPC adapter owns the lane. It never co-activates competing runtime adapters.
 
-### `use-subagents-dynamic`
+### `use-pi-subagents`
 
 Acts as the script-backed Pi RPC fallback when native `subagent_*` tools are inactive. It runs bounded scout, research, or worker lanes under a supervised `pi --mode rpc` child. Runs block by default; asynchronous mode is only for independent work. The parent supplies each child's cwd, isolates overlapping writers, and performs every Git operation. Runtime cleanup retires only private run state; unsafe or unverifiable resources are retained.
 

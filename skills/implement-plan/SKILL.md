@@ -38,14 +38,14 @@ Before source edits or delegated implementation launches:
 
 1. Read the complete user-provided plan; continue by offset if truncated.
 2. **Load [`assets/progress-tracker-template.md`](assets/progress-tracker-template.md) with the file-reading tool.** Memory or a citation does not count.
-3. Select exactly one runtime path: active native `subagent_*` tools plus their runtime skill; otherwise `use-subagents-dynamic`; otherwise generic `use-subagents` with the host's actual safe capability. Never co-activate competing runtime adapters.
+3. Select exactly one runtime path: active native `subagent_*` tools plus their runtime skill; otherwise `use-pi-subagents`; otherwise generic `use-subagents` with the host's actual safe capability. Never co-activate competing runtime adapters.
 4. Copy/adapt the tracker into the plan's `Implementation Progress`, or retain a separate tracker if the plan cannot be edited.
 5. Populate plan coverage and record `Template loaded from: implement-plan/assets/progress-tracker-template.md`.
 6. Dispatch each ready bounded non-trivial unit before any parent source edit. If no safe writer exists, apply the exceptions below; do not default to parent implementation.
 
 On resume, repeat steps 1–6 and reconcile current state before editing. If the template cannot be loaded, stop; do not fabricate evidence.
 
-When the dynamic Pi RPC runtime is selected, the parent chooses or creates each writer cwd, passes it as `--cwd`, stops the child before any Git operation on that cwd, inspects/integrates/validates through normal parent controls, and cleans runtime state separately from workspace cleanup. The runtime never creates, integrates, or removes worktrees/branches.
+When the Pi RPC runtime is selected, the parent chooses or creates each writer cwd, passes it as `--cwd`, stops the child before any Git operation on that cwd, inspects/integrates/validates through normal parent controls, and cleans runtime state separately from workspace cleanup. The runtime never creates, integrates, or removes worktrees/branches.
 
 ## Execute in verified batches
 

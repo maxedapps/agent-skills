@@ -1,5 +1,5 @@
 ---
-name: use-subagents-dynamic
+name: use-pi-subagents
 description: >-
   Plans, launches, and manages bounded scout, research, and worker coding agents
   through the Pi RPC script adapter. Use this skill when native `subagent_*`

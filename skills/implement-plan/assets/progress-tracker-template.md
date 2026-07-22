@@ -1,6 +1,6 @@
 # Implementation Progress
 
-> Load this template with the file-reading tool before source edits or delegated implementation. The parent is the only tracker writer while lanes run or may resume concurrently. When using the dynamic Pi RPC runtime, the parent prepares each writer cwd, passes it to the runtime, stops the child before Git operations, integrates through normal parent controls, and cleans runtime state separately from any workspace cleanup.
+> Load this template with the file-reading tool before source edits or delegated implementation. The parent is the only tracker writer while lanes run or may resume concurrently. When using the Pi RPC runtime, the parent prepares each writer cwd, passes it to the runtime, stops the child before Git operations, integrates through normal parent controls, and cleans runtime state separately from any workspace cleanup.
 
 - **Template loaded from:** `implement-plan/assets/progress-tracker-template.md`
 - **Plan:** `<path>`

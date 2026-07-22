@@ -5,7 +5,7 @@ description: >-
   skill whenever considering delegation, decomposition, parallel research,
   review or implementation, independent validation, or an explicit request to
   spawn or manage subagents. Prefer an active native subagent runtime, then
-  `use-subagents-dynamic`, and use this skill only as the generic fallback with
+  `use-pi-subagents`, and use this skill only as the generic fallback with
   the host's actual safe capability. Do not use for ordinary background shell,
   server, or process work.
 license: MIT
@@ -73,7 +73,7 @@ Send only task-relevant context. Never include secrets, credentials, tokens, pri
 Use exactly one active path, in order:
 
 1. If native `subagent_*` tools are active, load their runtime skill and use those tools.
-2. Otherwise, if `use-subagents-dynamic` is available, stop here and use that skill with `scripts/subagents.mjs`.
+2. Otherwise, if `use-pi-subagents` is available, stop here and use that skill with `scripts/subagents.mjs`.
 3. Otherwise inspect the host's actual native subagent capability and current tool schema or documentation. Use it only when permissions, ownership, observation, cancellation, and cleanup fit the assignment.
 4. Use a non-interactive agent CLI only as a last fallback after verifying authentication, explicit working directory, permission boundary, observable start and completion, capturable output, timeout, and cancellation. A subprocess is not a native subagent.
 5. If no safe capability exists, keep optional work in the parent. If the work is required or the user explicitly requires delegation, report it blocked rather than weakening controls or silently implementing in the parent.
