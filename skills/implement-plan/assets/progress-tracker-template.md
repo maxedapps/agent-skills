@@ -6,7 +6,7 @@
 - **Plan:** `<path>`
 - **Status:** `In progress | Partial | Blocked | Complete`
 - **Updated:** `<date/time>`
-- **Completion:** every requirement is `Verified` or user-approved `Descoped`; reconciliation, validation, and final review pass; no material issue remains open.
+- **Completion:** every requirement is `Verified` or user-approved `Descoped`; reconciliation and validation pass; every commissioned reviewer is `Clear`; no material issue remains open.
 
 ## Coverage
 
@@ -30,13 +30,15 @@ For delegated work retain run identity, terminal state/handoff, files changed, d
 
 ## Reviews and dispositions
 
-Use a fresh read-only subagent after each major coherent boundary—an integration, migration, public contract, security/data invariant, risky dependency, or delivery milestone—and for final full-plan review. Major does not mean “many rows.” Prohibit reviewer recursion. Record direct-review fallbacks and independence limits. In the existing method/evidence cell, record any selective decomplex Finding-triage report path and preserved source IDs, plus the scoped final Audit report path; when either pass is unavailable or its report cannot be written, record the fallback and independence limit instead. Add no parallel review tracker.
+At each major or plan-authored boundary and for final full-plan review, define a bounded read-only reviewer set. Initial reviewers are fresh and independent; prohibit recursion and do not share conclusions before handoff. Reuse the originating reviewer for its focused follow-up when safe, or record replacement continuity limits. Record direct-review fallbacks and independence limits. Add no duplicate reviewer merely to seek agreement and no parallel review tracker.
 
-| Review / covered rows | Boundary and scope | Method / run / evidence | Finding | Disposition and rationale | Fix or validation / rerun / one focused follow-up | Status |
+| Checkpoint / round / rows | Reviewer / run / scope | Finding ID / lineage | Parent disposition and rationale | Remediation / validation / decomplex evidence | Reviewer closure | Status |
 |---|---|---|---|---|---|---|
-| M01 / T01 | `<why major; bounded or final-full>` | `<fresh read-only run or fallback; inputs; triage/audit report path or fallback when applicable>` | `<finding or None; preserve original ID>` | `<Fix now, Validate, Reject, Human decision, or Block — why>` | `<row/check/result/decomplex disposition/follow-up>` | `<Open, Resolved, or Blocked>` |
+| M01.R1 / T01 | `<fresh read-only reviewer or fallback; bounded/full scope>` | `<stable ID; initial, fix-caused, or fix-exposed; None if clear>` | `<Fix now, Validate, Reject, Human decision, or Block — why>` | `<smallest remedy/check/result; triage/audit path or fallback; material delta>` | `<Clear, Changes required, Human decision required, or Blocked — evidence>` | `<Open, Reviewer clear, Human-resolved, or Blocked>` |
 
-The parent critically evaluates **every** reviewer finding and decomplex recommendation. `Fix now` is valid, in-scope, simple, proportionate, and low-risk. Use `Human decision` only for a material unresolved scope or architectural choice; decomplex `Ask user` does not map automatically. Neither advisory report creates tracker work. After accepted fixes, allow one focused follow-up only—never a reopened broad review or speculative abstraction, compatibility layer, or test machinery. Preserve required authority-matrix and separate verdict evidence by reference rather than duplicating it here.
+The parent critically evaluates **every** finding and decomplex recommendation; neither advisory source creates work automatically. Preserve finding IDs across rounds. Before a complexity-increasing remedy, use decomplex Finding triage when proportionate or record the built-in fallback; distinguish a valid defect from an overbuilt fix. Return fixes, validation, and evidence-backed rejections to reviewers with open findings, then repeat focused rounds over those findings, affected boundaries, and fix-caused or fix-exposed regressions. Never reopen unrelated broad scope.
+
+Close the checkpoint only when every commissioned reviewer is `Clear` and no material validation gap remains. Treat a human answer as an authoritative evidence delta and return it to affected reviewers for closure; it is not a substitute for reviewer clearance. Do not rerun without a material code, evidence, or human-decision delta. After two unsuccessful rounds for one root cause, recurrence after a claimed fix, or no meaningful progress, ask the user; never convert the iteration bound into completion. For final closure, record the decomplex Audit of the actual final diff and rerun it when review-driven remediation materially changes complexity.
 
 ## Human-decision queue
 
@@ -57,8 +59,10 @@ Do not silently implement queued items. Unresolved material decisions block comp
 - [ ] Every non-trivial batch records delegation consideration, ownership, dependencies/join, isolation/overlap, checks, and checkpoint.
 - [ ] Parent inspected delegated diffs/claims, reran applicable checks, resolved terminal states, and safely cleaned workflow resources.
 - [ ] Automated, integration, migration, browser/manual, rollout, and acceptance checks passed, or scope-relevant failures block.
-- [ ] Fresh reviews cover each major coherent boundary and the final full plan, or a direct fallback and limitation is recorded.
-- [ ] Every finding has a disposition; fixes/validation/reruns and at most one focused follow-up are recorded.
-- [ ] Human decisions, deviations, skips, confidence limits, and unrelated pre-existing failures are explicit.
+- [ ] Fresh independent reviewer sets cover each major coherent boundary and the final full plan, or a direct fallback and limitation is recorded.
+- [ ] Every finding retains stable lineage, parent disposition, remediation/validation evidence, and focused follow-up closure.
+- [ ] Every commissioned reviewer is `Clear`; human decisions were returned to affected reviewers as closure evidence; no material validation gap remains.
+- [ ] Final decomplex evidence covers the actual final diff, or its fallback and independence limit are explicit.
+- [ ] Human decisions, churn escalations, deviations, skips, confidence limits, and unrelated pre-existing failures are explicit.
 - [ ] Every change and added test directly supports a plan requirement; unnecessary complexity and adjacent scope were removed.
 - [ ] `Complete` is used only when all gates pass and no material issue or decision remains open.

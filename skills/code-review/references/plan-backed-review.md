@@ -99,9 +99,11 @@ Apply the candidate gate, scoring, limits, worktree, validation, and follow-up r
 
 Tests are matrix evidence only when they protect the claimed acceptance behavior or boundary. Use targeted static, runtime, migration, package, API, or browser checks that materially improve confidence. Identify installed versions and version-matched first-party evidence when third-party behavior, framework semantics, security assumptions, or migrations decide a row.
 
+For a focused closure follow-up, preserve prior finding IDs and classify each as resolved, withdrawn after disposition evidence, still material, or blocked. Admit a new finding only when a fix caused or exposed it or it is material to a directly affected boundary. Return `Clear`, `Changes required`, `Human decision required`, or `Blocked`; reviewer state is evidence for the owning workflow, not authority over its parent or user.
+
 ## Workflow
 
-1. Resolve authority, scope, invocation, and output. Follow-ups inspect only accepted fixes, affected boundaries, and material regressions.
+1. Resolve authority, scope, invocation, and output. Follow-ups inspect only accepted fixes, disputed dispositions and evidence, affected boundaries, validation, and fix-caused or fix-exposed regressions.
 2. Read all authority; extract requirements, implications, approvals, conflicts, and baseline defects.
 3. Inspect implementation and required integration boundaries. Apply relevant generic dimensions.
 4. Complete the matrix with evidence-supported statuses.

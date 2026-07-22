@@ -2,17 +2,17 @@
 name: implement-plan
 description: >-
   Implements existing Markdown plans exhaustively through tracked task batches,
-  delegation-first execution, active validation, and plan-backed reviews. Use
-  this skill when asked to implement, execute, carry out, or continue an
-  existing plan. Do not use for creating a plan from scratch or only reviewing
-  a plan without implementing it.
+  delegation-first execution, active validation, and iterative independent
+  review closure. Use this skill when asked to implement, execute, carry out, or
+  continue an existing plan. Do not use for creating a plan from scratch or only
+  reviewing a plan without implementing it.
 license: MIT
 compatibility: >-
   Requires project write access. Delegation requires a safely available
   capability, isolated concurrent writers, terminal handoffs, and parent
   verification. Browser-visible work requires browser automation.
 metadata:
-  short-description: Implement plans with delegated, tracked, verified batches
+  short-description: Implement plans with delegated batches and review closure loops
 ---
 
 # Implement Plan
@@ -29,7 +29,8 @@ Follow higher-priority constraints. After the startup gate:
 - Keep the tracker parent-owned and single-writer whenever lanes run or may resume concurrently.
 - Treat child handoffs as evidence, never acceptance. The parent inspects every diff, verifies claims, integrates, and tests.
 - Continue through dependency-ready work without asking unless a human decision is required.
-- Claim completion only after full-plan reconciliation, validation, and final review. Open work means `Partial` or `Blocked`, never `Complete`.
+- Close every required review checkpoint through independent review, parent disposition, remediation or validation, and focused re-review. Reviewer approval is evidence, never authority.
+- Claim completion only after full-plan reconciliation, validation, and final review closure. Open work means `Partial` or `Blocked`, never `Complete`.
 
 ## Mandatory startup gate
 
@@ -90,13 +91,24 @@ Allowed parent rationale: true triviality; tight coupling/integration ownership;
 
 ## Review checkpoints
 
-Use a **fresh read-only subagent** applying `code-review` after every major coherent implementation boundary and once for final full-plan review. Also honor plan-authored checkpoints. A boundary is major because it crosses or completes an integration, migration, public contract, security/data invariant, risky dependency, or delivery milestone—not because of row count.
+Commission a read-only reviewer set applying `code-review` after every major coherent implementation boundary and for final full-plan review. Also honor plan-authored checkpoints. A boundary is major because it crosses or completes an integration, migration, public contract, security/data invariant, risky dependency, or delivery milestone—not because of row count.
 
-Deduplicate checkpoints with the same scope and evidence. Use direct parent review only when independent review is unavailable/unsafe, user-prohibited, or genuinely disproportionate; record the reason and independence limit.
+Initial reviewers at a checkpoint must be fresh and independent: do not share their conclusions before handoff. One reviewer may cover a bounded checkpoint; use complementary reviewers when breadth, risk, or specialist depth justifies them. Deduplicate overlapping assignments and cap the set at what the parent can promptly verify. Do not add or replace reviewers merely to seek agreement. Use direct parent review only when independent review is unavailable or unsafe, user-prohibited, or genuinely disproportionate; record the reason and independence limit.
 
-Give reviewers the plan/tracker, covered IDs, relevant diff/contracts/tests, validation/manual evidence, skips, deviations, risks, and non-goals. Require read-only work and prohibit recursive delegation. For final review, require plan-backed full scope. Preserve the `code-review` authority matrix and separate baseline, compliance, quality, and validation verdicts when that contract requires them.
+Give reviewers the plan/tracker, covered IDs, assigned scope and dimensions, relevant diff/contracts/tests, validation/manual evidence, skips, deviations, risks, and non-goals. Require read-only work and prohibit recursive delegation. For final review, require plan-backed full scope across the reviewer set. Preserve the `code-review` authority matrix and separate baseline, compliance, quality, and validation verdicts when that contract requires them.
 
-At each checkpoint, selectively use `decomplex` Finding triage when a reviewer recommendation would add meaningful complexity, broaden scope, or depends on context-sensitive reachability or scale. Preserve every original finding ID in the triage report. The report is advisory evidence only: neither reviewer nor decomplex creates tracker work automatically. If the skill or report write is unavailable, record the parent-only fallback and independence/confidence limit in the existing review evidence; do not claim triage occurred.
+Require each reviewer to return one explicit checkpoint state: `Clear`, `Changes required`, `Human decision required`, or `Blocked`, with stable finding IDs. A reviewer with an open finding owns its focused follow-up when safely available; otherwise use a replacement with the complete finding lineage and record the continuity limit.
+
+### Close each checkpoint iteratively
+
+1. Collect all initial handoffs before sharing reviewer conclusions.
+2. Parent-verify, deduplicate by root cause, and disposition every finding.
+3. Implement or validate only accepted findings, rerun affected checks, and record the material delta.
+4. Return fixes, evidence, and disputed dispositions to only the reviewers with open findings. Follow-ups cover those findings, directly affected boundaries, validation, and fix-caused or fix-exposed regressions—not a reopened broad search.
+5. Repeat parent disposition, bounded remediation or validation, and focused re-review while any reviewer reports a material concern.
+6. Close only when every commissioned reviewer is `Clear` and no material validation gap remains. A user decision is an authoritative evidence delta: return it to affected reviewers for closure rather than treating it as a substitute for reviewer clearance.
+
+A follow-up may admit a new finding only when the remediation caused or exposed it or it is material to an affected boundary. Surface unrelated pre-existing issues separately; they do not silently expand plan scope. Do not rerun a reviewer without a material code, evidence, or human-decision delta.
 
 ### Disposition every finding
 
@@ -104,22 +116,24 @@ The parent must critically evaluate **every** reviewer finding and decomplex rec
 
 | Disposition | Use when |
 |---|---|
-| **Fix now** | Valid, in scope, simple, proportionate, and low risk; implement and rerun affected checks. |
+| **Fix now** | Valid, in scope, proportionate, and low risk; implement the smallest safe remedy and rerun affected checks. |
 | **Validate** | Plausible but evidence is insufficient; run a bounded check before deciding. |
-| **Reject** | Incorrect, unreachable, out of scope, unnecessary for the assigned task, or disproportionate; record evidence and rationale. |
-| **Human decision** | A required scope or architectural choice cannot be resolved safely without the user; queue for final presentation. |
+| **Reject** | Incorrect, unreachable, out of scope, unnecessary, or disproportionate; record evidence and return it to the reviewer. |
+| **Human decision** | Material uncertainty, reviewer disagreement, or a required scope, architecture, security, compatibility, or risk choice cannot be resolved safely. |
 | **Block** | Material and unresolved; overlapping work or completion cannot safely continue. |
 
-Fix simple valid findings. Map a decomplex `Ask user` recommendation to `Human decision` only when the unresolved choice is material; otherwise disposition it from the evidence without escalating. Do not silently implement queued human decisions. After accepted fixes, allow one focused read-only follow-up on those fixes only; do not reopen a broad review. Do not add speculative abstractions, compatibility layers, or test machinery merely to satisfy review.
+Reviewer findings and decomplex advice never create tracker work automatically. Before implementing a reviewer remedy that would add meaningful complexity or broaden scope, use `decomplex` Finding triage when available and proportionate; otherwise apply the built-in gate and record the fallback. Preserve original finding IDs, separate a valid defect from an overbuilt proposed remedy, and prefer the smallest behavior-preserving correction. Map decomplex `Ask user` to `Human decision` only when the unresolved choice is material.
+
+Send evidence-backed rejections back for reviewer closure. If the reviewer sustains a material concern, or the parent is materially unsure, ask the user rather than silently overruling it or shopping for another reviewer. After two unsuccessful remediation rounds for the same root cause, recurrence after a claimed fix, or a round with no meaningful progress, pause autonomous iteration and ask the user with evidence and options. This pauses the loop; it never permits false completion. Do not add speculative abstractions, compatibility layers, safeguards, or test machinery merely to satisfy review.
 
 ## Final reconciliation
 
 1. Reread the complete original plan line by line; add and execute any missed row.
 2. Confirm no row is `Pending`, `In progress`, or `Blocked`; verify approved descopes and all evidence.
 3. Review the diff task by task and remove changes whose scope or complexity is not justified by the assigned outcome.
-4. When available and proportionate, run a decomplex Audit focused only on complexity introduced by the plan's implementation diff—not unrelated legacy cleanup—and disposition every recommendation. Otherwise apply the parent gate and record the unavailable/report-write fallback and independence limit without claiming an audit.
-5. Run final targeted and repository-wide checks, required browser/manual validation, and safe cleanup.
-6. Run one fresh plan-backed full read-only review; disposition every finding and perform at most one focused follow-up for accepted fixes.
+4. Run final targeted and repository-wide checks, required browser/manual validation, and safe cleanup.
+5. Run the final checkpoint through the review-closure loop with a fresh plan-backed full reviewer set. When available and proportionate, include a `decomplex` Audit of complexity introduced by the current implementation diff—not unrelated legacy cleanup—and disposition every recommendation; otherwise record the fallback and independence limit.
+6. If review-driven remediation materially changes complexity, rerun a scoped decomplex Audit before closure. If audit-driven remediation changes implementation, rerun affected validation and reviewer follow-ups. Continue until the final checkpoint closes or requires a human decision.
 7. Present the human-decision queue. Any unresolved material issue remains `Blocked`; only evidence-backed unrelated pre-existing failures may be caveats.
 8. Update the tracker and rerun checks covering it when tracked.
 

@@ -61,7 +61,7 @@ Deduplicate root causes. By default, report every `S4`, at most five additional 
 
 `code-review` remains authoritative for admitted defects, severity/confidence scores, finding limits, plan compliance matrices, and the four plan-backed verdicts. A distinct `decomplex` report is advisory potential-complexity evidence only. Inspect and disposition every recommendation before admitting any material consequence as a code-review finding or next step; do not copy recommendations automatically or merge the two finding contracts.
 
-Allow one initial review and one accepted-fix follow-up. A final follow-up requires unresolved material risk, confirmed regression, or invalidated coverage. Do not expand search for incidental severe issues; surface them separately.
+Default standalone work to one initial review and one accepted-fix follow-up. An owning workflow may request additional focused closure rounds while material concerns remain. Preserve finding IDs and inspect only accepted fixes, disputed dispositions and evidence, directly affected boundaries, validation, and fix-caused or fix-exposed regressions; do not reopen broad search. Require a material code, evidence, or human-decision delta between rounds. Return one explicit closure state: `Clear`, `Changes required`, `Human decision required`, or `Blocked`. Surface unrelated incidental severe issues separately rather than silently expanding scope.
 
 ## Review and worktree rules
 

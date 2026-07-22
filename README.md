@@ -77,7 +77,7 @@ Pi and Claude Code honor `disable-model-invocation: true`; Codex honors the bund
 
 ### `code-review`
 
-Performs evidence-bound generic and plan-backed reviews. It strongly considers bounded read-only subagents for independent review dimensions, while the parent verifies evidence, consolidates handoffs, and owns final findings and verdicts.
+Performs evidence-bound generic and plan-backed reviews. It strongly considers bounded read-only subagents for independent review dimensions, while the parent verifies evidence, consolidates handoffs, and owns final findings and verdicts. Owning workflows may request focused closure rounds that preserve finding lineage without reopening broad scope.
 
 ### `decomplex`
 
@@ -93,7 +93,7 @@ Creates, rewrites, reviews, and evidence-backed improves Agent Skills with liter
 
 ### `implement-plan`
 
-Executes an existing Markdown plan in verified dependency-ready batches. It strongly considers bounded parallel subagent lanes, keeps integration and acceptance with the parent, reviews major boundaries and the full implementation, and queues doubtful complexity-increasing findings for human decisions.
+Executes an existing Markdown plan in verified dependency-ready batches. It strongly considers bounded parallel implementation lanes, keeps integration and acceptance with the parent, and iteratively closes independent reviews at major boundaries and across the full implementation. The parent evidence-gates every finding, uses decomplex for complexity-increasing remedies, and asks the human when material uncertainty or reviewer disagreement remains.
 
 ### `use-subagents`
 

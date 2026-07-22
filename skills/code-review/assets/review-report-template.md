@@ -63,6 +63,16 @@
 - **Approved deviation:** <source, scope, rationale, consequence>
 - **Authority conflict:** <sources/interpretations and Unverifiable consequence>
 
+## Follow-up closure
+
+<Include only for a focused closure round; otherwise remove this section.>
+
+- **Round and material delta:** <round ID; changed code, evidence, or human decision>
+- **Closure state:** <Clear | Changes required | Human decision required | Blocked>
+- **Resolved or withdrawn:** <preserved finding IDs and evidence>
+- **Still material:** <preserved finding IDs and evidence>
+- **New fix-caused or fix-exposed findings:** <IDs and lineage, or None>
+
 ## Findings
 
 <Include material findings only. If none, write: “No material findings.”>
