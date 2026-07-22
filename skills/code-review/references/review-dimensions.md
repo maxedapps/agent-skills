@@ -1,100 +1,92 @@
 # Review dimensions
 
-Use after the scope, evidence, materiality, and worktree rules in `SKILL.md`. Apply every selected dimension thoroughly. These heuristics generate candidates, not findings; every candidate must pass the core admission gate.
+Candidate heuristics only — every candidate must still pass the admission gate in `SKILL.md`. Apply selected dimensions thoroughly.
 
 ## Evidence traps
 
-- Compare moved, renamed, or extracted code and tests for dropped, duplicated, or drifted behavior.
-- Distinguish deterministic behavior, an evidence-backed reachable risk, and an observed incident. Never imply recurrence without operational evidence.
-- Make disposable repros assert behavior; logs alone may be suppressed or misleading.
+- Moved/renamed/extracted code or tests: dropped, duplicated, or drifted behavior
+- Deterministic vs reachable risk vs observed incident — don’t imply recurrence without ops evidence
+- Disposable repros must assert behavior; logs alone can mislead
 
 ## Correctness
 
-Check for:
-
-- edge cases, wrong assumptions, off-by-one errors, and lifecycle defects;
-- null, exception, and error-as-data handling gaps;
-- races, stale state, async ordering, cancellation, and cleanup;
-- inconsistent validation, parsing, serialization, encoding, or normalization;
-- wrong API shapes, statuses, return values, and error semantics;
-- behavior that conflicts with tests, docs, names, contracts, or user expectations;
-- refactors that lose side effects, ordering, fallbacks, or wiring.
+- Edges, wrong assumptions, off-by-one, lifecycle defects
+- Null/exception/error-as-data gaps
+- Races, stale state, async order, cancellation, cleanup
+- Inconsistent validation/parsing/serialization/encoding
+- Wrong API shapes, statuses, returns, error semantics
+- Conflicts with tests, docs, names, contracts, expectations
+- Refactors losing side effects, ordering, fallbacks, wiring
 
 ## Simplicity and maintainability
 
-Prefer obvious data flow and the least structure that meets current requirements. Challenge:
+Prefer obvious data flow and least structure for current needs. Challenge:
 
-- misleading names and unclear ownership;
-- unnecessary layers, wrappers, hooks, services, adapters, factories, or frameworks;
-- one-use helpers and tiny files that add navigation without a stable boundary;
-- speculative options, generic types, extension points, or broad APIs;
-- duplicate logic or state, clever type tricks, and comments masking confusing code.
+- Misleading names, unclear ownership
+- Unnecessary layers/wrappers/hooks/services/adapters/factories
+- One-use helpers/tiny files without a stable boundary
+- Speculative options, generics, extension points, broad APIs
+- Duplicate logic/state, clever type tricks, comments masking confusion
 
-For cleanup, prefer: **delete → direct call/import → local helper → shared abstraction**. Name concrete deletion/consolidation targets and intentional exceptions. Keep abstractions that remove real duplication, encode a stable domain concept, protect a boundary, centralize policy, or clarify call sites.
+Cleanup order: **delete → direct call/import → local helper → shared abstraction**. Name concrete deletion targets and intentional exceptions.
 
 ## Types and trust boundaries
 
-- Unsafe `any`/`unknown`, broad object/string types, lost generics, casts, and non-null assertions.
-- Missing runtime validation at user, external, persistence, message, or file boundaries.
-- Public types that misstate nullability, errors, async behavior, mutation, or ownership.
-- Drift among runtime schemas, generated types, and static types.
+- Unsafe `any`/`unknown`, broad object/string types, lost generics, casts, non-null assertions
+- Missing runtime validation at user/external/persistence/message/file boundaries
+- Public types misstating nullability, errors, async, mutation, ownership
+- Drift among runtime schemas, generated types, static types
 
-## Libraries, languages, and versions
+## Libraries, languages, versions
 
-Identify installed framework, dependency, SDK, language, database, and runtime versions before judging behavior. Use version-matched official docs, source, release notes, standards, or first-party examples. Check lifecycle, concurrency, cleanup, deprecations, custom replacements, and project contracts.
+Identify installed versions before judging behavior. Use version-matched official docs/source/release notes. Check lifecycle, concurrency, cleanup, deprecations, custom replacements, project contracts.
 
-High-risk integrations:
+High-risk:
 
-- **Error-as-value clients:** determine from installed types/source whether calls throw or return data plus error; discarded awaited results may swallow failure.
-- **Handwritten third-party interfaces/casts:** compare required fields and return shapes with installed types, especially in credential-gated paths.
-- **Dependency-owned routes:** verify method and URL against installed routes or the real handler; URL rendering alone proves nothing.
+- **Error-as-value clients:** throw vs result from installed types/source; discarded awaits may swallow failure
+- **Handwritten third-party interfaces/casts:** compare required fields/returns to installed types
+- **Dependency-owned routes:** method/URL vs installed routes/real handler
 
 ## Security and data safety
 
-- Server-side authentication, authorization, object access, and client-input trust.
-- SQL/NoSQL, command, template, path, header, log, XSS, redirect, and related injection.
-- CSRF-relevant changes; unsafe HTML/Markdown; secrets, tokens, PII, or internals in code, logs, errors, URLs, artifacts, or config.
-- Cryptography, randomness, deserialization, defaults, permissions, CORS, filesystem access, SSRF, dependencies, and deployment.
-- Security/data invariants in tests, failure paths, and recovery.
+- Authn/authz/object access; client-input trust
+- Injection: SQL/NoSQL, command, template, path, header, log, XSS, redirect
+- CSRF-relevant changes; unsafe HTML/Markdown; secrets/PII/tokens in code, logs, errors, URLs, artifacts, config
+- Crypto, randomness, deserialization, defaults, permissions, CORS, FS, SSRF, deps, deploy
+- Invariants in tests, failure paths, recovery
 
 ## Performance and scale
 
-- N+1 or repeated I/O; unjustified batching/caching; avoidable renders, computation, or allocation.
-- Missing pagination, streaming, limits, timeouts, cancellation, safe retries, or backpressure.
-- Algorithms mismatched to expected inputs; optimization complexity without evidence.
-
-Before prescribing an index, inspect the actual query with `EXPLAIN QUERY PLAN` or its datastore equivalent when practical. Report unavailable evidence. Verify each predicate and ordering shape; do not guess a column list or assume one index serves all queries.
+- N+1 / repeated I/O; unjustified batch/cache; avoidable render/compute/alloc
+- Missing pagination, streaming, limits, timeouts, cancellation, safe retries, backpressure
+- Algorithms mismatched to expected inputs; optimization complexity without evidence
+- Index advice: prefer `EXPLAIN QUERY PLAN` (or equivalent) when practical; don’t guess columns
 
 ## Tests and validation
 
-Judge protected behavior, not counts. Cover user-visible behavior, acceptance criteria, state transitions, failures, boundaries, regressions, invariants, concurrency, isolation, cleanup, integrations, security/data, and repository gates.
+Judge protected behavior, not counts. Cover user-visible behavior, acceptance, transitions, failures, boundaries, regressions, invariants, concurrency, isolation, cleanup, integrations, security/data, repo gates.
 
-Flag implementation-detail assertions, excessive mocking, duplicated coverage, fragile fixtures, skipped/filtered/gated tests, and tests whose names overstate executed behavior. Before deleting a test, check whether it uniquely protects wiring, environment compatibility, parser failures, upgrade canaries, persisted mappings, authorization, or isolation.
+Flag implementation-detail asserts, excessive mocks, duplicated coverage, fragile fixtures, skipped/gated tests, overstated names. Before deleting a test: unique protection for wiring, env compat, parser failures, upgrade canaries, persisted mappings, authz, isolation?
 
-Focused checks:
+Focused:
 
-- **Forms/browser flows:** submit rendered controls with actual hidden values, cookies, and browser state; synthetic requests can bypass broken wiring.
-- **Hybrid guarantees:** run static checks and runtime tests; transpile-only execution proves neither exact typing nor compilation.
-- **Discovered defects:** add a focused regression assertion when it protects behavior without coupling to implementation.
+- **Forms/browser:** real controls, hidden values, cookies, browser state
+- **Hybrid:** static + runtime; transpile-only proves neither exact types nor compile
+- **Discovered defects:** add focused regression when it protects behavior without coupling to impl
 
-## APIs, compatibility, data, and operations
+## APIs, compatibility, data, operations
 
-- Public contracts, versioning, backward compatibility, and stale clients.
-- Hidden errors, lost context, unsafe retries, and poor user/operator visibility.
-- Useful—not noisy—logs, metrics, and traces for important paths.
-- Migration integrity, idempotency, rollback, reconciliation, and recovery.
-- Environment, configuration, packaging, deployment, CI, and dependency drift.
+- Public contracts, versioning, backward compat, stale clients
+- Hidden errors, lost context, unsafe retries, poor operator visibility
+- Useful (not noisy) logs/metrics/traces
+- Migration integrity, idempotency, rollback, reconciliation, recovery
+- Env/config/packaging/deploy/CI/dependency drift
+- Side effects (send/create/pay): no retry unless non-execution known or idempotency/reconciliation exists; unknown outcome until reconciled
 
-For send/create/payment side effects, do not recommend retries unless non-execution is known or reconciliation/idempotency exists. If acceptance may have occurred, represent the outcome as unknown until reconciled. Trace classified outcomes through persistence failure, queue retry, and stale recovery; known accepted/rejected results must not be re-executed or downgraded because a terminal write failed.
+## Packages, CLIs, configuration, CI
 
-## Packages, CLIs, configuration, and CI
+Dry-run package artifact; install in clean temp consumer when practical. Check includes, exports, types, bins, executable bits, generated output, deps, licenses, defaults, secrets, CI/publish gates, help, errors, exit codes, paths, cleanup.
 
-For published packages or CLIs, inspect a dry-run package artifact and, when practical, install it in a clean temporary consumer. Check included files, exports, types, binaries, executable bits, generated output, dependencies, licenses, config defaults, secret handling, CI/publish gates, help, errors, exit codes, path handling, and cleanup.
+## Runtime, UI, accessibility, UX
 
-If review notes could enter the artifact, use a clean archive/copy or distinguish artifact contamination from owner content.
-
-## Runtime, UI, accessibility, and UX
-
-When practical, exercise representative rendered states and interactions: layout, clipping, responsiveness, loading/error/empty states, focus, auth, forms, downloads, animation, motion, and final frames. Static analysis cannot establish runtime behavior.
-
-Check keyboard navigation, focus management, semantics, contrast, screen-reader impact, touch/pointer behavior, reduced motion, and understandable feedback. Use real controls and browser-managed state rather than synthetic equivalents.
+Exercise representative rendered states when practical: layout, clipping, responsive, loading/error/empty, focus, auth, forms, downloads, motion/final frames. Check keyboard, focus, semantics, contrast, SR impact, touch, reduced motion, understandable feedback. Prefer real controls over synthetic bypasses.

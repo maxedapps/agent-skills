@@ -1,108 +1,96 @@
 # Code review: <title>
 
-> Remove all instructions, placeholders, and empty/irrelevant sections. Include plan-backed sections only for plan-backed work.
-
 ## Review constraints
 
 | Axis | Selection |
 |---|---|
-| Target | <repository, diff/PR, files, or implementation step> |
-| Baseline | <generic or plan-backed authority paths> |
-| Scope | <full or bounded, including required boundaries> |
-| Invocation | <standalone or embedded> |
-| Output | <Markdown report plus summary> |
-| Dimensions | <selected dimensions> |
-| Validation/tools | <material constraints> |
-| Writes/artifacts | <permissions and report exemption> |
+| Target | |
+| Baseline | generic or plan-backed paths |
+| Scope | full or bounded |
+| Invocation | standalone or embedded |
+| Output | |
+| Dimensions | |
+| Validation/tools | |
+| Writes/artifacts | |
 
 ## Summary
 
-<Overall result, highest material risks, and confidence. Say when no material issue was found. If overflow remains, state `not review-ready`.>
-
 ## Related decomplex review
 
-<Include only when a focused decomplex pass actually ran; otherwise remove this section.>
-
-- **Report:** `<.reviews/descriptive-slug-decomplex.md>`
-- **Owner disposition summary:** <Account for every recommendation and state only the material consequences admitted into this review or its next steps.>
+- **Report:**
+- **Owner disposition summary:**
 
 ## Coverage
 
 ### Inspected
 
-- `<path/diff/commit/symbol/runtime/authority/artifact>` — <full or partial; purpose>
+-
 
 ### Skipped or partial
 
-- `<area/check>` — <reason and confidence consequence>
+-
 
 ### Required boundaries
 
-- `<caller/API/migration/generated output/config/UI/package/operational path>`
+-
 
 ## Validation
 
-- **Run:** `<command/probe/manual check>` — <result and what it proves>
-- **Skipped/unavailable:** `<check>` — <reason and confidence/status consequence>
+- **Run:**
+- **Skipped/unavailable:**
 
 ## Plan-backed verdicts
 
-1. **Plan/baseline quality and omissions:** <judgment, evidence, exceptions, confidence>
-2. **Implementation compliance:** <judgment, status distribution, deviations/descopes, confidence>
-3. **Implementation quality beyond the baseline:** <judgment, evidence, exceptions, confidence>
-4. **Test and validation quality:** <judgment, protected/missing behavior, limitations, confidence>
+1. **Plan/baseline quality and omissions:**
+2. **Implementation compliance:**
+3. **Implementation quality beyond the baseline:**
+4. **Test and validation quality:**
 
 ## Plan compliance matrix
 
 | Authority item / implied requirement | Expected evidence | Implementation evidence | Validation / test evidence | Status |
 |---|---|---|---|---|
-| `<source + requirement>` | `<required proof>` | `<path:line/symbol/diff/runtime or missing>` | `<results/skips>` | `<exact status from plan-backed-review.md>` |
+| | | | | |
 
 ### Approvals and conflicts
 
-- **Approved deviation:** <source, scope, rationale, consequence>
-- **Authority conflict:** <sources/interpretations and Unverifiable consequence>
+- **Approved deviation:**
+- **Authority conflict:**
 
 ## Follow-up closure
 
-<Include only for a focused closure round; otherwise remove this section.>
-
-- **Round and material delta:** <round ID; changed code, evidence, or human decision>
-- **Closure state:** <Clear | Changes required | Human decision required | Blocked>
-- **Resolved or withdrawn:** <preserved finding IDs and evidence>
-- **Still material:** <preserved finding IDs and evidence>
-- **New fix-caused or fix-exposed findings:** <IDs and lineage, or None>
+- **Round and material delta:**
+- **Closure state:** Clear | Changes required | Human decision required | Blocked
+- **Resolved or withdrawn:**
+- **Still material:**
+- **New fix-caused or fix-exposed findings:**
 
 ## Findings
 
-<Include material findings only. If none, write: “No material findings.”>
-
 ### <severity> — <title>
 
-- **Dimension / authority:** <category and matrix item>
-- **Location:** `<path:line, symbol, runtime surface, or source>`
-- **Impact:** <reachable path and material consequence>
-- **Evidence:** <code/runtime/test/repro evidence>
-- **Confidence:** <confidence score>
-- **Condition:** <deterministic, reachable, or observed incident>
-- **Validation state:** <none or NEEDS RUNTIME VALIDATION>
-- **Smallest safe fix / validation:** <proportionate correction or decisive check>
+- **Dimension / authority:**
+- **Location:**
+- **Impact:**
+- **Evidence:**
+- **Confidence:**
+- **Condition:**
+- **Validation state:**
+- **Smallest safe fix / validation:**
 
 ## Context-dependent concerns
 
-- **Concern:** <concrete issue and named condition that would make it material>
-- **Disposition:** <no action needed if the condition is absent; clarification or validation if unresolved>
+- **Concern:**
+- **Disposition:**
 
 ## Confirmed-good areas
 
-- `<material behavior/contract>` — <supporting evidence>
+-
 
 ## Limitations and caveats
 
-- `<scope, access, runtime, credential, tool, validation, or baseline limit and consequence; never rejected candidates>`
-- `<blocking not-review-ready caveat when material finding overflow remains>`
+-
 
 ## Next steps
 
-1. `<must-fix or decisive validation in priority order; omit this section when none>`
-2. `<owner remediation/escalation decision when not review-ready>`
+1.

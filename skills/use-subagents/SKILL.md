@@ -1,103 +1,122 @@
 ---
 name: use-subagents
 description: >-
-  Plans and coordinates bounded subagent work across coding agents. Use this
-  skill whenever considering delegation, decomposition, parallel research,
-  review or implementation, independent validation, or an explicit request to
-  spawn or manage subagents. Prefer an active native subagent runtime, then
-  `use-pi-subagents`, and use this skill only as the generic fallback with
-  the host's actual safe capability. Do not use for ordinary background shell,
-  server, or process work.
+  Portable playbook for bounded subagent delegation on any coding-agent harness.
+  Use this skill whenever considering delegation, decomposition, parallel
+  research, review or implementation, independent validation, or an explicit
+  request to spawn or manage subagents. Works with the host's built-in subagent
+  tools, extensions/plugins, or a safe agent CLI. Do not use for ordinary
+  background shell, server, or process work.
 license: MIT
 compatibility: >-
-  Decision and coordination guidance is instruction-only. Launching requires a
-  runtime-specific adapter, a native subagent capability, or a suitably
-  controlled non-interactive agent CLI. Never co-activate competing runtime
-  adapters.
+  Instruction-only policy. Launching requires whatever subagent capability the
+  current harness provides (native tools, extension/plugin, or a controlled
+  non-interactive agent CLI). No dependency on a Pi-specific adapter.
 metadata:
-  short-description: Generic fallback for bounded subagent work
+  short-description: Portable subagent delegation, isolation, and cleanup
 ---
 
 # Use Subagents
 
-Generic coordinator guidance. Prefer one active runtime path (see Select a runtime). Never co-activate competing runtime adapters or skills. Follow higher-priority instructions for scope, privacy, tools, cost, and latency.
+Harness-agnostic **how to delegate**: policy, assignment shape, isolation, verify, cleanup.
 
-## Scope and runtime handoff
+- Callers (`create-plan`, `implement-plan`, `code-review`, …) decide **when**.
+- This skill defines **how**, using **whatever subagent mechanism the host provides**.
+- Host-specific launcher skills (if any) only supply launch/status/stop commands — they do **not** replace this policy.
+- This skill does **not** require Pi or any other single runtime.
 
-| This generic skill owns | A runtime-specific subagent skill or adapter owns |
-|---|---|
-| Delegation decisions, decomposition, assignment contracts, dependencies, sequencing/parallelism, synthesis, parent verification, workspace isolation, and Git operations | Exact child launch tools/arguments, permission enforcement, status meanings, process lifecycle, interruption/stopping, and runtime-state cleanup/recovery |
+## Pick a launcher (exactly one)
 
-Before any technical launch, status, interruption, stop, or cleanup operation, load the single selected runtime skill or adapter; its technical rules take precedence for those mechanics. Do not guess a future adapter name, invent tool calls, or assume one permission model.
+Use the first safe option the **current harness** actually has:
 
-## Decide
+1. **Built-in / native subagent tools** (and their host docs/skill, if any)
+2. **Host extension or plugin** that spawns bounded agents
+3. **Catalog/runtime adapter skill** for this harness, if installed and appropriate
+4. **Non-interactive agent CLI** only if all are proven: auth, cwd, permissions, start/completion, output capture, timeout, cancel
+5. Else: keep optional work in parent; **required** work → block/escalate — never weaken safety or silently parent-implement
 
-**Delegation-first rule:** when a safe capability exists, delegate every bounded non-trivial research, implementation, test-authoring, accepted remediation, or review unit. Parallelism affects scheduling only. Dependent or coupled work uses one blocking or awaited run, then parent join—not parent implementation.
+Rules:
 
-| Delegate | Parent-only |
-|---|---|
-| Bounded non-trivial research, implementation, test-authoring, accepted remediation, or review with a clear role, scope, output, and stop condition. | Framing, decomposition, synthesis, tracker/plan ownership, integration and conflict resolution, dispositions, focused acceptance validation, cleanup, and user communication. |
-| Independent units in parallel when capacity allows; dependent/coupled units as one awaited child. | Genuinely atomic mechanics with no research or behavior change. |
-| Required non-trivial work when a safe runtime path exists. | Explicit user prohibition of delegation. |
-| | Unavailable or unsafe capability for optional work (keep in parent) or required work (escalate/block—do not silently implement in the parent). |
+- Never drive two launchers at once for the same workflow.
+- Before launch/status/stop/cleanup, follow the chosen launcher’s mechanics.
+- Policy below always applies, regardless of launcher.
 
-Do not stay in the parent for speed, warm context, coordination overhead, coupling, verification overhead, or missing parallelism.
+## Delegate by default
 
-## Split the work
+When a safe launcher exists, **delegate**. Not only “hard” work. “Small/easy” is not a reason to keep it in parent.
 
-| Pattern | Use and sequencing |
-|---|---|
-| Independent fan-out | Run separable research or review angles in parallel, with non-overlapping questions and one parent synthesis. |
-| Staged pipeline | Run scout → worker → reviewer when each output is required input for the next; verify each handoff before advancing. |
-| Independent judgment | Give fresh reviewers the same evidence without sharing prior conclusions; resolve disagreements from evidence. |
-| Writer lanes | For explicitly authorized implementation, run writers sequentially in one checkout or place each concurrent writer in an isolated checkout with non-overlapping ownership. |
+**Parent keeps** (strong reason only):
 
-Record dependencies, owned files/questions, expected evidence, and the join point. Keep concurrency bounded by useful independence and available capacity; never maximize fan-out by default. The parent and other children must not mutate an active writer lane.
+- framing / decomposition / synthesis
+- plan/tracker ownership
+- integrate, dispositions, acceptance reruns
+- user comms
+- worktree + runtime cleanup
+- truly atomic single-step mechanics with no judgment
+- explicit user prohibition
+- no safe launcher (required work → block)
 
-## Define each assignment
+If you skip delegation, record the strong reason.
 
-Give each child one bounded assignment containing:
+## Worktrees + Git + cleanup
 
-- **Role and objective:** one job and a concrete expected outcome.
-- **Starting context:** exact project path, files, facts, and unresolved questions needed to begin.
-- **Scope:** owned areas, requirements, non-goals, and prohibited scope creep.
-- **Permissions:** allowed paths/tools and forbidden writes, commands, installs, destructive actions, or production access. Forbid child edits to parent-owned plans and trackers.
-- **Evidence and validation:** required sources, diffs, tests, commands, and explicit skipped-check reporting.
-- **Handoff:** concise findings or changed files; decisions; exact check results; risks; blockers; remaining work. Parent owns Git status/diff/commit/integration.
-- **Stop controls:** completion condition, timeout, budget where relevant, and no recursive delegation.
+**Parent owns** isolation and Git. Children never create/manage worktrees/branches or run Git — unless the host’s subagent API explicitly owns isolation and the parent still verifies outcomes.
 
-Send only task-relevant context. Never include secrets, credentials, tokens, private transcripts, `.env` contents, or unrelated sensitive data. Project trust is not a sandbox.
+### Isolate
 
-## Select a runtime and supervise
+- **Readers:** read-only; shared checkout OK
+- **Writers:** sequential in one checkout, **or** concurrent only in **parent-created** isolated worktrees/workspaces with non-overlapping ownership
+- Do not mutate an active writer cwd from parent/siblings
+- Record: path, branch (if any), owned files/domain, deps, join point
+- Cap fan-out by parent integrate/verify/cleanup capacity
 
-Use exactly one active path, in order:
+### Integrate
 
-1. If native `subagent_*` tools are active, load their runtime skill and use those tools.
-2. Otherwise, if `use-pi-subagents` is available, stop here and use that skill with `scripts/subagents.mjs`.
-3. Otherwise inspect the host's actual native subagent capability and current tool schema or documentation. Use it only when permissions, ownership, observation, cancellation, and cleanup fit the assignment.
-4. Use a non-interactive agent CLI only as a last fallback after verifying authentication, explicit working directory, permission boundary, observable start and completion, capturable output, timeout, and cancellation. A subprocess is not a native subagent.
-5. If no safe capability exists, keep optional work in the parent. If the work is required or the user explicitly requires delegation, report it blocked rather than weakening controls or silently implementing in the parent.
+1. Stop or await the child to a terminal state
+2. Inspect handoff + full diff + checks (child claims = evidence, not proof)
+3. Parent Git integrate only if verified
 
-Never co-activate competing runtime adapters or skills.
+### Cleanup (mandatory)
 
-For every launched run:
+After each lane and at workflow end / interrupt recovery:
 
-- grant least privilege and default to read-only;
-- use a fresh child for a new assignment or independent judgment; reuse only for same-assignment follow-up;
-- parallelize only genuinely independent work; run dependent/coupled work as one blocking or awaited child;
-- enforce the Writer lanes rule above before any child writes;
-- set a bounded timeout, confirm a new work cycle actually started, monitor to a terminal outcome, and inspect blocked, unknown, timed-out, or failed states;
-- never fire and forget, and after repeated identical failures change the bounded approach instead of retrying blindly.
+1. Stop live children
+2. Integrate, retain, or abandon **workflow-owned** work only
+3. Remove safe fully-handled parent worktrees/branches/workspaces
+4. Clean launcher/runtime/process state via the chosen mechanism
+5. Never delete dirty/conflicted/unintegrated/unknown/owner-owned work
+6. Report every retention + why
 
-## Synthesize, verify, and clean up
+**No orphan worktrees, branches, or agent processes.**
 
-The parent owns the result:
+## Assignment contract
 
-1. Inspect material evidence, every child-made diff, check output, skips, risks, and assumptions. Perform Git inspection yourself.
-2. Spot-check claims and rerun relevant focused and repository validation. Child claims, status, and exit codes are evidence, not proof.
-3. Resolve disagreement from sources and tests rather than averaging conclusions. Reject scope creep and unnecessary complexity.
-4. Integrate only verified work with parent-owned Git controls. Use the runtime adapter only to stop or clean workflow-owned run state, or deliberately retain it. Never discard dirty/unintegrated parent-owned workspaces.
+Each child gets one bounded job:
 
-## Final reporting
+- **Role + objective** — one job, concrete outcome
+- **Context** — cwd/project path, files, facts, open questions
+- **Scope** — owned areas, requirements, non-goals
+- **Permissions** — least privilege; forbid secrets/prod/destructive acts unless explicit; forbid child edits to parent plans/trackers
+- **Validation** — required checks; report exact results + skips
+- **Stop** — completion condition, timeout; **no recursive delegation**
+- **Handoff** — files read/changed · decisions · checks+results · skips · risks · blockers · remaining · evidence pointers (not transcripts)
 
-Report roles used, material findings or changes, parent verification and validation, unresolved/failed work, and intentionally retained resources with reasons. Include low-level run or resource identifiers only when useful for continuation or diagnosis.
+Send only task-relevant context. Never send secrets, tokens, `.env`, or private transcripts.
+
+## Supervise
+
+- Fresh child for new or independent judgment; reuse only for same-assignment follow-up
+- Bounded timeout; confirm work started; monitor to terminal state
+- Never fire-and-forget
+- Repeated identical failure → change approach, don’t blind-retry
+- Independent lanes may run in parallel; dependent/coupled work → one awaited child, then join
+
+## Report
+
+- roles used
+- material results/changes
+- parent verification
+- unresolved/failed work
+- worktrees/branches created, integrated, removed
+- retained resources + why
+- launcher run IDs only if needed for continuation

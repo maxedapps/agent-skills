@@ -49,7 +49,7 @@ npx skills add maxedapps/agent-skills \
   --skill vps-setup-hardening
 ```
 
-Review each skill and its compatibility requirements before use. `code-review`, `create-plan`, and `implement-plan` delegate bounded non-trivial research, implementation, testing, remediation, and review whenever a safe capability exists. Parallelism changes scheduling only; synthesis, integration, dispositions, acceptance, and user decisions stay with the parent. No catalog skill is a hard runtime dependency of another.
+Review each skill and its compatibility requirements before use. `code-review`, `create-plan`, and `implement-plan` **delegate by default** whenever a safe capability exists — not only for “hard” work. Parallelism changes scheduling only; synthesis, integration, dispositions, acceptance, cleanup, and user decisions stay with the parent. Material ambiguity and complexity-increasing review remedies escalate to the user rather than shaky assumptions. No catalog skill is a hard runtime dependency of another. Worktree create/isolate/integrate/remove and runtime cleanup are canonical in `use-subagents` / `use-pi-subagents` and are mandatory after lanes finish.
 
 ### Manual-only VPS skill
 
@@ -66,7 +66,8 @@ Pi and Claude Code honor `disable-model-invocation: true`; Codex honors the bund
 ## Runtime and related skills
 
 - **`decomplex` is a soft integration.** It can provide focused advisory reports to `code-review`, `create-plan`, and `implement-plan` when installed and proportionate. It requires write access for one distinct `.reviews/<descriptive-slug>-decomplex.md` report but never edits reviewed targets. Each owning workflow retains its concise built-in gate and records an honest fallback when the skill or report write is unavailable.
-- **Use one subagent runtime path.** Prefer active native `subagent_*` tools plus their runtime skill; otherwise use `use-pi-subagents`; otherwise use generic `use-subagents` with the host's actual safe capability. Never co-activate competing runtime adapters. The Pi RPC adapter launches and supervises isolated Pi RPC children from a parent-supplied cwd. The parent owns workspace isolation and all Git operations; runtime `clean` retires only private run state.
+- **`use-subagents` is portable policy** (delegate-by-default, assignment contract, worktrees/Git/cleanup) for any harness’s built-in tools, plugins, or CLIs. It does **not** depend on Pi.
+- **`use-pi-subagents` is a Pi launcher only** — use it with `use-subagents` when native `subagent_*` tools are inactive. Never co-activate competing launchers. Parent owns worktrees, Git, and mandatory cleanup (no orphans).
 - **`agent-browser` remains external.** Install it from [skills.sh](https://www.skills.sh/vercel-labs/agent-browser/agent-browser) when browser interaction or UI verification is needed:
 
   ```sh
@@ -77,7 +78,7 @@ Pi and Claude Code honor `disable-model-invocation: true`; Codex honors the bund
 
 ### `code-review`
 
-Performs evidence-bound generic and plan-backed reviews. It strongly considers bounded read-only subagents for independent review dimensions, while the parent verifies evidence, consolidates handoffs, and owns final findings and verdicts. Owning workflows may request focused closure rounds that preserve finding lineage without reopening broad scope.
+Evidence-bound generic and plan-backed reviews. Delegates read-only lanes by default; admits only material reachable findings; parent consolidates scores/verdicts. Supports focused closure rounds without reopening broad scope.
 
 ### `decomplex`
 
@@ -85,7 +86,7 @@ Reviews proposed or existing source, plans, architecture, tests, configuration, 
 
 ### `create-plan`
 
-Frames the planning problem with minimal parent context, then delegates every bounded non-trivial repository or external-research question. Independent questions may run separately; dependent questions use one awaited child. The parent verifies decision-critical evidence, writes the lean implementation handoff, dispositions findings, and closes independent reviews.
+Research → smallest plan → review → deliver. Delegates research/review by default; asks the user instead of shaky assumptions; writes a lean `.plans/` handoff with bullet task changes and exact verify steps.
 
 ### `create-skill`
 
@@ -93,15 +94,15 @@ Creates, rewrites, reviews, and evidence-backed improves Agent Skills with liter
 
 ### `implement-plan`
 
-Dispatches every bounded non-trivial dependency-ready research, implementation, test, accepted-remediation, and review unit before parent source edits. Coupled work uses one awaited worker; the parent owns the tracker, workspace isolation, Git integration, focused validation, dispositions, and acceptance.
+Maps a plan to tracker tasks/subtasks, then runs a delegated loop per item: analyze → implement → check → review → fix until clear → cleanup → next. Subagents by default (built-in, plugins, or skills). Parent owns tracker, integration, dispositions, acceptance, and mandatory worktree/runtime cleanup.
 
 ### `use-subagents`
 
-Provides delegation-first decomposition, assignment, supervision, and verification guidance only when neither active native `subagent_*` tooling nor the Pi RPC adapter owns the lane. It never co-activates competing runtime adapters.
+Harness-agnostic subagent playbook: delegate-by-default, assignment contract, worktree isolate/integrate/remove, mandatory cleanup, supervision, and parent verification. Works with whatever launcher the host provides. No dependency on `use-pi-subagents`.
 
 ### `use-pi-subagents`
 
-Acts as the script-backed Pi RPC fallback when native `subagent_*` tools are inactive. It runs bounded scout, research, or worker lanes under a supervised `pi --mode rpc` child. Runs block by default; asynchronous mode is only for independent work. The parent supplies each child's cwd, isolates overlapping writers, and performs every Git operation. Runtime cleanup retires only private run state; unsafe or unverifiable resources are retained.
+Pi RPC launcher (`scripts/subagents.mjs`) when native `subagent_*` tools are inactive. **Complements** `use-subagents` (policy) rather than replacing it. Parent supplies cwd/worktrees, verifies, Gits, runs script `clean` for run state, and removes safe parent-created workspaces. Retains and reports unsafe/unknown resources.
 
 ### `web-research`
 
