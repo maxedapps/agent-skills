@@ -1,18 +1,18 @@
 ---
 name: implement-plan
 description: >-
-  Implements existing Markdown plans exhaustively through tracked task batches,
-  delegation-first execution, active validation, and iterative independent
-  review closure. Use this skill when asked to implement, execute, carry out, or
-  continue an existing plan. Do not use for creating a plan from scratch or only
-  reviewing a plan without implementing it.
+  Implements existing Markdown plans exhaustively through orchestrator-led
+  delegated batches, active validation, and iterative independent review closure.
+  Use this skill when asked to implement, execute, carry out, or continue an
+  existing plan. Do not use for creating a plan from scratch or only reviewing a
+  plan without implementing it.
 license: MIT
 compatibility: >-
   Requires project write access. Delegation requires a safely available
   capability, isolated concurrent writers, terminal handoffs, and parent
   verification. Browser-visible work requires browser automation.
 metadata:
-  short-description: Implement plans with delegated batches and review closure loops
+  short-description: Orchestrate delegated plan implementation and review closure
 ---
 
 # Implement Plan
@@ -24,8 +24,8 @@ Follow higher-priority constraints. After the startup gate:
 - Cover every actionable plan requirement with independently verifiable tracker rows.
 - Keep implementation centered on the user’s requested outcome and the plan’s required behavior. Discovery and review do not authorize adjacent improvements or broader scope.
 - Before adding code, abstractions, tests, safeguards, or follow-up work, ask whether it is necessary now and whether a simpler change would suffice. Omit or simplify it when not justified.
-- **Avoid complexity at all cost. If in doubt, ask the user.**
-- **Before every non-trivial implementation batch, strongly consider subagents.** Delegate eligible bounded work when safe; record why parent-owned work is not eligible.
+- Avoid unjustified complexity; preserve necessary correctness, safety, compatibility, and operability. If materially unsure, ask the user.
+- **The parent orchestrates; delegate every bounded non-trivial research, source implementation, test-authoring, accepted remediation, and review unit when a safe capability exists.** Parent execution is limited to the recorded exceptions below.
 - Keep the tracker parent-owned and single-writer whenever lanes run or may resume concurrently.
 - Treat child handoffs as evidence, never acceptance. The parent inspects every diff, verifies claims, integrates, and tests.
 - Continue through dependency-ready work without asking unless a human decision is required.
@@ -38,18 +38,21 @@ Before source edits or delegated implementation launches:
 
 1. Read the complete user-provided plan; continue by offset if truncated.
 2. **Load [`assets/progress-tracker-template.md`](assets/progress-tracker-template.md) with the file-reading tool.** Memory or a citation does not count.
-3. Copy/adapt it into the plan's `Implementation Progress`, or retain a separate tracker if the plan cannot be edited.
-4. Populate plan coverage and record `Template loaded from: implement-plan/assets/progress-tracker-template.md`.
-5. Only then inspect implementation context, refine rows, assign lanes, or edit source.
+3. Select exactly one runtime path: active native `subagent_*` tools plus their runtime skill; otherwise `use-subagents-dynamic`; otherwise generic `use-subagents` with the host's actual safe capability. Never co-activate competing runtime adapters.
+4. Copy/adapt the tracker into the plan's `Implementation Progress`, or retain a separate tracker if the plan cannot be edited.
+5. Populate plan coverage and record `Template loaded from: implement-plan/assets/progress-tracker-template.md`.
+6. Dispatch each ready bounded non-trivial unit before any parent source edit. If no safe writer exists, apply the exceptions below; do not default to parent implementation.
 
-On resume, repeat steps 1–4 and reconcile current state before editing. If the template cannot be loaded, stop; do not fabricate evidence.
+On resume, repeat steps 1–6 and reconcile current state before editing. If the template cannot be loaded, stop; do not fabricate evidence.
+
+When the dynamic Pi RPC runtime is selected, the parent chooses or creates each writer cwd, passes it as `--cwd`, stops the child before any Git operation on that cwd, inspects/integrates/validates through normal parent controls, and cleans runtime state separately from workspace cleanup. The runtime never creates, integrates, or removes worktrees/branches.
 
 ## Execute in verified batches
 
 1. **Inventory:** map implementation, migration, cleanup, docs, rollout, and required validation to stable rows with plan references, dependencies, and acceptance evidence. Split opaque compound rows.
 2. **Select:** enumerate dependency-ready rows. Define the batch's scope, risks, rollback/cleanup, checks, and join point.
 3. **Prevent new complexity:** before the batch, run `decomplex` in Prevention mode only when it introduces or materially expands architecture, abstractions, dependencies, configuration, concurrency, caches/queues/retries, compatibility/fallback layers, broad test machinery, or operational safeguards. Otherwise apply the built-in gate without creating a disproportionate report.
-4. **Assign:** strongly consider subagents for every non-trivial batch. Record owner, ownership boundary, isolation, overlap, rationale, and review checkpoint.
+4. **Assign:** delegate every bounded non-trivial ready unit before parent source edits. Record owner, ownership boundary, isolation, overlap, join, and review checkpoint; for a parent exception, record the exact allowed rationale.
 5. **Implement:** stay within assigned ownership. Record deviations immediately.
 6. **Verify:** parent-inspect diffs and claims; run targeted behavior tests plus applicable test, lint, typecheck, build, migration, and browser/manual checks.
 7. **Update:** record concise evidence. Mark rows `Verified`, `Blocked`, or ready for another batch; then repeat.
@@ -58,27 +61,26 @@ A prevention report is advisory and does not create tracker work. The parent dis
 
 `Verified` requires task-specific evidence. `Descoped` requires explicit user approval and rationale. A phase is complete only when all child rows are `Verified` or approved `Descoped`.
 
-## Delegation and parallelism
+## Delegation and scheduling
 
-Delegate when work has bounded ownership, explicit acceptance evidence, and no unsafe coupling. Cap fan-out at the number of lanes the parent can promptly inspect, integrate, and verify; fewer lanes are better than an integration backlog.
+Use only the runtime path selected at startup. Delegate with bounded ownership, explicit acceptance evidence, and no unsafe overlap. Cap fan-out at the lanes the parent can promptly inspect, integrate, and verify; parallelism is a scheduling choice, never an eligibility gate.
 
-| Reasonable delegated lane | Keep sequential or parent-owned |
+| Delegate | Parent-owned |
 |---|---|
-| Independent adapter plus focused tests in owned files | Cross-cutting refactor with shared callers |
-| Read-only repository/API research with a precise question | Integration decisions requiring rapid iteration |
-| Isolated docs, fixture, or migration lane with exact acceptance checks | Tiny edit whose handoff costs more than implementation |
-| Independent test coverage for a stable public contract | Coupled schema, implementation, and rollout changes |
+| Bounded non-trivial inventory/research, source implementation, test authoring, accepted remediation, and independent review | Framing, decomposition, tracker writes, synthesis, integration/conflict resolution, finding dispositions, focused acceptance reruns, cleanup decisions, and user communication |
+| Independent units in isolated parallel lanes when useful | Genuinely atomic mechanics with no research or behavior change |
+| Coupled, overlapping, or dependent behavior as one coherent blocking/awaited worker | Explicit user prohibition or an unavailable/unsafe capability |
 
-Concurrent writers require isolated worktrees and non-overlapping file/domain ownership. Writers sharing a checkout run sequentially. Do not mutate overlapping code during an active writer or checkpoint review. Keep coupled work sequential or parent-owned.
+A busy single-writer or one-worktree capacity is transient: wait for it, verify/integrate the result, then dispatch the dependent worker. Speed, warm context, coordination overhead, coupling, rapid iteration, verification cost, or lack of parallelism never justify parent source implementation. Required non-trivial work with no safe capability is blocked or escalated to the user.
+
+Concurrent writers require isolated worktrees and non-overlapping file/domain ownership. Writers sharing a checkout run sequentially. Do not mutate overlapping code during an active writer or checkpoint review.
 
 For each delegated run:
 
-- grant least privilege and provide plan/tracker paths, row IDs, constraints, starting files, acceptance criteria, and checks;
-- require a terminal handoff with run identity, files read/changed, decisions, exact commands/results, skips, risks, blockers, and remaining work;
+- grant least privilege and provide only task-relevant plan/tracker rows, constraints, starting files, acceptance criteria, and checks;
+- require a concise terminal handoff with run identity, files read/changed, decisions, exact check results, skips, risks, blockers, remaining work, and durable evidence pointers—not reasoning or raw transcripts;
 - resolve terminal state before its join point;
-- parent-inspect the full diff, spot-check claims, rerun task-specific and applicable repository checks, then clean only workflow-owned worktrees/processes/artifacts without losing owner work.
-
-Allowed parent rationale: true triviality; tight coupling/integration ownership; overlapping scope; unavailable safe isolation/capability; immediate iterative decisions; user prohibition; or verification cost exceeding delegation benefit. Never call a broad phase trivial.
+- parent-inspect the full diff, spot-check claims, perform Git integration yourself, rerun task-specific and applicable repository checks, stop children before mutating their cwd, then clean runtime state and only parent-owned workspaces/artifacts without losing owner work.
 
 ## Validation and safety
 
@@ -97,13 +99,13 @@ Initial reviewers at a checkpoint must be fresh and independent: do not share th
 
 Give reviewers the plan/tracker, covered IDs, assigned scope and dimensions, relevant diff/contracts/tests, validation/manual evidence, skips, deviations, risks, and non-goals. Require read-only work and prohibit recursive delegation. For final review, require plan-backed full scope across the reviewer set. Preserve the `code-review` authority matrix and separate baseline, compliance, quality, and validation verdicts when that contract requires them.
 
-Require each reviewer to return one explicit checkpoint state: `Clear`, `Changes required`, `Human decision required`, or `Blocked`, with stable finding IDs. A reviewer with an open finding owns its focused follow-up when safely available; otherwise use a replacement with the complete finding lineage and record the continuity limit.
+Require each reviewer to return one explicit checkpoint state: `Clear`, `Changes required`, `Human decision required`, or `Blocked`, with stable finding IDs. `Clear` means no unresolved material concern in assigned scope after considering parent and user evidence, not acceptance of every recommendation. A reviewer with an open finding owns its focused follow-up when safely available; otherwise use a replacement with the complete finding lineage and record the continuity limit.
 
 ### Close each checkpoint iteratively
 
 1. Collect all initial handoffs before sharing reviewer conclusions.
 2. Parent-verify, deduplicate by root cause, and disposition every finding.
-3. Implement or validate only accepted findings, rerun affected checks, and record the material delta.
+3. Delegate each accepted non-trivial remediation or validation unit; implement only accepted findings, rerun affected checks, and record the material delta.
 4. Return fixes, evidence, and disputed dispositions to only the reviewers with open findings. Follow-ups cover those findings, directly affected boundaries, validation, and fix-caused or fix-exposed regressions—not a reopened broad search.
 5. Repeat parent disposition, bounded remediation or validation, and focused re-review while any reviewer reports a material concern.
 6. Close only when every commissioned reviewer is `Clear` and no material validation gap remains. A user decision is an authoritative evidence delta: return it to affected reviewers for closure rather than treating it as a substitute for reviewer clearance.

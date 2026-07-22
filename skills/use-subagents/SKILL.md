@@ -26,7 +26,7 @@ Generic coordinator guidance. Prefer one active runtime path (see Select a runti
 
 | This generic skill owns | A runtime-specific subagent skill or adapter owns |
 |---|---|
-| Delegation decisions, decomposition, assignment contracts, dependencies, sequencing/parallelism, synthesis, and parent verification | Exact tools and arguments, permission enforcement, status meanings, ownership and worktrees, interruption/stopping, cleanup, and recovery |
+| Delegation decisions, decomposition, assignment contracts, dependencies, sequencing/parallelism, synthesis, parent verification, workspace isolation, and Git operations | Exact child launch tools/arguments, permission enforcement, status meanings, process lifecycle, interruption/stopping, and runtime-state cleanup/recovery |
 
 Before any technical launch, status, interruption, stop, or cleanup operation, load the single selected runtime skill or adapter; its technical rules take precedence for those mechanics. Do not guess a future adapter name, invent tool calls, or assume one permission model.
 
@@ -63,7 +63,7 @@ Give each child one bounded assignment containing:
 - **Scope:** owned areas, requirements, non-goals, and prohibited scope creep.
 - **Permissions:** allowed paths/tools and forbidden writes, commands, installs, destructive actions, or production access. Forbid child edits to parent-owned plans and trackers.
 - **Evidence and validation:** required sources, diffs, tests, commands, and explicit skipped-check reporting.
-- **Handoff:** concise findings or changed files; branch; commit SHA or clean HEAD/status for no-change work (no fake commit); decisions; exact check results; risks; blockers; remaining work. Parent integrates.
+- **Handoff:** concise findings or changed files; decisions; exact check results; risks; blockers; remaining work. Parent owns Git status/diff/commit/integration.
 - **Stop controls:** completion condition, timeout, budget where relevant, and no recursive delegation.
 
 Send only task-relevant context. Never include secrets, credentials, tokens, private transcripts, `.env` contents, or unrelated sensitive data. Project trust is not a sandbox.
@@ -93,10 +93,10 @@ For every launched run:
 
 The parent owns the result:
 
-1. Inspect material evidence, every child-made diff, complete Git state, check output, skips, risks, and assumptions.
+1. Inspect material evidence, every child-made diff, check output, skips, risks, and assumptions. Perform Git inspection yourself.
 2. Spot-check claims and rerun relevant focused and repository validation. Child claims, status, and exit codes are evidence, not proof.
 3. Resolve disagreement from sources and tests rather than averaging conclusions. Reject scope creep and unnecessary complexity.
-4. Integrate only verified work, then use the runtime adapter's ownership-safe controls to stop, remove, or deliberately retain every workflow-owned run and resource. Never touch unrelated resources or discard dirty/unintegrated work.
+4. Integrate only verified work with parent-owned Git controls. Use the runtime adapter only to stop or clean workflow-owned run state, or deliberately retain it. Never discard dirty/unintegrated parent-owned workspaces.
 
 ## Final reporting
 

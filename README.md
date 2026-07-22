@@ -7,8 +7,8 @@
 - `create-plan` — create, review, and improve researched, implementation-ready plans before coding.
 - `create-skill` — create, rewrite, and review concise, actionable Agent Skills.
 - `implement-plan` — execute existing Markdown implementation plans with delegation-first tracking and verification.
-- `use-subagents` — provide legacy delegation guidance only when the dynamic skill is unavailable.
-- `use-subagents-dynamic` — decide, split, launch, supervise, integrate, and clean bounded CLI subagent work.
+- `use-subagents` — provide generic delegation-first coordination when no native or dynamic adapter is active.
+- `use-subagents-dynamic` — launch and supervise bounded Pi RPC subagent work when native `subagent_*` tools are inactive.
 - `web-research` — perform current, source-backed research across web content and repositories.
 - `vps-setup-hardening` — manually run a safety-gated Linux VPS setup and hardening workflow.
 
@@ -49,7 +49,7 @@ npx skills add maxedapps/agent-skills \
   --skill vps-setup-hardening
 ```
 
-Review each skill and its compatibility requirements before use. `code-review`, `create-plan`, and `implement-plan` use safe subagents when bounded exploration or independent review is proportionate. Synthesis and acceptance stay with the parent. No catalog skill is a hard runtime dependency of another.
+Review each skill and its compatibility requirements before use. `code-review`, `create-plan`, and `implement-plan` delegate bounded non-trivial research, implementation, testing, remediation, and review whenever a safe capability exists. Parallelism changes scheduling only; synthesis, integration, dispositions, acceptance, and user decisions stay with the parent. No catalog skill is a hard runtime dependency of another.
 
 ### Manual-only VPS skill
 
@@ -66,7 +66,7 @@ Pi and Claude Code honor `disable-model-invocation: true`; Codex honors the bund
 ## Runtime and related skills
 
 - **`decomplex` is a soft integration.** It can provide focused advisory reports to `code-review`, `create-plan`, and `implement-plan` when installed and proportionate. It requires write access for one distinct `.reviews/<descriptive-slug>-decomplex.md` report but never edits reviewed targets. Each owning workflow retains its concise built-in gate and records an honest fallback when the skill or report write is unavailable.
-- **`use-subagents-dynamic` owns subagent coordination and runtime execution.** It decides and decomposes bounded work, then launches and supervises supported Pi, Claude Code, Codex, Grok, or Kimi CLI children through verified Herdr or standalone execution. It also integrates and cleans isolated worker worktrees. The dynamic skill requires Node, current authenticated CLIs, Git for workers, and macOS/Linux for standalone asynchronous control. Use legacy `use-subagents` only when the dynamic skill is unavailable; never load both.
+- **Use one subagent runtime path.** Prefer active native `subagent_*` tools plus their runtime skill; otherwise use `use-subagents-dynamic`; otherwise use generic `use-subagents` with the host's actual safe capability. Never co-activate competing runtime adapters. The dynamic adapter launches and supervises isolated Pi RPC children from a parent-supplied cwd. The parent owns workspace isolation and all Git operations; runtime `clean` retires only private run state.
 - **`agent-browser` remains external.** Install it from [skills.sh](https://www.skills.sh/vercel-labs/agent-browser/agent-browser) when browser interaction or UI verification is needed:
 
   ```sh
@@ -85,7 +85,7 @@ Reviews proposed or existing source, plans, architecture, tests, configuration, 
 
 ### `create-plan`
 
-Produces a lean Markdown implementation handoff with key planning files, material evidence and decisions, stable tasks, and observable acceptance checks. Exploration and independent review are proportionate; synthesis and acceptance stay with the parent.
+Frames the planning problem with minimal parent context, then delegates every bounded non-trivial repository or external-research question. Independent questions may run separately; dependent questions use one awaited child. The parent verifies decision-critical evidence, writes the lean implementation handoff, dispositions findings, and closes independent reviews.
 
 ### `create-skill`
 
@@ -93,15 +93,15 @@ Creates, rewrites, reviews, and evidence-backed improves Agent Skills with liter
 
 ### `implement-plan`
 
-Executes an existing Markdown plan in verified dependency-ready batches. It strongly considers bounded parallel implementation lanes, keeps integration and acceptance with the parent, and iteratively closes independent reviews at major boundaries and across the full implementation. The parent evidence-gates every finding, uses decomplex for complexity-increasing remedies, and asks the human when material uncertainty or reviewer disagreement remains.
+Dispatches every bounded non-trivial dependency-ready research, implementation, test, accepted-remediation, and review unit before parent source edits. Coupled work uses one awaited worker; the parent owns the tracker, workspace isolation, Git integration, focused validation, dispositions, and acceptance.
 
 ### `use-subagents`
 
-Provides legacy decision, decomposition, assignment, supervision, and verification guidance only when `use-subagents-dynamic` is unavailable. It must not co-activate with the dynamic skill.
+Provides delegation-first decomposition, assignment, supervision, and verification guidance only when neither active native `subagent_*` tooling nor the dynamic adapter owns the lane. It never co-activates competing runtime adapters.
 
 ### `use-subagents-dynamic`
 
-Decides whether delegation helps, splits work into bounded scout, research, or worker lanes, and runs supported Pi, Claude Code, Codex, Grok, Kimi, and verified Herdr environments through one script. Readers remain read-only; workers receive isolated Git worktrees. The parent reviews and validates every result. Integration and cleanup are dry-run-first, ancestry-gated, non-force operations; unsafe or unverifiable resources are retained.
+Acts as the script-backed Pi RPC fallback when native `subagent_*` tools are inactive. It runs bounded scout, research, or worker lanes under a supervised `pi --mode rpc` child. Runs block by default; asynchronous mode is only for independent work. The parent supplies each child's cwd, isolates overlapping writers, and performs every Git operation. Runtime cleanup retires only private run state; unsafe or unverifiable resources are retained.
 
 ### `web-research`
 

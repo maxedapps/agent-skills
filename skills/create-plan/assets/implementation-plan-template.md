@@ -2,6 +2,8 @@
 
 > **Status:** Ready for implementation | Blocked on [decision]
 
+<!-- Ready means no unresolved material gate can change implementation; otherwise use Blocked. -->
+
 ## Outcome and boundaries
 
 - **Problem and target:** [Evidence-backed current problem and observable desired outcome.]
