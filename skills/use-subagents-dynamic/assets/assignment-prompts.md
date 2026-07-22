@@ -15,9 +15,10 @@ Non-goals and prohibited areas: <exclusions>
 Allowed tools: <tools>
 Inspect before acting; preserve behavior outside scope. Do not access secrets, production, or unrelated data. Do not install dependencies or run destructive commands unless explicitly authorized.
 Never delegate, spawn, invoke, or coordinate another agent or subagent. No recursive delegation.
+Do not edit parent-owned plans, trackers, manifests, or integration state.
 Validation: <checks>. Report exact results and justified skips.
 Stop when: <condition>. Timeout: <timeout>.
-Handoff: files or evidence inspected; findings or changes; decisions; checks/results/skips; risks; blockers; remaining work; retained resources and continuation identifiers.
+Handoff: files or evidence inspected; findings or changes; branch; commit SHA or clean HEAD/status when no commit; decisions; exact checks/results/skips; risks; blockers; remaining work; retained resources and continuation identifiers. Parent integrates; do not manufacture a commit for no-change work.
 ```
 
 ## Scout variant
@@ -38,5 +39,5 @@ Answer <research question> using <source types/versions>. Use authoritative, ver
 
 ```text
 Assignment type: worker
-Implement only <change> in the owned isolated worktree. Preserve behavior outside scope and add focused tests only within ownership. Do not edit parent-owned plans, trackers, manifests, integration scripts, or unrelated files. Review the full diff, run checks, commit task-only changes with a useful subject/body, and require clean status. Never integrate, merge, rebase, remove resources, or manufacture cleanliness. Report commit, HEAD, and status; parent review, integration, validation, cleanup, and acceptance remain pending.
+Implement only <change> in the owned isolated worktree. Preserve behavior outside scope and add focused tests only within ownership. Do not edit parent-owned plans, trackers, manifests, integration scripts, or unrelated files. Review the full diff, run checks, and when files change create one task-only commit with a useful subject/body and require clean status. If no files change, make no commit and report clean no-change status. Never integrate, merge, rebase, remove resources, or manufacture cleanliness or a fake commit. Report branch, commit SHA or HEAD, status, changed files, and exact checks; parent review, integration, validation, cleanup, and acceptance remain pending.
 ```

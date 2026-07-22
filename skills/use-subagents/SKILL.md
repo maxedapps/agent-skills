@@ -1,24 +1,26 @@
 ---
 name: use-subagents
 description: >-
-  Provides legacy guidance for planning and coordinating bounded subagent work.
-  Use this skill when delegation, decomposition, parallel research or review,
-  isolated implementation, or independent validation may help, but only if
-  `use-subagents-dynamic` is unavailable. Do not use when
-  `use-subagents-dynamic` is available, for recursive delegation, or for
-  ordinary background processes.
+  Plans and coordinates bounded subagent work across coding agents. Use this
+  skill whenever considering delegation, decomposition, parallel research,
+  review or implementation, independent validation, or an explicit request to
+  spawn or manage subagents. Prefer an active native subagent runtime, then
+  `use-subagents-dynamic`, and use this skill only as the generic fallback with
+  the host's actual safe capability. Do not use for ordinary background shell,
+  server, or process work.
 license: MIT
 compatibility: >-
   Decision and coordination guidance is instruction-only. Launching requires a
   runtime-specific adapter, a native subagent capability, or a suitably
-  controlled non-interactive agent CLI.
+  controlled non-interactive agent CLI. Never co-activate competing runtime
+  adapters.
 metadata:
-  short-description: Legacy fallback for bounded subagent work
+  short-description: Generic fallback for bounded subagent work
 ---
 
-# Use Subagents (Legacy Fallback)
+# Use Subagents
 
-Use this legacy guidance only when `use-subagents-dynamic` is unavailable. Never co-activate both skills; if the dynamic skill is available, stop and use it instead. Follow higher-priority instructions for scope, privacy, tools, cost, and latency.
+Generic coordinator guidance. Prefer one active runtime path (see Select a runtime). Never co-activate competing runtime adapters or skills. Follow higher-priority instructions for scope, privacy, tools, cost, and latency.
 
 ## Scope and runtime handoff
 
@@ -26,17 +28,20 @@ Use this legacy guidance only when `use-subagents-dynamic` is unavailable. Never
 |---|---|
 | Delegation decisions, decomposition, assignment contracts, dependencies, sequencing/parallelism, synthesis, and parent verification | Exact tools and arguments, permission enforcement, status meanings, ownership and worktrees, interruption/stopping, cleanup, and recovery |
 
-Use the generic workflow to decide and design work even when no adapter exists. Before any technical launch, status, interruption, stop, or cleanup operation, load an available runtime-specific subagent skill or adapter; its technical rules take precedence for those mechanics. Do not guess a future adapter name, invent tool calls, or assume one permission model.
+Before any technical launch, status, interruption, stop, or cleanup operation, load the single selected runtime skill or adapter; its technical rules take precedence for those mechanics. Do not guess a future adapter name, invent tool calls, or assume one permission model.
 
 ## Decide
 
-| Delegate when | Stay in the parent when |
-|---|---|
-| The assignment has one bounded role, scope, output, and stop condition. | The task is direct, small, or cheaper to verify locally. |
-| Fresh context, expertise, independent judgment, context isolation, or real parallelism adds material value. | Work is tightly coupled, scopes overlap, or frequent parent-child iteration is required. |
-| Expected value exceeds launch, monitoring, synthesis, verification, and cleanup cost. | Reconstructing context or coordinating the run erases the benefit. |
+**Delegation-first rule:** when a safe capability exists, delegate every bounded non-trivial research, implementation, test-authoring, accepted remediation, or review unit. Parallelism affects scheduling only. Dependent or coupled work uses one blocking or awaited run, then parent join—not parent implementation.
 
-Complexity alone is not a reason to delegate. Loading this skill requires a decision, not a launch.
+| Delegate | Parent-only |
+|---|---|
+| Bounded non-trivial research, implementation, test-authoring, accepted remediation, or review with a clear role, scope, output, and stop condition. | Framing, decomposition, synthesis, tracker/plan ownership, integration and conflict resolution, dispositions, focused acceptance validation, cleanup, and user communication. |
+| Independent units in parallel when capacity allows; dependent/coupled units as one awaited child. | Genuinely atomic mechanics with no research or behavior change. |
+| Required non-trivial work when a safe runtime path exists. | Explicit user prohibition of delegation. |
+| | Unavailable or unsafe capability for optional work (keep in parent) or required work (escalate/block—do not silently implement in the parent). |
+
+Do not stay in the parent for speed, warm context, coordination overhead, coupling, verification overhead, or missing parallelism.
 
 ## Split the work
 
@@ -56,25 +61,30 @@ Give each child one bounded assignment containing:
 - **Role and objective:** one job and a concrete expected outcome.
 - **Starting context:** exact project path, files, facts, and unresolved questions needed to begin.
 - **Scope:** owned areas, requirements, non-goals, and prohibited scope creep.
-- **Permissions:** allowed paths/tools and forbidden writes, commands, installs, destructive actions, or production access.
+- **Permissions:** allowed paths/tools and forbidden writes, commands, installs, destructive actions, or production access. Forbid child edits to parent-owned plans and trackers.
 - **Evidence and validation:** required sources, diffs, tests, commands, and explicit skipped-check reporting.
-- **Handoff:** concise findings or changed files, decisions, exact check results, risks, blockers, and remaining work.
+- **Handoff:** concise findings or changed files; branch; commit SHA or clean HEAD/status for no-change work (no fake commit); decisions; exact check results; risks; blockers; remaining work. Parent integrates.
 - **Stop controls:** completion condition, timeout, budget where relevant, and no recursive delegation.
 
 Send only task-relevant context. Never include secrets, credentials, tokens, private transcripts, `.env` contents, or unrelated sensitive data. Project trust is not a sandbox.
 
 ## Select a runtime and supervise
 
-1. If a runtime-specific subagent skill or adapter is available, load it and use its exact lifecycle and safety mechanics.
-2. Otherwise inspect the host's actual native subagent capability and current tool schema or documentation. Use it only when permissions, ownership, observation, cancellation, and cleanup fit the assignment.
-3. Use a non-interactive agent CLI only as a last fallback after verifying authentication, explicit working directory, permission boundary, observable start and completion, capturable output, timeout, and cancellation. A subprocess is not a native subagent.
-4. If no safe capability exists, keep optional work in the parent. If the user explicitly requires delegation, report it blocked rather than weakening controls.
+Use exactly one active path, in order:
+
+1. If native `subagent_*` tools are active, load their runtime skill and use those tools.
+2. Otherwise, if `use-subagents-dynamic` is available, stop here and use that skill with `scripts/subagents.mjs`.
+3. Otherwise inspect the host's actual native subagent capability and current tool schema or documentation. Use it only when permissions, ownership, observation, cancellation, and cleanup fit the assignment.
+4. Use a non-interactive agent CLI only as a last fallback after verifying authentication, explicit working directory, permission boundary, observable start and completion, capturable output, timeout, and cancellation. A subprocess is not a native subagent.
+5. If no safe capability exists, keep optional work in the parent. If the work is required or the user explicitly requires delegation, report it blocked rather than weakening controls or silently implementing in the parent.
+
+Never co-activate competing runtime adapters or skills.
 
 For every launched run:
 
 - grant least privilege and default to read-only;
 - use a fresh child for a new assignment or independent judgment; reuse only for same-assignment follow-up;
-- parallelize readers only for independent work;
+- parallelize only genuinely independent work; run dependent/coupled work as one blocking or awaited child;
 - enforce the Writer lanes rule above before any child writes;
 - set a bounded timeout, confirm a new work cycle actually started, monitor to a terminal outcome, and inspect blocked, unknown, timed-out, or failed states;
 - never fire and forget, and after repeated identical failures change the bounded approach instead of retrying blindly.

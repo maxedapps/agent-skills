@@ -2,6 +2,12 @@
 
 Read this file completely only immediately before a worker's integration or cleanup. The parent performs every step through `scripts/subagents.mjs`; workers never integrate or remove resources.
 
+## Parent checkout and state
+
+- Script workers require a fully clean parent checkout at launch and again at integration. Unrelated tracked or untracked dirt fails closed: stop, retain workflow resources, and escalate—do not implement the blocked unit in the parent.
+- Keep tracker and runtime state outside the checkout under an explicit private `SUBAGENTS_STATE_ROOT` (for example `$SUBAGENTS_STATE_ROOT/progress/...`). Never place transient tracker/state files in the parent worktree to satisfy cleanliness.
+- Never stash, reset, or commit owner dirt to clear the gate. Do not force-clean unrelated parent changes.
+
 ## Ordered gates
 
 1. **Reach a terminal state.** Use `status` and, when required, `stop`. A live or ambiguous runtime blocks integration.
