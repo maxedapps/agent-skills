@@ -3,16 +3,15 @@ set -Eeuo pipefail
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck source=skills/vps-setup-hardening/scripts/lib/common.sh
-source "$SCRIPT_DIR/lib/common.sh"
+source "$SCRIPT_DIR/../lib/common.sh"
 
 usage() {
   cat <<'EOF'
 Usage:
-  sudo ./scripts/install-nodejs.sh [--major 24]
+  sudo ./scripts/ubuntu/install-nodejs.sh [--major 24]
 
-Installs the selected Node.js LTS major from the NodeSource APT repository.
-Major 24 is the default supported LTS line as of this skill's synchronized date.
-This installer supports Debian-based amd64 and arm64 hosts.
+Installs the selected Node.js LTS major from the NodeSource APT repository on
+Ubuntu 24.04/26.04. Major 24 is the default. Supports amd64 and arm64.
 EOF
 }
 
@@ -26,9 +25,9 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 require_root "${ORIGINAL_ARGS[@]}"
+require_profile ubuntu
 [[ $MAJOR == 22 || $MAJOR == 24 ]] || die 'Supported LTS major values are 22 and 24; 24 is recommended for a new VPS.'
-load_os_release
-have apt-get || die 'This local Node.js installer supports Debian-based APT systems only. Use a maintained LTS package source for this distribution.'
+have apt-get || die 'apt-get is required.'
 
 ARCH=$(dpkg --print-architecture)
 [[ $ARCH == amd64 || $ARCH == arm64 ]] || die "NodeSource supports this skill on amd64 and arm64 only; detected $ARCH."

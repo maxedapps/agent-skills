@@ -6,11 +6,12 @@
 - `decomplex` — prevent, audit, and triage unnecessary complexity without editing reviewed targets.
 - `create-plan` — create, review, and improve researched, implementation-ready plans before coding.
 - `create-skill` — create, rewrite, and review concise, actionable Agent Skills.
+- `create-slides` — create polished, dependency-free HTML slide decks from a tested stepped-reveal starter.
 - `implement-plan` — execute existing Markdown implementation plans with delegation-first tracking and verification.
 - `use-subagents` — portable delegation policy, assignment contracts, worktree isolation/cleanup for any harness.
 - `use-pi-subagents` — Pi RPC launcher for bounded subagents when native `subagent_*` tools are inactive (use with `use-subagents`).
 - `web-research` — perform current, source-backed research across web content and repositories.
-- `vps-setup-hardening` — manually run a safety-gated Linux VPS setup and hardening workflow.
+- `vps-setup-hardening` — manually set up and harden Ubuntu 24.04/26.04 or AL2023 on EC2.
 
 ## Install
 
@@ -34,7 +35,7 @@ npx skills add maxedapps/agent-skills --skill code-review
 npx skills add maxedapps/agent-skills --skill vps-setup-hardening
 ```
 
-Install all nine skills explicitly:
+Install all ten skills explicitly:
 
 ```sh
 npx skills add maxedapps/agent-skills \
@@ -42,6 +43,7 @@ npx skills add maxedapps/agent-skills \
   --skill decomplex \
   --skill create-plan \
   --skill create-skill \
+  --skill create-slides \
   --skill implement-plan \
   --skill use-subagents \
   --skill use-pi-subagents \
@@ -92,6 +94,10 @@ Research → smallest plan → review → deliver. Delegates research/review by 
 
 Creates, rewrites, reviews, and evidence-backed improves Agent Skills with literal activation routing, concise execution contracts, progressive disclosure, exact resources, trigger/near-miss evaluation, and representative output checks. It includes a placeholder-safe starter and quality checklist.
 
+### `create-slides`
+
+Creates and materially redesigns polished, dependency-free HTML slide decks (vanilla HTML/CSS/JS) from a tested stepped-reveal starter, with optional pre-built themes (technical, corporate, playful) and position-stable header/footer chrome. Decks open directly from a local `index.html` with no server, build step, or network access; validation requires a browser or browser-automation capability.
+
 ### `implement-plan`
 
 Maps a plan to tracker tasks/subtasks, then runs a delegated loop per item: analyze → implement → check → review → fix until clear → cleanup → next. Subagents by default (built-in, plugins, or skills) under `use-subagents` policy. Parent owns tracker, integration, dispositions, acceptance, and mandatory worktree/runtime cleanup.
@@ -110,7 +116,7 @@ Researches current web and external technical information with available search,
 
 ### `vps-setup-hardening`
 
-Turns a fresh supported Linux VPS into a verified baseline through inspection-first changes, named key-only administration, optional Tailscale, provider- or host-filtered ingress, optional Docker and Node.js, independent exposure tests, reboot approval, and a concise evidence-qualified report. It is manual-only and preserves the current access path until a replacement is proven.
+Turns a fresh Ubuntu 24.04/26.04 or Amazon Linux 2023 EC2 host into a verified baseline through inspection-first changes, named key-only administration, optional Tailscale, UFW or provider/Security Group ingress, optional Docker and Node.js, independent exposure tests, reboot approval, and a concise evidence-qualified report. It is manual-only and preserves the current access path until a replacement is proven.
 
 ## Structure
 

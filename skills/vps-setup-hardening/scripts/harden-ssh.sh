@@ -13,6 +13,7 @@ Usage:
 
 Disables root, password, and keyboard-interactive SSH login after a separate
 external key-based login for USER has been tested. Existing sessions stay open.
+Requires a standard top-level sshd_config.d Include on a supported profile.
 The confirmation flag is a safety gate and must never be supplied speculatively.
 EOF
 }
@@ -28,9 +29,10 @@ while [[ $# -gt 0 ]]; do
     *) die "Unknown argument: $1" ;;
   esac
 done
-require_root "${ORIGINAL_ARGS[@]}"
 [[ -n $ADMIN ]] || die 'Provide the tested administrator with --admin USER.'
 [[ $CONFIRMED == true ]] || die 'First test a separate external key-based login, then rerun with --confirmed-login-tested.'
+require_root "${ORIGINAL_ARGS[@]}"
+detect_profile
 id "$ADMIN" >/dev/null 2>&1 || die "Administrator does not exist: $ADMIN"
 ADMIN_HOME=$(getent passwd "$ADMIN" | awk -F: '{print $6}')
 [[ -s "$ADMIN_HOME/.ssh/authorized_keys" ]] || die "$ADMIN has no non-empty authorized_keys file."
@@ -40,39 +42,19 @@ SSHD_CONFIG=/etc/ssh/sshd_config
 TEMPLATE="$SKILL_DIR/assets/config/00-agent-recipes-hardening.conf"
 [[ -r $SSHD_CONFIG ]] || die "Missing SSH daemon configuration: $SSHD_CONFIG"
 [[ -r $TEMPLATE ]] || die "Missing hardening template: $TEMPLATE"
+has_sshd_config_d_include "$SSHD_CONFIG" \
+  || die 'sshd_config must Include a standard sshd_config.d drop-in directory. Refusing main-file mutation.'
 
-TARGET=''
+TARGET=/etc/ssh/sshd_config.d/00-agent-recipes-hardening.conf
+mkdir -p /etc/ssh/sshd_config.d
 TARGET_EXISTED=false
 BACKUP=''
-if grep -Eiq '^[[:space:]]*Include[[:space:]]+.*sshd_config\.d/' "$SSHD_CONFIG"; then
-  TARGET=/etc/ssh/sshd_config.d/00-agent-recipes-hardening.conf
-  mkdir -p /etc/ssh/sshd_config.d
-  [[ -e $TARGET ]] && TARGET_EXISTED=true
-  if [[ -e $TARGET ]]; then
-    BACKUP="${TARGET}.agent-recipes.rollback"
-    cp -a "$TARGET" "$BACKUP"
-  fi
-  install -m 0644 "$TEMPLATE" "$TARGET"
-else
-  TARGET=$SSHD_CONFIG
-  TARGET_EXISTED=true
-  BACKUP="${SSHD_CONFIG}.agent-recipes.rollback"
-  cp -a "$SSHD_CONFIG" "$BACKUP"
-  TEMP_CONFIG=$(mktemp)
-  trap 'rm -f "${TEMP_CONFIG:-}"' EXIT
-  {
-    echo '# BEGIN AGENT-RECIPES HARDENING'
-    cat "$TEMPLATE"
-    echo '# END AGENT-RECIPES HARDENING'
-    echo
-    awk '
-      /^# BEGIN AGENT-RECIPES HARDENING$/ {skip=1; next}
-      /^# END AGENT-RECIPES HARDENING$/ {skip=0; next}
-      !skip {print}
-    ' "$SSHD_CONFIG"
-  } >"$TEMP_CONFIG"
-  install -m 0600 "$TEMP_CONFIG" "$SSHD_CONFIG"
+[[ -e $TARGET ]] && TARGET_EXISTED=true
+if [[ -e $TARGET ]]; then
+  BACKUP="${TARGET}.agent-recipes.rollback"
+  cp -a "$TARGET" "$BACKUP"
 fi
+install -m 0644 "$TEMPLATE" "$TARGET"
 
 rollback() {
   warn 'Rolling back the SSH configuration.'
@@ -102,22 +84,17 @@ check_setting pubkeyauthentication yes
 check_setting passwordauthentication no
 check_setting kbdinteractiveauthentication no
 
-if have systemctl; then
-  if systemctl reload ssh.service 2>/dev/null; then
-    SSH_SERVICE=ssh.service
-  elif systemctl reload sshd.service 2>/dev/null; then
-    SSH_SERVICE=sshd.service
-  else
-    rollback
-    systemctl reload ssh.service 2>/dev/null || systemctl reload sshd.service 2>/dev/null || true
-    die 'Could not reload the SSH service; the previous configuration was restored.'
-  fi
+if systemctl reload ssh.service 2>/dev/null; then
+  SSH_SERVICE=ssh.service
+elif systemctl reload sshd.service 2>/dev/null; then
+  SSH_SERVICE=sshd.service
 else
   rollback
-  die 'No supported service manager was found to reload sshd safely.'
+  systemctl reload ssh.service 2>/dev/null || systemctl reload sshd.service 2>/dev/null || true
+  die 'Could not reload the SSH service; the previous configuration was restored.'
 fi
 rm -f "$BACKUP"
 
 log "SSH hardening is active via $TARGET ($SSH_SERVICE)."
 echo 'Keep the current session open and test another new login now.'
-echo 'The firewall has not been changed.'
+echo 'The firewall has not been changed. Distro cipher/KEX/host-key defaults were not altered.'

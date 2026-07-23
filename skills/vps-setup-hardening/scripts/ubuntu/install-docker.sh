@@ -3,17 +3,19 @@ set -Eeuo pipefail
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck source=skills/vps-setup-hardening/scripts/lib/common.sh
-source "$SCRIPT_DIR/lib/common.sh"
+source "$SCRIPT_DIR/../lib/common.sh"
 
 usage() {
   cat <<'EOF'
 Usage:
-  sudo ./scripts/install-docker.sh [--admin USER]
+  sudo ./scripts/ubuntu/install-docker.sh [--admin USER]
 
 Installs Docker Engine, Buildx, and the Compose plugin from Docker's official
-APT repository on supported Ubuntu or Debian releases. Sudo-based administration
-is the default. Supplying --admin explicitly adds USER to the root-equivalent
-docker group and must represent an approved privilege decision.
+APT repository on Ubuntu 24.04/26.04. Sudo-based administration is the default.
+Supplying --admin explicitly adds USER to the root-equivalent docker group and
+must represent an approved privilege decision.
+
+A verified provider firewall must already govern Docker-published ingress.
 EOF
 }
 
@@ -27,7 +29,9 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 require_root "${ORIGINAL_ARGS[@]}"
-load_os_release
+require_profile ubuntu
+have apt-get || die 'apt-get is required.'
+[[ -n ${OS_CODENAME:-} ]] || die 'The Ubuntu codename is missing; cannot select Docker packages safely.'
 
 add_admin_to_docker_group() {
   [[ -n $ADMIN ]] || return 0
@@ -41,11 +45,7 @@ verify_docker_install() {
   docker info >/dev/null
   docker compose version >/dev/null
   docker buildx version >/dev/null
-  if have systemctl; then
-    systemctl is-active --quiet docker.service || die 'Docker service is not active.'
-  else
-    warn 'systemd is unavailable; Docker service state could not be verified with systemctl.'
-  fi
+  systemctl is-active --quiet docker.service || die 'Docker service is not active.'
 
   docker rm -f "$test_container" >/dev/null 2>&1 || true
   if ! docker run --name "$test_container" --rm hello-world >/dev/null; then
@@ -65,9 +65,6 @@ if have docker; then
   verify_docker_install
   exit 0
 fi
-[[ $OS_ID == ubuntu || $OS_ID == debian ]] || die "This local installer supports official Docker repositories on Ubuntu and Debian only. Follow https://docs.docker.com/engine/install/ for $OS_ID, then continue with the skill workflow."
-have apt-get || die 'apt-get is required by this installer.'
-[[ -n $OS_CODENAME ]] || die 'The distribution codename is missing; cannot select Docker packages safely.'
 
 CONFLICTS=()
 for package in docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc; do
@@ -85,14 +82,15 @@ apt-get install -y ca-certificates curl
 install -d -m 0755 /etc/apt/keyrings
 KEY_TMP=$(mktemp)
 trap 'rm -f "$KEY_TMP"' EXIT
-curl -fsSL "https://download.docker.com/linux/${OS_ID}/gpg" -o "$KEY_TMP"
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o "$KEY_TMP"
 grep -q 'BEGIN PGP PUBLIC KEY BLOCK' "$KEY_TMP" || die 'The downloaded Docker signing key was unexpected.'
 install -m 0644 "$KEY_TMP" /etc/apt/keyrings/docker.asc
 
 ARCH=$(dpkg --print-architecture)
+[[ $ARCH == amd64 || $ARCH == arm64 ]] || die "Unsupported architecture for Docker APT packages: $ARCH"
 cat >/etc/apt/sources.list.d/docker.sources <<EOF
 Types: deb
-URIs: https://download.docker.com/linux/${OS_ID}
+URIs: https://download.docker.com/linux/ubuntu
 Suites: ${OS_CODENAME}
 Components: stable
 Architectures: ${ARCH}
@@ -109,8 +107,7 @@ verify_docker_install
 log "Docker installed: $(docker --version)"
 cat <<'EOF'
 Docker-published traffic can bypass host-input rules such as UFW. A verified
-provider firewall or reviewed Docker-aware policy must control public ingress.
-Bind private ports explicitly to loopback or the intended Tailscale address,
-and publish public ports only with explicit approval. Verify every published
-port externally.
+provider firewall must control public ingress. Bind private ports explicitly to
+loopback or the intended Tailscale address, and publish public ports only with
+explicit approval. Verify every published port externally.
 EOF

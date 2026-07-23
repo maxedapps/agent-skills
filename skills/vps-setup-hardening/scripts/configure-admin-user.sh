@@ -14,6 +14,8 @@ Creates or updates a named administrator, grants passwordless sudo, and installs
 SSH authorized keys. If FILE is omitted, the script reuses the administrator's
 existing keys, the invoking sudo user's keys, or root's keys—in that order.
 It does not change sshd or firewall settings.
+
+Requires a supported profile (ubuntu or al2023-ec2).
 EOF
 }
 
@@ -28,8 +30,10 @@ while [[ $# -gt 0 ]]; do
     *) die "Unknown argument: $1" ;;
   esac
 done
-require_root "${ORIGINAL_ARGS[@]}"
+[[ -n $ADMIN ]] || die 'Provide a valid lowercase Linux username with --admin.'
 [[ $ADMIN =~ ^[a-z_][a-z0-9_-]*[$]?$ ]] || die 'Provide a valid lowercase Linux username with --admin.'
+require_root "${ORIGINAL_ARGS[@]}"
+detect_profile
 
 if id "$ADMIN" >/dev/null 2>&1; then
   log "Administrator account already exists: $ADMIN"
@@ -47,6 +51,10 @@ fi
 ADMIN_HOME=$(getent passwd "$ADMIN" | awk -F: '{print $6}')
 [[ -n $ADMIN_HOME && -d $ADMIN_HOME ]] || die "Could not determine a home directory for $ADMIN."
 ADMIN_GROUP=$(id -gn "$ADMIN")
+ADMIN_SHELL=$(getent passwd "$ADMIN" | awk -F: '{print $7}')
+case "$ADMIN_SHELL" in
+  */nologin|*/false) die "Administrator $ADMIN has a non-login shell: $ADMIN_SHELL" ;;
+esac
 
 if getent group sudo >/dev/null 2>&1; then
   usermod -aG sudo "$ADMIN"
@@ -98,6 +106,7 @@ ssh-keygen -lf "$KEYS_TMP" >/dev/null 2>&1 || die 'The authorized-keys input con
 install -m 0600 -o "$ADMIN" -g "$ADMIN_GROUP" "$KEYS_TMP" "$ADMIN_KEYS"
 chmod 0750 "$ADMIN_HOME"
 log "Installed SSH keys for $ADMIN from $KEY_SOURCE."
+log "Passwordless sudo means possession of this SSH key is root-equivalent."
 
 SSH_PORT=$(detect_ssh_port || printf '22')
 echo

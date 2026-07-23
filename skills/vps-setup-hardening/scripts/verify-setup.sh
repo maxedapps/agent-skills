@@ -8,43 +8,79 @@ source "$SCRIPT_DIR/lib/common.sh"
 usage() {
   cat <<'EOF'
 Usage:
-  sudo ./scripts/verify-setup.sh --firewall host|external [--admin USER]
+  sudo ./scripts/verify-setup.sh --profile ubuntu|al2023-ec2
+    --ingress host|external [--admin USER]
     [--ssh-access public|tailscale-only]
-    [--confirmed-external-firewall-tested]
+    [--confirmed-external-ingress-tested]
+    [--confirmed-security-group-tested]
 
-Checks the local baseline and expected SSH-access mode, prints listeners and
-published container ports, and emits a concise current-state report.
+Emits pass/fail/warning evidence only. Write the human report from
+assets/final-report.md using this evidence plus independent external tests.
 
-External mode never claims to classify a provider or separate Docker-aware
-policy locally. It requires the confirmation flag after intended access and
-public IPv4/IPv6 exposure have been tested independently.
+Ubuntu:
+  --ingress host                      UFW mode (invalid with Docker present)
+  --ingress external + confirmation   provider firewall evidence recorded
+
+AL2023:
+  --ingress external + --confirmed-security-group-tested
 EOF
 }
 
 ORIGINAL_ARGS=("$@")
 ADMIN=''
 SSH_ACCESS=public
-FIREWALL_MODE=''
-EXTERNAL_FIREWALL_CONFIRMED=false
+PROFILE_ARG=''
+INGRESS=''
+EXTERNAL_CONFIRMED=false
+SG_CONFIRMED=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --admin) [[ $# -ge 2 ]] || die '--admin requires a value.'; ADMIN=$2; shift 2 ;;
     --ssh-access) [[ $# -ge 2 ]] || die '--ssh-access requires a value.'; SSH_ACCESS=$2; shift 2 ;;
-    --firewall) [[ $# -ge 2 ]] || die '--firewall requires host or external.'; FIREWALL_MODE=$2; shift 2 ;;
-    --confirmed-external-firewall-tested) EXTERNAL_FIREWALL_CONFIRMED=true; shift ;;
+    --profile) [[ $# -ge 2 ]] || die '--profile requires ubuntu or al2023-ec2.'; PROFILE_ARG=$2; shift 2 ;;
+    --ingress) [[ $# -ge 2 ]] || die '--ingress requires host or external.'; INGRESS=$2; shift 2 ;;
+    --confirmed-external-ingress-tested) EXTERNAL_CONFIRMED=true; shift ;;
+    --confirmed-security-group-tested) SG_CONFIRMED=true; shift ;;
+    --firewall) die 'Replaced by --profile and --ingress. See --help.' ;;
+    --confirmed-external-firewall-tested) die 'Replaced by --confirmed-external-ingress-tested or --confirmed-security-group-tested.' ;;
     --help) usage; exit 0 ;;
     *) die "Unknown argument: $1" ;;
   esac
 done
-require_root "${ORIGINAL_ARGS[@]}"
+[[ $PROFILE_ARG == ubuntu || $PROFILE_ARG == al2023-ec2 ]] || die '--profile must be ubuntu or al2023-ec2.'
 [[ $SSH_ACCESS == public || $SSH_ACCESS == tailscale-only ]] || die '--ssh-access must be public or tailscale-only.'
-[[ $FIREWALL_MODE == host || $FIREWALL_MODE == external ]] || die '--firewall must be host or external.'
-if [[ $EXTERNAL_FIREWALL_CONFIRMED == true && $FIREWALL_MODE != external ]]; then
-  die '--confirmed-external-firewall-tested is valid only with --firewall external.'
+[[ $INGRESS == host || $INGRESS == external ]] || die '--ingress must be host or external.'
+
+if [[ $PROFILE_ARG == ubuntu ]]; then
+  if [[ $INGRESS == host && $EXTERNAL_CONFIRMED == true ]]; then
+    die '--confirmed-external-ingress-tested is valid only with --ingress external.'
+  fi
+  if [[ $SG_CONFIRMED == true ]]; then
+    die '--confirmed-security-group-tested is valid only with --profile al2023-ec2.'
+  fi
+  if [[ $INGRESS == external && $EXTERNAL_CONFIRMED == false ]]; then
+    die 'Ubuntu external ingress requires completed independent access and public IPv4/IPv6 exposure tests, then --confirmed-external-ingress-tested.'
+  fi
+elif [[ $PROFILE_ARG == al2023-ec2 ]]; then
+  [[ $INGRESS == external ]] || die 'al2023-ec2 requires --ingress external (EC2 Security Groups).'
+  if [[ $EXTERNAL_CONFIRMED == true ]]; then
+    die 'Use --confirmed-security-group-tested for al2023-ec2, not --confirmed-external-ingress-tested.'
+  fi
+  if [[ $SG_CONFIRMED == false ]]; then
+    die 'al2023-ec2 requires completed independent access and public IPv4/IPv6 exposure tests, then --confirmed-security-group-tested.'
+  fi
+  if [[ $INGRESS == host ]]; then
+    die 'al2023-ec2 does not support host firewall ingress.'
+  fi
 fi
-if [[ $FIREWALL_MODE == external && $EXTERNAL_FIREWALL_CONFIRMED == false ]]; then
-  die 'External firewall mode requires completed independent access and public IPv4/IPv6 exposure tests, then --confirmed-external-firewall-tested.'
+
+require_root "${ORIGINAL_ARGS[@]}"
+detect_profile
+[[ $PROFILE_ARG == "$PROFILE" ]] || die "Host profile is '$PROFILE' but --profile '$PROFILE_ARG' was supplied."
+if [[ $PROFILE == ubuntu ]] && have docker && [[ $INGRESS == host ]]; then
+  die 'Docker is present; --ingress host is invalid. Use external/provider ingress with confirmation.'
 fi
+
 SSH_PORT=$(detect_ssh_port) || die 'Could not determine the SSH listening port safely.'
 
 FAILURES=0
@@ -52,6 +88,9 @@ WARNINGS=0
 pass() { printf '[PASS] %s\n' "$*"; }
 fail() { printf '[FAIL] %s\n' "$*"; FAILURES=$((FAILURES + 1)); }
 check_warn() { printf '[WARN] %s\n' "$*"; WARNINGS=$((WARNINGS + 1)); }
+
+pass "Profile: $PROFILE ($OS_PRETTY_NAME $OS_VERSION_ID, $ARCH_NORMALIZED)"
+pass "SSH listening port detected: $SSH_PORT"
 
 if [[ -n $ADMIN ]]; then
   if id "$ADMIN" >/dev/null 2>&1; then
@@ -78,97 +117,90 @@ else
   fail 'sshd is unavailable'
 fi
 
-UFW_ACTIVE=false
-FIREWALLD_ACTIVE=false
-if have ufw && ufw status 2>/dev/null | grep -q '^Status: active'; then UFW_ACTIVE=true; fi
-if have firewall-cmd && firewall-cmd --state 2>/dev/null | grep -q '^running$'; then FIREWALLD_ACTIVE=true; fi
-
-if [[ $FIREWALL_MODE == external ]]; then
-  pass 'External firewall mode selected; separate ingress policy is not classified locally'
-  pass 'Independent intended-access and public IPv4/IPv6 exposure tests were confirmed'
-  if [[ $UFW_ACTIVE == true || $FIREWALLD_ACTIVE == true ]]; then
-    check_warn 'A host firewall is also active; external mode does not classify its rules'
-  fi
-else
-if [[ $UFW_ACTIVE == true && $FIREWALLD_ACTIVE == true ]]; then
-  fail 'Both UFW and firewalld are active'
-elif [[ $UFW_ACTIVE == true ]]; then
-  UFW_STATUS=$(ufw status numbered)
-  pass 'UFW is active'
-  UFW_UNKNOWN=$(grep -E '^\[[[:space:]]*[0-9]+\]' <<<"$UFW_STATUS" | grep -v 'Agent Recipes' || true)
-  if [[ -z $UFW_UNKNOWN ]]; then pass 'UFW contains only recognized skill rules'; else fail 'UFW contains unrecognized rules that require review'; fi
-  if [[ $SSH_ACCESS == tailscale-only ]]; then
-    if grep -q 'Agent Recipes SSH over Tailscale' <<<"$UFW_STATUS"; then pass 'UFW permits SSH over Tailscale'; else fail 'UFW lacks the managed Tailscale SSH rule'; fi
-    if grep -q 'Agent Recipes temporary public SSH' <<<"$UFW_STATUS"; then fail 'UFW still permits managed public SSH'; else pass 'UFW managed public SSH rule is absent'; fi
+# --- Profile-specific ingress / update / MAC / reboot ---
+if [[ $PROFILE == ubuntu ]]; then
+  if [[ $INGRESS == external ]]; then
+    pass 'Ubuntu external/provider ingress mode; separate ingress policy is not classified locally'
+    pass 'Independent intended-access and public IPv4/IPv6 exposure tests were confirmed'
   else
-    if grep -q 'Agent Recipes temporary public SSH' <<<"$UFW_STATUS"; then pass 'UFW permits managed public SSH'; else check_warn 'The managed public SSH rule was not recognized'; fi
-  fi
-elif [[ $FIREWALLD_ACTIVE == true ]]; then
-  pass 'firewalld is active'
-  PUBLIC_ZONE=$(firewalld_public_zone || true)
-  if [[ -z $PUBLIC_ZONE ]]; then
-    fail 'The public firewalld zone could not be determined'
-  else
-    RUNTIME_TARGET=$(firewall-cmd --zone="$PUBLIC_ZONE" --get-target 2>/dev/null || true)
-    PERMANENT_TARGET=$(firewall-cmd --permanent --zone="$PUBLIC_ZONE" --get-target 2>/dev/null || true)
-    if [[ $RUNTIME_TARGET != ACCEPT && $PERMANENT_TARGET != ACCEPT ]]; then pass "Public firewalld zone $PUBLIC_ZONE is default-deny"; else fail "Public firewalld zone $PUBLIC_ZONE has target ACCEPT"; fi
-  fi
-  FIREWALLD_ADVANCED=''
-  for zone in $(firewall-cmd --get-zones); do
-    [[ $zone == tailscale ]] && continue
-    for mode in runtime permanent; do
-      if [[ $mode == permanent ]]; then FW_ARGS=(--permanent --zone="$zone"); else FW_ARGS=(--zone="$zone"); fi
-      for option in --list-rich-rules --list-source-ports --list-forward-ports --list-protocols; do
-        VALUE=$(firewall-cmd "${FW_ARGS[@]}" "$option" 2>/dev/null || true)
-        [[ -n $VALUE ]] && FIREWALLD_ADVANCED+=" ${zone}:${mode}:${option}"
-      done
-    done
-  done
-  DIRECT_RUNTIME=$(firewall-cmd --direct --get-all-rules 2>/dev/null || true)
-  DIRECT_PERMANENT=$(firewall-cmd --permanent --direct --get-all-rules 2>/dev/null || true)
-  [[ -z $DIRECT_RUNTIME && -z $DIRECT_PERMANENT ]] || FIREWALLD_ADVANCED+=' direct-rules'
-  for mode in runtime permanent; do
-    if [[ $mode == permanent ]]; then POLICIES=$(firewall-cmd --permanent --get-policies 2>/dev/null || true); else POLICIES=$(firewall-cmd --get-policies 2>/dev/null || true); fi
-    for policy in $POLICIES; do
-      [[ $policy == allow-host-ipv6 || $policy == docker-forwarding ]] || FIREWALLD_ADVANCED+=" unexpected-policy:${mode}:${policy}"
-    done
-  done
-  if [[ -z $FIREWALLD_ADVANCED ]]; then pass 'No unsupported firewalld rich/direct exposure rules were found'; else fail "Unsupported firewalld rules require review:${FIREWALLD_ADVANCED}"; fi
-
-  if [[ $SSH_ACCESS == tailscale-only ]]; then
-    FIREWALLD_REMAINING=''
-    for zone in $(firewall-cmd --get-zones); do
-      [[ $zone == tailscale ]] && continue
-      for mode in runtime permanent; do
-        if [[ $mode == permanent ]]; then FW_ARGS=(--permanent --zone="$zone"); INFO_ARGS=(--permanent); else FW_ARGS=(--zone="$zone"); INFO_ARGS=(); fi
-        if firewall-cmd "${FW_ARGS[@]}" --query-service=ssh >/dev/null 2>&1 \
-          || firewall-cmd "${FW_ARGS[@]}" --query-port="$SSH_PORT/tcp" >/dev/null 2>&1; then
-          FIREWALLD_REMAINING+=" ${zone}:${mode}"
-        fi
-        for service in $(firewall-cmd "${FW_ARGS[@]}" --list-services); do
-          SERVICE_PORTS=$(firewall-cmd "${INFO_ARGS[@]}" --info-service="$service" 2>/dev/null | awk -F': ' '$1 ~ /^[[:space:]]*ports$/ {print $2}')
-          if grep -Eq "(^|[[:space:]])${SSH_PORT}/tcp($|[[:space:]])" <<<"$SERVICE_PORTS"; then
-            FIREWALLD_REMAINING+=" ${zone}:${mode}:${service}"
-          fi
-        done
-      done
-    done
-    if [[ -z $FIREWALLD_REMAINING ]]; then pass 'firewalld has no standard public SSH allowance'; else fail "firewalld still allows SSH in:${FIREWALLD_REMAINING}"; fi
-    if firewall-cmd --zone=tailscale --query-port="$SSH_PORT/tcp" >/dev/null 2>&1; then pass 'firewalld permits SSH in the Tailscale zone'; else fail 'firewalld lacks Tailscale-zone SSH access'; fi
-  else
-    if [[ -n $PUBLIC_ZONE ]] && { firewall-cmd --zone="$PUBLIC_ZONE" --query-service=ssh >/dev/null 2>&1 || firewall-cmd --zone="$PUBLIC_ZONE" --query-port="$SSH_PORT/tcp" >/dev/null 2>&1; }; then
-      pass "firewalld permits public SSH in zone $PUBLIC_ZONE"
+    if have ufw && ufw status 2>/dev/null | grep -q '^Status: active'; then
+      UFW_STATUS=$(ufw status numbered)
+      pass 'UFW is active'
+      UFW_UNKNOWN=$(grep -E '^\[[[:space:]]*[0-9]+\]' <<<"$UFW_STATUS" | grep -v 'Agent Recipes' || true)
+      if [[ -z $UFW_UNKNOWN ]]; then pass 'UFW contains only recognized skill rules'; else fail 'UFW contains unrecognized rules that require review'; fi
+      if [[ $SSH_ACCESS == tailscale-only ]]; then
+        if grep -q 'Agent Recipes SSH over Tailscale' <<<"$UFW_STATUS"; then pass 'UFW permits SSH over Tailscale'; else fail 'UFW lacks the managed Tailscale SSH rule'; fi
+        if grep -q 'Agent Recipes temporary public SSH' <<<"$UFW_STATUS"; then fail 'UFW still permits managed public SSH'; else pass 'UFW managed public SSH rule is absent'; fi
+      else
+        if grep -q 'Agent Recipes temporary public SSH' <<<"$UFW_STATUS"; then pass 'UFW permits managed public SSH'; else check_warn 'The managed public SSH rule was not recognized'; fi
+      fi
     else
-      check_warn 'A public SSH firewalld allowance was not recognized'
+      fail 'No active UFW host firewall was found for --ingress host'
     fi
   fi
-elif have nft && nft list ruleset 2>/dev/null | grep -q .; then
-  check_warn 'An nftables ruleset exists but this verifier cannot classify its policy safely.'
-else
-  fail 'No active supported host firewall was found'
-fi
+
+  if have aa-status; then
+    if aa-status --enabled >/dev/null 2>&1; then pass 'AppArmor is enabled'; else check_warn 'AppArmor is not enabled'; fi
+  else
+    check_warn 'AppArmor status utility was not found.'
+  fi
+
+  if [[ -f /etc/apt/apt.conf.d/20auto-upgrades ]] \
+    && grep -q 'Unattended-Upgrade "1"' /etc/apt/apt.conf.d/20auto-upgrades; then
+    pass 'APT unattended upgrades are enabled'
+  else
+    check_warn 'APT unattended upgrades configuration was not recognized.'
+  fi
+  ORIGINS_BLOB=$(grep -RhsE 'Allowed-Origins|Origins-Pattern|origin=' /etc/apt/apt.conf.d 2>/dev/null || true)
+  if grep -Eiq 'security|\\$\{distro_codename\}-security|UbuntuESM' <<<"$ORIGINS_BLOB"; then
+    pass 'Unattended-upgrade security origins qualification is present'
+  elif [[ -n $ORIGINS_BLOB ]]; then
+    check_warn 'unattended-upgrades origins config is present but a security origin could not be qualified'
+  else
+    check_warn 'No unattended-upgrades origins configuration was found to qualify'
+  fi
+  if grep -Rqs 'Automatic-Reboot "true"' /etc/apt/apt.conf.d 2>/dev/null; then
+    fail 'APT unattended upgrades are configured to reboot automatically'
+  else
+    pass 'No APT automatic-reboot setting was found'
+  fi
+  if [[ -e /var/run/reboot-required ]]; then check_warn 'Ubuntu reboot-required marker is present'; else pass 'No Ubuntu reboot-required marker is present'; fi
+
+elif [[ $PROFILE == al2023-ec2 ]]; then
+  pass 'AL2023 external Security Group ingress mode; SG policy is not classified locally'
+  pass 'Independent intended-access and public IPv4/IPv6 exposure tests were confirmed (--confirmed-security-group-tested)'
+  if have getenforce; then
+    SELINUX_MODE=$(getenforce)
+    if [[ $SELINUX_MODE == Enforcing ]]; then
+      pass 'SELinux is enforcing'
+    elif [[ $SELINUX_MODE == Permissive ]]; then
+      check_warn 'SELinux is permissive (enabled but not enforcing)'
+    else
+      check_warn "SELinux mode is $SELINUX_MODE"
+    fi
+  else
+    check_warn 'SELinux status utility was not found.'
+  fi
+  if rpm -q system-release >/dev/null 2>&1; then
+    REL=$(rpm -q system-release --qf '%{VERSION}\n')
+    pass "Pinned AL2023 system-release version: $REL"
+  else
+    fail 'system-release package is not installed'
+  fi
+  check_warn 'AL2023 does not claim automatic release upgrades; treat dnf check-release-update results as manual maintenance.'
+  if have needs-restarting; then
+    if needs-restarting -r >/dev/null 2>&1; then
+      pass 'needs-restarting -r does not indicate a required reboot'
+    else
+      check_warn 'needs-restarting -r indicates a reboot is advisable'
+    fi
+  fi
+  if [[ -e /var/run/smart-restart/needs-restart ]]; then
+    check_warn 'smart-restart reboot marker is present'
+  fi
 fi
 
+# --- Shared checks ---
 if have tailscale; then
   if tailscale status >/dev/null 2>&1 && [[ -d /sys/class/net/tailscale0 ]]; then
     pass "Tailscale is connected: $(tailscale ip -4 2>/dev/null || printf 'address unavailable')"
@@ -195,30 +227,6 @@ else
   check_warn 'Time synchronization status could not be determined.'
 fi
 
-if have aa-status; then
-  if aa-status --enabled >/dev/null 2>&1; then pass 'AppArmor is enabled'; else check_warn 'AppArmor is not enabled'; fi
-elif have getenforce; then
-  if [[ $(getenforce) == Enforcing ]]; then pass 'SELinux is enforcing'; else check_warn "SELinux mode is $(getenforce)"; fi
-else
-  check_warn 'No AppArmor or SELinux status utility was found.'
-fi
-
-if [[ -f /etc/apt/apt.conf.d/20auto-upgrades ]] \
-  && grep -q 'Unattended-Upgrade "1"' /etc/apt/apt.conf.d/20auto-upgrades; then
-  pass 'APT unattended upgrades are enabled'
-elif have systemctl && systemctl is-enabled --quiet dnf-automatic.timer 2>/dev/null; then
-  pass 'DNF automatic updates are enabled'
-else
-  check_warn 'Automatic security updates were not recognized by this verifier.'
-fi
-if grep -Rqs 'Automatic-Reboot "true"' /etc/apt/apt.conf.d 2>/dev/null; then
-  fail 'APT unattended upgrades are configured to reboot automatically'
-else
-  pass 'No APT automatic-reboot setting was found'
-fi
-
-if [[ -e /var/run/reboot-required ]]; then check_warn 'A reboot is required'; else pass 'No reboot-required marker is present'; fi
-
 if have systemctl; then
   FAILED_UNITS=$(systemctl --failed --no-legend 2>/dev/null | awk 'NF {count++} END {print count+0}')
   if [[ $FAILED_UNITS -eq 0 ]]; then pass 'No failed systemd units'; else check_warn "$FAILED_UNITS systemd unit(s) are failed"; fi
@@ -235,51 +243,34 @@ if have docker; then
   if docker info >/dev/null 2>&1; then pass 'Docker Engine is responding'; else fail 'Docker Engine is not responding'; fi
   if docker compose version >/dev/null 2>&1; then pass "Docker Compose is available: $(docker compose version --short 2>/dev/null || docker compose version)"; else fail 'Docker Compose plugin is unavailable'; fi
   if docker buildx version >/dev/null 2>&1; then pass "Docker Buildx is available: $(docker buildx version | awk '{print $2}')"; else fail 'Docker Buildx plugin is unavailable'; fi
-  if have systemctl; then
-    if systemctl is-active --quiet docker.service; then pass 'Docker service is active'; else fail 'Docker service is not active'; fi
+  if systemctl is-active --quiet docker.service; then pass 'Docker service is active'; else fail 'Docker service is not active'; fi
+  if [[ $INGRESS != external ]]; then
+    fail 'Docker is present without external/provider/SG ingress mode'
   fi
   echo
   echo '=== Docker published ports ==='
   docker ps --format 'table {{.Names}}\t{{.Ports}}' || check_warn 'Could not inspect Docker published ports.'
 fi
-if have node; then printf '\nNode.js: %s; npm: %s\n' "$(node --version)" "$(npm --version)"; fi
+
+if have node; then
+  pass "Node.js: $(node --version); npm: $(npm --version 2>/dev/null || printf 'unavailable')"
+  if [[ $PROFILE == al2023-ec2 ]] && have alternatives; then
+    if alternatives --display node >/dev/null 2>&1; then
+      pass 'alternatives node entry is present'
+    else
+      check_warn 'alternatives node entry was not found'
+    fi
+  fi
+fi
 
 printf '\nVerification complete: %s failure(s), %s warning(s).\n' "$FAILURES" "$WARNINGS"
-
-load_os_release
-printf '\n=== Current setup report ===\n'
-printf 'Platform: %s %s (%s)\n' "${PRETTY_NAME:-$OS_ID}" "$OS_VERSION_ID" "$(uname -m)"
-printf 'Kernel: %s\n' "$(uname -r)"
-printf 'Administrator: %s\n' "${ADMIN:-not supplied}"
-printf 'SSH access: %s on TCP port %s\n' "$SSH_ACCESS" "$SSH_PORT"
-printf 'Firewall strategy: %s\n' "$FIREWALL_MODE"
-if [[ $FIREWALL_MODE == external ]]; then
-  echo 'External exposure evidence: independently tested and confirmed; separate ingress policy not classified locally'
-else
-  echo 'External exposure evidence: still required; local host-firewall checks are not sufficient'
-fi
-if have tailscale; then printf 'Tailscale: %s\n' "$(tailscale version 2>/dev/null | head -n 1 || printf 'installed')"; else echo 'Tailscale: not installed'; fi
-if have docker; then
-  printf 'Docker: %s; Compose: %s; Buildx: %s\n' \
-    "$(docker --version)" \
-    "$(docker compose version --short 2>/dev/null || printf 'unavailable')" \
-    "$(docker buildx version 2>/dev/null | awk '{print $2}' || printf 'unavailable')"
-else
-  echo 'Docker: not installed'
-fi
-if have node; then printf 'Node.js: %s; npm: %s\n' "$(node --version)" "$(npm --version)"; else echo 'Node.js: not installed'; fi
-if have pnpm; then printf 'pnpm: %s\n' "$(pnpm --version)"; fi
-if [[ -e /var/run/reboot-required ]]; then echo 'Reboot: required'; else echo 'Reboot: no reboot-required marker'; fi
-printf 'Result: %s failure(s), %s warning(s)\n' "$FAILURES" "$WARNINGS"
-
-echo
 if [[ $FAILURES -gt 0 ]]; then
   echo 'Remaining work: resolve the failures above before declaring setup complete.'
-elif [[ -e /var/run/reboot-required ]]; then
+elif [[ $PROFILE == ubuntu && -e /var/run/reboot-required ]]; then
   echo 'Remaining work: reboot after access checks, reconnect through the intended path, and repeat verification.'
-elif [[ $FIREWALL_MODE == host ]]; then
-  echo 'Remaining work: confirm intended SSH, expected public-SSH behavior, and public IPv4/IPv6 exposure from another machine.'
+elif [[ $PROFILE == al2023-ec2 ]] && have needs-restarting && ! needs-restarting -r >/dev/null 2>&1; then
+  echo 'Remaining work: reboot after access checks, reconnect through the intended path, and repeat verification.'
 else
-  echo 'Remaining work: none detected locally; repeat independent exposure checks after future networking, firewall, or runtime changes.'
+  echo 'Remaining work: complete or repeat independent external SSH and exposure checks as applicable; perform profile maintenance (APT full upgrades or AL release upgrades) deliberately.'
 fi
 [[ $FAILURES -eq 0 ]]
