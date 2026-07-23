@@ -7,9 +7,14 @@ message, and the material.
 Contents: [Audience and outcome](#audience-and-outcome-first) ·
 [Message-led titles](#message-led-slide-titles) ·
 [Evidence and provenance](#evidence-research-and-provenance) ·
-[Story structures](#story-structures) · [Density](#density-live-vs-self-paced) ·
-[Hierarchy](#visual-hierarchy) · [Type, color, imagery](#typography-color-imagery) ·
-[Data display](#data-display) · [Layouts](#layouts-and-starter-primitives) ·
+[Story structures](#story-structures) ·
+[Density and delivery](#density-and-delivery) ·
+[Layout contracts](#layout-contracts) ·
+[Use the space](#use-the-space) ·
+[Hierarchy](#visual-hierarchy) ·
+[Type, color, imagery](#typography-color-imagery) ·
+[Data display](#data-display) ·
+[Layouts and primitives](#layouts-and-starter-primitives) ·
 [Anti-patterns](#anti-patterns)
 
 ## Audience and outcome first
@@ -54,14 +59,71 @@ Pick the shape that fits the material; do not force one formula:
 Whatever the shape: one idea per slide, an early stakes-setting slide, and a
 closing slide that restates the message and the next step.
 
-## Density: live vs self-paced
+## Density and delivery
 
-- **Live (presented) decks** support a speaker: fewer words, larger focal
-  elements, stepped reveals (`data-enter`) to pace the narration.
-- **Self-paced (sent) decks** must stand alone: complete sentences, captions
-  that interpret figures, little or no stepping.
-- Ask which mode applies when it is consequential and unclear; it changes
-  nearly every density decision.
+Delivery mode changes density **and** reveal model. Ask when unclear.
+
+| Mode | Density | Reveal default |
+|---|---|---|
+| **Live talk** | Few words, large focal elements | Multi-step `data-enter` to pace narration |
+| **Recorded video / tutorial** | Comfortable reading, roomy gaps | **One-step staggered** (whole body on one ArrowRight) unless the speaker wants multi-step |
+| **Self-paced (sent)** | Complete sentences; captions interpret figures | Little or no stepping |
+
+- Multi-step reveals are for pacing speech, not decoration.
+- One-step staggered: all body nodes share `data-enter="1"`; stagger only via
+  CSS `transition-delay` (see `web-slides.md`). Titles/chrome may stay unstepped.
+- Self-paced decks must stand alone without the speaker.
+
+## Layout contracts
+
+Name the contract per **slide role**. One deck commonly mixes roles —
+that is intentional, not a contradiction.
+
+### Cover / close roles
+
+| Contract | When |
+|---|---|
+| **`cover-center`** | Title stack vertically centered on the stage (default for opening/closing full-bleeds) |
+| **`cover-top`** | Title stack top-aligned like content (rare; only if requested) |
+
+### Content roles
+
+| Contract | When |
+|---|---|
+| **`title-band + body-upper`** | Fixed top title band; body starts soon under it in the upper region with roomy gaps. Default for tutorial/video content slides. |
+| **`title-band + body-center-remaining`** | Fixed top title band; the **group** of body content is vertically centered in the leftover frame (content still content-sized). |
+| **`free-flow`** | No fixed band; only when the slide is a special full-bleed or statement moment. |
+
+**Title band rules (when used):**
+
+- Reserve a fixed-height heading region so eyebrow + title Y stay stable
+  across content slides (two-line title min-height if titles wrap).
+- Do **not** vertically center the whole `.slide` when a title band is in
+  play — that is what makes titles jump as body height changes.
+- Optional `slide-footer` chrome stays pinned via the starter primitive;
+  it is not a substitute for the title band.
+
+**Default combo for video/tutorial decks:** `cover-center` +  
+`title-band + body-upper` + one-step staggered + tutorial-comfortable gaps.
+
+## Use the space
+
+“Use the space” means:
+
+1. Stable hierarchy (titles don’t jump; eye knows where to land).
+2. Content-sized modules (cards/panels fit their text, with sensible padding).
+3. Comfortable gaps between major rows (title → body, body band → body band).
+4. Intentional empty margin — especially a calm lower region on upper-body layouts.
+
+It does **not** mean:
+
+- Stretching cards/bridges/lists to the footer to “fill” leftover height.
+- Centering short text inside a huge empty panel as a substitute for layout.
+- Cramping rows under the title while leaving a dead lower half.
+
+Equal-height cards **within a row** (from the tallest content in that row)
+are fine. Full-slide stretch-fill is not, unless the user explicitly wants
+a full-bleed module.
 
 ## Visual hierarchy
 
@@ -70,26 +132,26 @@ closing slide that restates the message and the next step.
 - Use whitespace as the primary grouping tool; align to the layout grid
   instead of adding boxes and rules.
 - Keep recurring elements (titles, credits, accents) in the same place on
-  every slide so attention goes to what changed; if used, the starter's
-  `slide-header`/`slide-footer` primitives guarantee that same-place
-  rendering regardless of each slide's content height.
+  every content slide so attention goes to what changed.
+- Mix boxed and unboxed content when it helps: lede → cards → aside line,
+  bridge → insight row, steps → short takeaway — not only grids of cards.
 
 ## Typography, color, imagery
 
 - Type: the starter's token scale keeps sizes consistent; change tokens, not
-  ad-hoc sizes. Prefer one family with weight contrast; keep line lengths
-  short and headlines tight.
-- Color: start from a content-derived accent (subject, brand, data meaning)
-  on a restrained neutral base. Check contrast for every text/background
-  pair; never rely on color alone to encode meaning.
-- Themes: optionally start from the shipped theme whose personality matches
-  the content — technical (dark, electric accent), corporate (paper serif),
-  playful (warm rounded) — or skip themes entirely. They are starting points
-  to adapt, never constraints. The playful rounded look is strongest on
-  macOS and degrades to a clean geometric sans elsewhere.
-- Imagery: use images that carry information or mood relevant to the
-  content; full-bleed one strong image rather than tiling several weak
-  ones. No decorative stock filler, no unlicensed material.
+  ad-hoc sizes. Prefer one body family with weight contrast; optional
+  **serif display** for `h1`/`h2` when the art direction calls for it.
+  Keep line lengths short and headlines tight.
+- Color: start from a content-derived accent on a restrained neutral base.
+  Check contrast for every text/background pair; never rely on color alone.
+  If the brief is “accent on text/UI only,” keep backgrounds pure neutral
+  gray/ink gradients — no accent-tinted washes.
+- Themes: optionally start from technical / corporate / playful — starting
+  points to adapt, never constraints. Override accent, surfaces, and type
+  tokens after copy. Playful rounded look is strongest on macOS.
+- Imagery: use images that carry information or mood; full-bleed one strong
+  image rather than tiling weak ones. No decorative stock filler, no
+  unlicensed material.
 
 ## Data display
 
@@ -103,30 +165,35 @@ closing slide that restates the message and the next step.
 ## Layouts and starter primitives
 
 Map common slide shapes to the starter's composable primitives
-(`assets/slides.css`):
+(`assets/slides.css`), then layer deck-specific structure (title band,
+body stack) in the theme/override CSS:
 
 | Slide shape | Primitives |
 |---|---|
-| Cover / section break | `full-bleed` + `stack` |
+| Cover / section break | `full-bleed` or absolute cover shell + `stack` |
 | Single big claim | `statement` |
 | Point beside evidence or code | `split` (+ `code`, `media`) |
 | Comparison / option cards | `grid` + `card` |
 | Key metrics | `cluster` + `statistic` |
 | Attributed quote | `quote` |
 | Figure with caption | `media` |
-| Recurring header/footer | `slide-header`, `slide-footer` |
+| Recurring footer chrome | `slide-footer` |
+| Fixed content titles | deck `slide-heading` band (not in starter; add in theme CSS) |
 
-Compose these before inventing new CSS; add a new primitive only when a
+Compose primitives before inventing new CSS; add a new primitive only when a
 layout genuinely recurs and none fits.
 
 ## Anti-patterns
 
 - Topic-label titles; walls of bullets read aloud; paragraph slides in a
   live deck.
-- Decoration unrelated to content: gradients, icons, or stock photos as
-  filler.
-- Charts pasted with default styling and no stated finding.
-- Stepped reveals used as spectacle rather than pacing; animation on every
-  element.
+- Vertically centering entire content slides when titles must stay locked.
+- Stretch-filling cards/panels to consume empty viewport (“fake density”).
+- Treating cover-center and content title-band as mutually exclusive.
+- Multi-step reveals for video decks that only needed one staggered step.
+- Accent-colored background washes when the brief wanted neutral surfaces.
+- Rewriting user-edited copy while “fixing layout.”
+- Decoration unrelated to content; charts with no stated finding.
+- Stepped reveals as spectacle; animation on every element.
 - Uncredited data, quotes, or imagery; invented specifics.
 - Many ideas crammed on one slide to reduce slide count — split instead.

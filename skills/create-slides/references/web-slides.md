@@ -6,7 +6,10 @@ optionally one `theme-*.css` override) works and where you may extend it. The ru
 
 Contents: [DOM and state contract](#dom-and-state-contract) ·
 [Navigation](#navigation) · [Runtime API](#runtime-api) ·
-[CSS structure](#css-structure) · [Motion](#motion-and-choreography) ·
+[CSS structure](#css-structure) ·
+[Layout implementation notes](#layout-implementation-notes) ·
+[Motion](#motion-and-choreography) ·
+[One-step staggered reveals](#one-step-staggered-reveals) ·
 [Responsive and print](#responsive-and-print) ·
 [Accessibility](#accessibility) · [Extend vs rebuild](#extend-vs-rebuild) ·
 [Browser QA checklist](#browser-qa-checklist)
@@ -91,6 +94,45 @@ a competing key listener with its own state).
   `[data-step-state="..."]` selectors; add per-deck overrides on those same
   hooks.
 
+## Layout implementation notes
+
+The starter centers each `.slide` (`justify-content: center`). That is fine
+for simple sample slides and for **`cover-center`**. It is the wrong default
+for content slides that need a locked title position.
+
+### Title band + body (content slides)
+
+Typical structure:
+
+```html
+<section class="slide">
+  <header class="slide-heading">
+    <p class="eyebrow">…</p>
+    <h2>…</h2>
+  </header>
+  <div class="slide-body">…</div>
+  <footer class="slide-footer">…</footer>
+</section>
+```
+
+Theme/override CSS pattern:
+
+- `.slide { justify-content: flex-start; }` for content slides (not cover).
+- `.slide-heading` fixed height (room for eyebrow + two-line title).
+- `.slide-body { flex: 1; display: flex; flex-direction: column; }` with
+  either `justify-content: flex-start` + top padding (**body-upper**) or
+  `justify-content: center` (**body-center-remaining**).
+- Body children stay `flex: 0 0 auto` — content-sized. Do not set
+  `flex: 1` / `height: 100%` on cards merely to fill the stage.
+- Equal-height cards inside one grid/split row: stretch items to the row’s
+  content height only.
+
+### Cover center
+
+Keep cover as its own shell (often `position: absolute; inset: 0` inside a
+padding-less `.slide--cover`) with `justify-content: center`. Do not reuse
+the content title-band on the cover unless the art direction says so.
+
 ## Motion and choreography
 
 - Motion is purposeful pacing, not spectacle: reveal to direct attention,
@@ -106,6 +148,31 @@ a competing key listener with its own state).
 - Reduced motion: the starter's media query removes transitions and
   translation so every state change is an instant opacity flip. Any motion
   you add must collapse the same way — same content states, no movement.
+
+## One-step staggered reveals
+
+When the art direction is **one-step staggered** (common for video):
+
+1. Leave titles/eyebrows unstepped (visible at step 0) unless the cover
+   deliberately reveals subtitle lines.
+2. Put `data-enter="1"` on every body node that should appear together.
+3. Stagger **only** with CSS delay, e.g. `--stagger: 0|1|2` on nodes and:
+
+```css
+[data-enter][data-step-state="active"] {
+  transition-delay: calc(var(--stagger, 0) * 70ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-enter][data-step-state="active"] { transition-delay: 0ms !important; }
+}
+```
+
+4. Expect each content slide’s `finalStep` to be `1` (plus cover/close if
+   they also use a single enter step). Do not use `data-enter="2"`+ unless
+   the speaker truly wants another keypress.
+
+Equal `data-enter` values already group in the runtime; stagger is visual
+only and must not require extra navigation steps.
 
 ## Responsive and print
 
@@ -150,6 +217,8 @@ deck's step map headlessly: `require()` the copied `slides.js` in Node and
 feed each node's attribute strings through `stepPair`/`finalStep` to
 confirm every slide's expected final step and grouping.
 
+### Runtime
+
 Run in a real browser (e.g. `agent-browser`) on the finished deck:
 
 - ArrowRight/ArrowDown through every step of every slide to the end; then
@@ -160,6 +229,31 @@ Run in a real browser (e.g. `agent-browser`) on the finished deck:
 - Console has no errors or warnings from the deck.
 - Recurring chrome (`slide-header`/`slide-footer`) renders at identical
   coordinates on every slide that has it — no jumping between slides.
-- Emulate reduced motion — identical states, no movement.
+- Emulate reduced motion — identical states, no movement (stagger delays 0).
 - Resize to a small window — layout letterboxes, text stays legible.
 - Close the browser and stop any helper processes when done.
+
+### Composition
+
+Still in the browser (measure with `getBoundingClientRect` if unsure):
+
+- Content title-band slides: eyebrow/title tops match across several slides.
+- Cover (if `cover-center`): content block midY ≈ stage midY.
+- Cards/panels are not stretch-filled: no tall empty interiors with a thin
+  text cap at the top or middle unless deliberately designed as a hero.
+- Major body rows have even, comfortable gaps; body is not glued under the
+  title while a large empty region sits unused below for no reason.
+- One-step decks: a single ArrowRight on a content slide reveals the full
+  body; `finalSteps[i]` is typically `1` for those slides.
+- Accent-only surfaces: computed background has no accent RGB washes when
+  that constraint was chosen.
+
+Optional debug sketch (adapt selectors to the deck):
+
+```js
+// title lock + body start across content slides
+const stage = document.querySelector('.stage').getBoundingClientRect();
+const h2 = document.querySelector('.slide[data-state=current] .slide-heading h2');
+const body = document.querySelector('.slide[data-state=current] .slide-body');
+// compare (h2.top - stage.top) across slides; inspect body first-child tops
+```

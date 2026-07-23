@@ -96,7 +96,7 @@ Creates, rewrites, reviews, and evidence-backed improves Agent Skills with liter
 
 ### `create-slides`
 
-Creates and materially redesigns polished, dependency-free HTML slide decks (vanilla HTML/CSS/JS) from a tested stepped-reveal starter, with optional pre-built themes (technical, corporate, playful) and position-stable header/footer chrome. Decks open directly from a local `index.html` with no server, build step, or network access; validation requires a browser or browser-automation capability.
+Creates and materially redesigns polished, dependency-free HTML slide decks (vanilla HTML/CSS/JS) from a tested stepped-reveal starter, with optional themes, art-direction intake (cover vs content layout contracts, reveal model, density), and runtime **plus composition** QA. Decks open from a local `index.html` with no server, build step, or network access; validation requires a browser or browser-automation capability.
 
 ### `implement-plan`
 
