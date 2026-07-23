@@ -7,6 +7,7 @@
 - `create-plan` — create, review, and improve researched, implementation-ready plans before coding.
 - `create-skill` — create, rewrite, and review concise, actionable Agent Skills.
 - `create-slides` — create polished, dependency-free HTML slide decks from a tested stepped-reveal starter.
+- `generate-image` — generate AI images through fal.ai HTTP queue workflows (Bun CLI; default `openai/gpt-image-2`).
 - `implement-plan` — execute existing Markdown implementation plans with delegation-first tracking and verification.
 - `use-subagents` — portable delegation policy, assignment contracts, worktree isolation/cleanup for any harness.
 - `use-pi-subagents` — Pi RPC launcher for bounded subagents when native `subagent_*` tools are inactive (use with `use-subagents`).
@@ -35,7 +36,7 @@ npx skills add maxedapps/agent-skills --skill code-review
 npx skills add maxedapps/agent-skills --skill vps-setup-hardening
 ```
 
-Install all ten skills explicitly:
+Install all eleven skills explicitly:
 
 ```sh
 npx skills add maxedapps/agent-skills \
@@ -44,6 +45,7 @@ npx skills add maxedapps/agent-skills \
   --skill create-plan \
   --skill create-skill \
   --skill create-slides \
+  --skill generate-image \
   --skill implement-plan \
   --skill use-subagents \
   --skill use-pi-subagents \
@@ -97,6 +99,10 @@ Creates, rewrites, reviews, and evidence-backed improves Agent Skills with liter
 ### `create-slides`
 
 Creates and materially redesigns polished, dependency-free HTML slide decks (vanilla HTML/CSS/JS) from a tested stepped-reveal starter, with optional themes, art-direction intake (cover vs content layout contracts, reveal model, density), and runtime **plus composition** QA. Decks open from a local `index.html` with no server, build step, or network access; validation requires a browser or browser-automation capability.
+
+### `generate-image`
+
+Generates AI images through fal.ai via a small Bun HTTP/queue CLI. Defaults to `openai/gpt-image-2`, uses `FAL_KEY`, and downloads result files locally for inspection.
 
 ### `implement-plan`
 
