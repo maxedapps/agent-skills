@@ -1,0 +1,27 @@
+/*
+ * Corporate theme — warm paper background, deep navy accent, serif headings
+ * over a humanist sans body. Load AFTER slides.css; it overrides the base
+ * :root tokens by cascade. All text/surface token pairs meet WCAG AA.
+ */
+
+:root {
+  --color-bg: #faf7f1;
+  --color-surface: #f0ebe1;
+  --color-border: #d8d0bf;
+  --color-text: #2b2e33;
+  --color-muted: #5d6069;
+  --color-accent: #1e3a5f;
+  --color-accent-ink: #f7f4ec;
+
+  --font-body: Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro, sans-serif;
+
+  --radius: 0.25em;
+}
+
+/* Serif headings at normal tracking — hierarchy comes from weight, not tightening. */
+h1,
+h2,
+h3 {
+  font-family: Charter, 'Bitstream Charter', 'Sitka Text', Cambria, serif;
+  letter-spacing: normal;
+}

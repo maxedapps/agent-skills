@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Slides Starter</title>
+  <link rel="stylesheet" href="slides.css">
+  <!-- Optional theme (copy the file, keep load order): <link rel="stylesheet" href="theme-technical.css"> -->
+</head>
+<body>
+  <main class="stage" aria-label="Slide deck">
+
+    <!-- Cover -->
+    <section class="slide" aria-label="Cover">
+      <div class="full-bleed stack">
+        <h1>Slides Starter</h1>
+        <p class="muted">A dependency-free HTML, CSS, and JavaScript deck.</p>
+        <p class="cluster" data-enter="1">
+          <kbd>&rarr;</kbd> <span>next step</span>
+          <kbd>&larr;</kbd> <span>previous step</span>
+          <kbd>Shift</kbd>+<kbd>&rarr;</kbd> <span>next slide</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- Statement -->
+    <section class="slide" aria-label="Statement">
+      <p class="statement">One HTML file for content, one stylesheet for the look, one script for navigation.</p>
+      <!-- Recurring chrome: static (no data-enter/exit), same position on every content slide. -->
+      <footer class="slide-footer">
+        <span>Slides Starter</span>
+        <span>Statement</span>
+      </footer>
+    </section>
+
+    <!-- Split: text beside code, with enter, enter+exit, and exit-only steps -->
+    <section class="slide" aria-label="How stepping works">
+      <div class="stack">
+        <h2>Stepped reveals</h2>
+        <div class="split">
+          <ul class="stack--tight">
+            <li data-enter="1">Add <code>data-enter="n"</code> to reveal a node at step n.</li>
+            <li data-enter="2">Add <code>data-exit="n"</code> to hide it again at step n.</li>
+            <li data-enter="3">Nodes with neither attribute are always visible.</li>
+            <li data-enter="2" data-exit="4">This line enters at 2 and exits at 4.</li>
+          </ul>
+          <pre class="code"><code>&lt;li data-enter="1"&gt;...&lt;/li&gt;
+&lt;li data-enter="2"&gt;...&lt;/li&gt;
+&lt;li data-enter="2" data-exit="4"&gt;...&lt;/li&gt;</code></pre>
+        </div>
+        <!-- Exit-only node: visible from step 0, gone from step 1 onward. -->
+        <p class="muted" data-exit="1">This hint is exit-only: press <kbd>&rarr;</kbd> and it leaves.</p>
+      </div>
+      <footer class="slide-footer">
+        <span>Slides Starter</span>
+        <span>Stepped reveals</span>
+      </footer>
+    </section>
+
+    <!-- Grid / comparison with grouped steps (equal data-enter values) -->
+    <section class="slide" aria-label="Layout primitives">
+      <div class="stack">
+        <h2>Layout primitives</h2>
+        <div class="grid">
+          <!-- Grouped step: both cards share data-enter="1" and appear together. -->
+          <article class="card stack--tight" data-enter="1">
+            <h3>stack &amp; cluster</h3>
+            <p class="muted">Vertical flow and wrapping horizontal groups.</p>
+          </article>
+          <article class="card stack--tight" data-enter="1">
+            <h3>split &amp; grid</h3>
+            <p class="muted">Two panes side by side, or auto-fitting cards.</p>
+          </article>
+          <article class="card stack--tight" data-enter="2">
+            <h3>media &amp; statistic</h3>
+            <p class="muted">Captioned figures and big labeled numbers.</p>
+          </article>
+          <article class="card stack--tight" data-enter="2">
+            <h3>quote, code, full-bleed</h3>
+            <p class="muted">Pull quotes, monospace blocks, edge-to-edge areas.</p>
+          </article>
+        </div>
+      </div>
+      <footer class="slide-footer">
+        <span>Slides Starter</span>
+        <span>Layout primitives</span>
+      </footer>
+    </section>
+
+    <!-- Figure / data -->
+    <section class="slide" aria-label="What the starter ships">
+      <div class="stack">
+        <h2>What this starter ships</h2>
+        <div class="split">
+          <div class="cluster">
+            <div class="statistic" data-enter="1">
+              <span class="statistic__value">3</span>
+              <span class="statistic__label">files: HTML, CSS, JS</span>
+            </div>
+            <div class="statistic" data-enter="2">
+              <span class="statistic__value">0</span>
+              <span class="statistic__label">dependencies or build steps</span>
+            </div>
+          </div>
+          <figure class="media" data-enter="3">
+            <svg viewBox="0 0 320 120" role="img" aria-label="Timeline of one slide: step 0 shows the base content, later steps reveal or remove nodes">
+              <line x1="20" y1="60" x2="300" y2="60" stroke="#3a404c" stroke-width="2"/>
+              <circle cx="40" cy="60" r="10" fill="#8ec2ff"/>
+              <circle cx="130" cy="60" r="10" fill="#8ec2ff"/>
+              <circle cx="220" cy="60" r="10" fill="#aab3c0"/>
+              <text x="40" y="95" fill="#aab3c0" font-size="12" text-anchor="middle">step 0</text>
+              <text x="130" y="95" fill="#aab3c0" font-size="12" text-anchor="middle">enter</text>
+              <text x="220" y="95" fill="#aab3c0" font-size="12" text-anchor="middle">exit</text>
+            </svg>
+            <figcaption>Each slide steps from 0 to its highest enter/exit value.</figcaption>
+          </figure>
+        </div>
+      </div>
+      <footer class="slide-footer">
+        <span>Slides Starter</span>
+        <span>What ships</span>
+      </footer>
+    </section>
+
+    <!-- Closing -->
+    <section class="slide" aria-label="Closing">
+      <div class="stack">
+        <h2>Copy, adapt, present</h2>
+        <p class="muted statement">Replace this content with yours; keep <code>slides.js</code> as the runtime.</p>
+        <blockquote class="quote" data-enter="1">
+          Everything here opens from a local file &mdash; no server, no libraries.
+          <footer>&mdash; this starter, about itself</footer>
+        </blockquote>
+      </div>
+    </section>
+
+  </main>
+  <script src="slides.js"></script>
+</body>
+</html>

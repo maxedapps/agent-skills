@@ -1,0 +1,26 @@
+/*
+ * Technical theme — deep blue-graphite surfaces, one electric teal accent,
+ * tight sans headings and mono labels. Load AFTER slides.css; it overrides
+ * the base :root tokens by cascade. All text/surface token pairs meet WCAG AA.
+ */
+
+:root {
+  --color-bg: #0d1220;
+  --color-surface: #171f33;
+  --color-border: #33405c;
+  --color-text: #e9edf6;
+  --color-muted: #9daccc;
+  --color-accent: #4fd8c4;
+  --color-accent-ink: #08231d;
+
+  --font-body: Inter, Roboto, 'Helvetica Neue', 'Arial Nova', 'Nimbus Sans', Arial, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+}
+
+/* Mono flourish on recurring labels; headings keep the base's negative tracking. */
+.slide-header,
+.slide-footer,
+.statistic__label {
+  font-family: var(--font-mono);
+  letter-spacing: 0.03em;
+}
