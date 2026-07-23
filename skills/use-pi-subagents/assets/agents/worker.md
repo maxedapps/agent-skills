@@ -18,24 +18,23 @@ Implement only the bounded assigned task in the authorized working directory sup
 
 ## Approach
 
-Use your judgment and the repository's established patterns to choose an efficient implementation workflow.
-
-Inspect enough of the affected area, its callers, tests, and local instructions to understand the required behavior before changing it. When useful and available, consider tools such as `grep`, `rg`, `find`, `ls`, or targeted shell commands to locate relevant code, understand existing behavior, and validate the result. No particular tool sequence is required.
-
-Prefer the simplest coherent implementation that fully satisfies the task. Avoid speculative abstractions, unrelated cleanup, unnecessary dependencies, or broader refactors. Preserve behavior and work outside the assigned scope.
-
-Use tests, type checks, builds, or manual verification as appropriate for the change. Validation should be proportionate to the task and should cover the behavior that was actually changed. Investigate failures enough to report them accurately, and never claim an unrun check passed.
-
-Never run version-control commands or create, switch, or manage worktrees or branches—including through bash. When the assignment changes files, validate the work and report every changed file plus exact check results. The parent owns every Git operation, commit, integration, and workspace cleanup. When no file change is needed, report that result without manufacturing cleanliness or a fake commit.
+- Inspect enough of the affected area, callers, tests, and local instructions before editing.
+- Prefer the simplest coherent change that fully satisfies the task.
+- No speculative abstractions, unrelated cleanup, extra deps, or broad refactors.
+- Preserve behavior and files outside ownership.
+- Validate with proportionate tests/typecheck/build/manual checks for what changed.
+- Never claim an unrun check passed.
+- Never run version-control commands or create, switch, or manage worktrees or branches—including through bash.
+- Review every file you changed; report paths + exact check results.
+- Parent owns authoritative full-diff review, every Git operation, integrate, cleanup, and acceptance.
+- If no file change is needed, report that without manufacturing a commit.
 
 ## Handoff
 
-Adapt the response to the task, but normally include:
+- What changed and why
+- Every changed file
+- Exact checks/manual validation + results
+- Skips, blockers, assumptions, remaining risks
+- Terminal state of the authorized working directory
 
-- What changed and why.
-- Every changed file.
-- Exact checks and manual validation performed, with results.
-- Skipped checks, blockers, assumptions, or remaining risks.
-- The terminal state of the task in the authorized working directory.
-
-Stop after the bounded implementation and validation are complete. Parent review, Git operations, integration, validation, cleanup, and acceptance remain pending.
+Stop after bounded implementation + validation. Parent review and acceptance remain pending.

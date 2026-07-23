@@ -7,8 +7,8 @@
 - `create-plan` — create, review, and improve researched, implementation-ready plans before coding.
 - `create-skill` — create, rewrite, and review concise, actionable Agent Skills.
 - `implement-plan` — execute existing Markdown implementation plans with delegation-first tracking and verification.
-- `use-subagents` — provide generic delegation-first coordination when no native or Pi RPC adapter is active.
-- `use-pi-subagents` — launch and supervise bounded Pi RPC subagent work when native `subagent_*` tools are inactive.
+- `use-subagents` — portable delegation policy, assignment contracts, worktree isolation/cleanup for any harness.
+- `use-pi-subagents` — Pi RPC launcher for bounded subagents when native `subagent_*` tools are inactive (use with `use-subagents`).
 - `web-research` — perform current, source-backed research across web content and repositories.
 - `vps-setup-hardening` — manually run a safety-gated Linux VPS setup and hardening workflow.
 
@@ -49,7 +49,7 @@ npx skills add maxedapps/agent-skills \
   --skill vps-setup-hardening
 ```
 
-Review each skill and its compatibility requirements before use. `code-review`, `create-plan`, and `implement-plan` **delegate by default** whenever a safe capability exists — not only for “hard” work. Parallelism changes scheduling only; synthesis, integration, dispositions, acceptance, cleanup, and user decisions stay with the parent. Material ambiguity and complexity-increasing review remedies escalate to the user rather than shaky assumptions. No catalog skill is a hard runtime dependency of another. Worktree create/isolate/integrate/remove and runtime cleanup are canonical in `use-subagents` / `use-pi-subagents` and are mandatory after lanes finish.
+Review each skill and its compatibility requirements before use. `code-review`, `create-plan`, and `implement-plan` **delegate by default** whenever a safe capability exists — not only for “hard” work. Parallelism changes scheduling only; synthesis, integration, dispositions, acceptance, cleanup, and user decisions stay with the parent. Material ambiguity and complexity-increasing review remedies escalate to the user rather than shaky assumptions. No catalog skill is a hard runtime dependency of another. Worktree isolate/integrate/remove policy is canonical in `use-subagents` and mandatory after lanes finish; harness launchers (e.g. `use-pi-subagents`) own only their runtime-state cleanup.
 
 ### Manual-only VPS skill
 
@@ -66,8 +66,8 @@ Pi and Claude Code honor `disable-model-invocation: true`; Codex honors the bund
 ## Runtime and related skills
 
 - **`decomplex` is a soft integration.** It can provide focused advisory reports to `code-review`, `create-plan`, and `implement-plan` when installed and proportionate. It requires write access for one distinct `.reviews/<descriptive-slug>-decomplex.md` report but never edits reviewed targets. Each owning workflow retains its concise built-in gate and records an honest fallback when the skill or report write is unavailable.
-- **`use-subagents` is portable policy** (delegate-by-default, assignment contract, worktrees/Git/cleanup) for any harness’s built-in tools, plugins, or CLIs. It does **not** depend on Pi.
-- **`use-pi-subagents` is a Pi launcher only** — use it with `use-subagents` when native `subagent_*` tools are inactive. Never co-activate competing launchers. Parent owns worktrees, Git, and mandatory cleanup (no orphans).
+- **`use-subagents` is portable policy** (delegate-by-default, roles/assignment contract, worktrees/Git/cleanup) for any harness’s built-in tools, plugins, or CLIs. It does **not** depend on Pi.
+- **`use-pi-subagents` is a Pi launcher only** — use it with `use-subagents` when native `subagent_*` tools are inactive. Never drive competing launchers for the same lane. Parent owns worktrees, Git, and workspace cleanup; Pi `clean` retires run state only. No unaccounted workflow-owned resources.
 - **`agent-browser` remains external.** Install it from [skills.sh](https://www.skills.sh/vercel-labs/agent-browser/agent-browser) when browser interaction or UI verification is needed:
 
   ```sh
@@ -94,15 +94,15 @@ Creates, rewrites, reviews, and evidence-backed improves Agent Skills with liter
 
 ### `implement-plan`
 
-Maps a plan to tracker tasks/subtasks, then runs a delegated loop per item: analyze → implement → check → review → fix until clear → cleanup → next. Subagents by default (built-in, plugins, or skills). Parent owns tracker, integration, dispositions, acceptance, and mandatory worktree/runtime cleanup.
+Maps a plan to tracker tasks/subtasks, then runs a delegated loop per item: analyze → implement → check → review → fix until clear → cleanup → next. Subagents by default (built-in, plugins, or skills) under `use-subagents` policy. Parent owns tracker, integration, dispositions, acceptance, and mandatory worktree/runtime cleanup.
 
 ### `use-subagents`
 
-Harness-agnostic subagent playbook: delegate-by-default, assignment contract, worktree isolate/integrate/remove, mandatory cleanup, supervision, and parent verification. Works with whatever launcher the host provides. No dependency on `use-pi-subagents`.
+Harness-agnostic subagent playbook: delegate-by-default, scout/research/worker profiles, assignment contract, worktree isolate/integrate/remove, mandatory cleanup, supervision, and parent verification. Works with whatever launcher the host provides. No dependency on `use-pi-subagents`.
 
 ### `use-pi-subagents`
 
-Pi RPC launcher (`scripts/subagents.mjs`) when native `subagent_*` tools are inactive. **Complements** `use-subagents` (policy) rather than replacing it. Parent supplies cwd/worktrees, verifies, Gits, runs script `clean` for run state, and removes safe parent-created workspaces. Retains and reports unsafe/unknown resources.
+Pi RPC launcher (`scripts/subagents.mjs`) when native `subagent_*` tools are inactive. **Complements** `use-subagents` (policy) rather than replacing it. Parent supplies cwd/worktrees, verifies, integrates, removes safe workspaces per policy, then runs script `clean` for Pi run state only. Retains and reports unsafe/unknown resources.
 
 ### `web-research`
 

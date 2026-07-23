@@ -21,58 +21,35 @@ metadata:
 
 # Use Pi Subagents
 
-**Pi RPC launcher only.** Policy lives in `use-subagents` — load/follow that skill for:
+**Pi RPC launcher only.** Load/follow `use-subagents` for delegation, split, assignment shape, worktrees/Git, verify, workspace cleanup, and reporting.
 
-- delegate-by-default
-- parent vs child ownership
-- assignment contract
-- worktrees / Git / mandatory cleanup
-- verify and reporting
+This skill is **how to start and supervise Pi RPC children** via [`scripts/subagents.mjs`](scripts/subagents.mjs).
 
-This skill adds **how to start and supervise children on Pi** via `scripts/subagents.mjs`.
+## Pi rules
 
-Use when:
-
-- you are on Pi
-- native `subagent_*` tools are **not** active
-- a safe launcher is needed
-
-Do **not** co-activate with native `subagent_*` or another launcher for the same workflow.
-
-## Pi mechanics
-
-- Only [`scripts/subagents.mjs`](scripts/subagents.mjs) — never raw `pi --mode rpc`
-- Roles: **scout** (repo map) · **research** (external) · **worker** (implement)
-- Parent supplies exact `--cwd`
-- Readers: read-only in that cwd
-- Concurrent writers: parent-created isolated worktrees + non-overlapping ownership (per `use-subagents`)
-- Children never Git or manage worktrees/branches (including via bash)
-- No recursive delegation — assignments must forbid spawning agents
+- Only `node scripts/subagents.mjs …` from this skill directory — never raw `pi --mode rpc`
+- Roles: **scout** · **research** · **worker** (Pi profiles in [`assets/agents/`](assets/agents/); portable behavior also in `use-subagents`)
+- Parent supplies exact `--cwd` (prepare worktrees per `use-subagents` first)
+- Pi children: **no Git at all** (including bash); no worktree/branch management; no recursive delegation
 - Child claims/exit/status = evidence, not acceptance
+- `clean` retires **script run state only** — never cwd/worktrees/Git
 
 ## Workflow
 
-1. Apply `use-subagents` (split, ownership, isolation plan, join points).
-2. Prepare each cwd/worktree yourself.
-3. Build assignment from [`assets/assignment-prompts.md`](assets/assignment-prompts.md) + one role in [`assets/agents/`](assets/agents/) (envelope already matches the portable handoff contract).
-4. From this skill directory:
+1. Apply `use-subagents` (split, ownership, isolation, join points); prepare each `--cwd`.
+2. Build the task prompt; script wraps it with [`assets/assignment-prompts.md`](assets/assignment-prompts.md) + role profile from [`assets/agents/`](assets/agents/).
+3. Preflight from this skill directory:
    - `node scripts/subagents.mjs --help`
-   - `node scripts/subagents.mjs info` (Pi version + RPC gate)
-5. Launch:
-   - `run --role … --cwd … --timeout …`
-   - blocking default
-   - `--async` only for independent lanes
-6. Supervise: `status` · `send` (same-assignment follow-up) · `stop`  
-   States/recovery: [`references/rpc-lifecycle.md`](references/rpc-lifecycle.md)
-7. Parent verify: handoff + full diff + rerun checks + parent Git (`use-subagents` integrate rules).
-8. **Cleanup (both layers):**
-   - stop child if live
-   - `clean` dry-run then apply → **script run state only** (`clean` never touches cwd)
-   - remove safe parent-created worktrees/branches per `use-subagents`
-   - retain dirty/unknown/owner work; report why
-9. Report results, validation, worktree lifecycle, retentions (same shape as `use-subagents`).
+   - `node scripts/subagents.mjs info`
+4. Launch: `node scripts/subagents.mjs run --role <scout|research|worker> (--assignment FILE|--prompt TEXT) --cwd PATH --timeout MS [--async]`
+   - blocking default; `--async` only for independent lanes
+5. Supervise: `node scripts/subagents.mjs status|send|stop …`  
+   States/generations/recovery: [`references/rpc-lifecycle.md`](references/rpc-lifecycle.md)
+6. Verify + integrate + remove safe worktrees/branches per `use-subagents`.
+7. Runtime cleanup (after review): `node scripts/subagents.mjs clean --run ID` then `--apply` when safe.
+8. Report per `use-subagents` (include `runId` only if needed).
 
 ## Failure
 
 Unproven ownership, permissions, identity, liveness, or cwd provenance → stop.  
-No force/stash/reset/raw-delete/weakened checks. Retain resources; report last safe step.
+Retain ambiguous runtime/state; report `runId`, last state, cwd, next safe inspection step. No force-kill of unverified PIDs.

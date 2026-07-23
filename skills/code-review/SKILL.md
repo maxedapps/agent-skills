@@ -25,7 +25,7 @@ metadata:
 - No source edits unless asked. Don’t clobber owner git/worktree state.
 - Main agent assigns final findings/scores/verdicts. Child handoffs = evidence.
 - **Delegate by default** into bounded read-only lanes when safe. “Small/easy” ≠ skip.
-- Leverage subagents — built-in, extensions/plugins, or skills. Follow `use-subagents` policy; on Pi without native `subagent_*`, launch via `use-pi-subagents`.
+- Leverage subagents — built-in, extensions/plugins, or skills. Follow `use-subagents` policy; use the host’s selected launcher (on Pi without native `subagent_*`, `use-pi-subagents`).
 
 ### Admit a finding only if
 

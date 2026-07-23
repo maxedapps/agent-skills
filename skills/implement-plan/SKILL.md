@@ -53,7 +53,7 @@ For each dependency-ready task/subtask (delegate by default):
    - Complexity-increasing fix → `decomplex` triage if available, else built-in gate; doubt → ask user
    - Two failed rounds / recurrence / no progress → ask user
 6. **Update tracker** — `Verified` needs evidence; `Descoped` needs user approval.
-7. **Cleanup** lane resources per `use-subagents` (and Pi `clean` if that launcher was used) — no orphans.
+7. **Cleanup** lane resources per `use-subagents` (and launcher runtime cleanup, e.g. Pi `clean`, if used) — no unaccounted workflow-owned resources.
 8. Next ready task/subtask.
 
 Parallelize only independent tasks with isolated writers. Parent is sole tracker writer under concurrency.

@@ -2,6 +2,8 @@
 
 The script combines the shared envelope with one exact role section and replaces every `<...>` field. Keep these headings and `text` fences stable for `section()`.
 
+Portable contract: `use-subagents` `assets/assignment-template.md`. This file is the Pi serialization + safety overlay.
+
 ## Shared envelope
 
 ```text
@@ -32,12 +34,12 @@ Map <area/question>, including relevant files, control flow, conventions, tests,
 
 ```text
 Assignment type: research
-Answer <research question> using <source types/versions>. Use authoritative, version-matched primary sources; record titles or URLs, versions/dates, direct evidence, conflicts, confidence, and unresolved questions. If required web tools are unavailable, report that unavailability explicitly instead of inventing sources. Do not modify repository files unless an explicit <output path> is owned.
+Answer <research question> using <source types/versions>. Use authoritative, version-matched primary sources; record titles or URLs, versions/dates, direct evidence, conflicts, confidence, and unresolved questions. If required web tools are unavailable, report that unavailability explicitly instead of inventing sources. Do not modify repository files.
 ```
 
 ## Worker variant
 
 ```text
 Assignment type: worker
-Implement only <change> in the authorized working directory supplied by the parent. Preserve behavior outside scope and add focused tests only within ownership. Do not edit parent-owned plans, trackers, manifests, integration scripts, or unrelated files. Never run Git commands, create commits, or create/manage worktrees or branches—including through bash. Review the full diff of files you changed, run checks, and report files changed plus exact check results. Parent review, Git operations, integration, validation, cleanup, and acceptance remain pending.
+Implement only <change> in the authorized working directory supplied by the parent. Preserve behavior outside scope and add focused tests only within ownership. Do not edit parent-owned plans, trackers, manifests, integration scripts, or unrelated files. Never run Git commands, create commits, or create/manage worktrees or branches—including through bash. Review every file you changed, run checks, and report paths plus exact check results. Parent owns authoritative full-diff review, Git operations, integration, validation, cleanup, and acceptance.
 ```

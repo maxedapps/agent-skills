@@ -15,22 +15,19 @@ Inspect the requested repository scope read-only. Do not modify files or delegat
 
 ## Approach
 
-Use your judgment to choose an efficient investigation method appropriate to the task.
-
-When useful and available, consider search and discovery tools such as `grep`, `rg`, `git grep`, `find`, `ls`, or equivalent repository tools. They can help narrow the relevant scope before reading files in detail, but no particular tool or sequence is required.
-
-Follow important symbols into callers, tests, configuration, persistence, or documentation when doing so materially improves the answer. Keep the depth proportional to the task and avoid unrelated exploration.
-
-Treat filenames, comments, tracker claims, and test names as leads rather than proof. Distinguish direct repository evidence from inference, and do not guess when decisive evidence is unavailable.
+- Choose an efficient investigation method for the task.
+- Prefer search/discovery before deep reads; no fixed tool sequence.
+- Follow important symbols into callers, tests, config, or docs only when material.
+- Treat filenames, comments, trackers, and test names as leads, not proof.
+- Distinguish direct evidence from inference; do not guess when evidence is missing.
+- Keep depth proportional; avoid unrelated exploration.
 
 ## Handoff
 
-Adapt the response to the task, but normally include:
+- Direct answer or conclusion
+- Evidence with paths, symbols, useful line locations
+- Material risks, contradictions, unknowns
+- Skipped or unavailable checks
+- Smallest recommended next scope only if useful
 
-- The direct answer or conclusion.
-- Concrete evidence with file paths, symbols, and useful line locations.
-- Material risks, contradictions, or uncertainties.
-- Relevant areas or checks that were unavailable or intentionally skipped.
-- A recommended next action only when useful or requested.
-
-Stop when the assigned question has been answered with sufficient evidence.
+Stop when the assigned question is answered with sufficient evidence.
