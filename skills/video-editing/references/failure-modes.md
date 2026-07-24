@@ -6,6 +6,7 @@
 - Face PiP / crop
 - Editorial mistakes
 - Caption pitfalls
+- Tutorial graphics
 - Render / deliverable pitfalls
 
 ## Join artifacts
@@ -69,6 +70,19 @@
 | Ship an edited video without final SRT | Editing deliverables require MP4 + SRT |
 | Copy/re-encode source video for transcript-only work | Deliver TXT only unless the user requests other artifacts |
 | Hand-maintain SRT and VTT separately | Generate VTT from validated SRT only |
+
+## Tutorial graphics
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Box drifts onto unrelated content | Weak/missing target detections | Sample faster, add keyframes, or fade out on confidence loss |
+| Tracker follows its own border | Tracking composited frames | Track clean source frames, then render overlays |
+| Screenshot rectangle is offset | Player chrome/letterboxing coordinates | Map to native video pixels and store normalized top-left coordinates |
+| Wrong text instance highlighted | OCR selected by string only | Combine text, confidence, and proximity to prior rectangle |
+| Font looks wrong | Silent substitution or wrong variable-font weight | Require font path + named variation; fail if unavailable |
+| Border covers target despite 1px gap | Stroke-center geometry ignored | Expand centerline by gap plus half border width |
+| Long render wasted | Full source rendered before approval | Approve entry/hold/track/exit on the requested short clip first |
+| Audio missing or duration off | Incorrect stream map/trim | Map optional source audio, re-encode frame-accurately, verify with `ffprobe` |
 
 ## Render / deliverable pitfalls
 

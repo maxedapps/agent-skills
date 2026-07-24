@@ -1,0 +1,40 @@
+{
+  "lower-third-modern": {
+    "type": "lower-third",
+    "position": [0.043, 0.758],
+    "style": {
+      "panelWidthPx": 1050,
+      "panelHeightPx": 218,
+      "radiusPx": 28,
+      "accent": "#fa923f",
+      "nameSizePx": 64,
+      "subtitleSizePx": 38
+    },
+    "animation": {
+      "panelInSeconds": 0.46,
+      "accentDelaySeconds": 0.08,
+      "accentInSeconds": 0.42,
+      "nameDelaySeconds": 0.16,
+      "subtitleDelaySeconds": 0.27,
+      "textInSeconds": 0.42,
+      "exitSeconds": 0.64
+    }
+  },
+  "spotlight-clean": {
+    "type": "spotlight",
+    "style": {
+      "color": "#fa923f",
+      "gapPx": 1,
+      "borderWidthPx": 8,
+      "radiusPx": 28,
+      "dimAlpha": 150,
+      "shadow": false
+    },
+    "animation": {
+      "enter": "stroke-clockwise-top-left",
+      "enterSeconds": 0.73,
+      "exit": "fade-expand",
+      "exitSeconds": 0.4
+    }
+  }
+}

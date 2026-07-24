@@ -28,6 +28,7 @@ project/
     edit/           # keep-list, filter, plan, previews
     face/           # optional PiP intermediates
     joins/          # boundary QA
+    graphics/       # optional configs, tracks, previews, overlay frames
 ```
 
 ## Phases
@@ -115,7 +116,20 @@ Listen to every assembled seam and pause candidate. Candidate defaults are about
 5. Spot-check lip sync + joins on face
 Details: `face-pip.md`
 
-### J — Final captions, export, cleanup
+### J — Optional tutorial graphics, then final captions/export
+
+After the edit timeline and optional PiP are locked, read `motion-graphics.md`. Apply graphics to the master so job times use the final timeline. Approve a short entry/hold/exit preview before a long render.
+
+```bash
+python3 scripts/render_graphics.py \
+  --input work/edit/master-4k.mp4 \
+  --config work/graphics/job.json \
+  --output work/edit/master-graphics.mp4 \
+  --keep-work
+```
+
+Use `master-graphics.mp4` as the export input when created. Graphics-only jobs skip phases B–I and render directly from the source.
+
 ```bash
 # lock final.srt (verified cut-SRT or one ASR on final timeline)
 cp work/edit/clean-preview.srt work/edit/final.srt   # if verified
@@ -150,6 +164,8 @@ Report with `assets/edit-report.md`.
 | `render_clean.sh` | Master render |
 | `sync_audio_offset.py` | Face/screen audio offset |
 | `suggest_face_crop.py` | Multi-frame crop suggestion + preview |
+| `render_graphics.py` | Config-driven spotlight/lower-third clip composition |
+| `vision_ocr.swift` | macOS local OCR → normalized top-left text rectangles |
 | `export_final_video.sh` | Default 2K deliverable encode |
 | `srt_to_vtt.py` | SRT → VTT |
 | `cleanup_work.sh` | Delete disposable edit artifacts; `--caption-work` removes caption-only work after delivery |
@@ -162,4 +178,5 @@ Report with `assets/edit-report.md`.
 - Every assembled jump-cut seam was listened to; no cut-adjacent orphaned prep/breath remains
 - Clean-output internal/inter-cue pause candidates were reviewed; accepted exceptions are documented and section cadence is not breathless
 - Face (if any): good offset + person-centered crop
+- Graphics (if any): target/text/fonts and entry/hold/track/exit visually approved; streams/timing probed
 - Temps cleaned; sources kept
