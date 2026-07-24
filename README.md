@@ -4,7 +4,6 @@
 
 - `code-review` — perform adaptable generic, scoped, and plan-backed implementation reviews.
 - `decomplex` — prevent, audit, and triage unnecessary complexity without editing reviewed targets.
-- `video-editing` — clean tutorial/talking-head takes, add callouts/lower thirds, or create captions/subtitles/transcripts.
 - `explain` — manually produce context-grounded Markdown explanations and standalone HTML that opens in the default browser unless suppressed.
 - `create-plan` — create, review, and improve researched, implementation-ready plans before coding.
 - `create-skill` — create, rewrite, and review concise, actionable Agent Skills.
@@ -30,7 +29,6 @@ Install one skill:
 npx skills add maxedapps/agent-skills@code-review
 npx skills add maxedapps/agent-skills@explain
 npx skills add maxedapps/agent-skills@vps-setup-hardening
-npx skills add maxedapps/agent-skills@video-editing
 ```
 
 Or use the explicit option:
@@ -39,10 +37,9 @@ Or use the explicit option:
 npx skills add maxedapps/agent-skills --skill code-review
 npx skills add maxedapps/agent-skills --skill explain
 npx skills add maxedapps/agent-skills --skill vps-setup-hardening
-npx skills add maxedapps/agent-skills --skill video-editing
 ```
 
-Install all thirteen skills explicitly:
+Install all twelve skills explicitly:
 
 ```sh
 npx skills add maxedapps/agent-skills \
@@ -57,8 +54,7 @@ npx skills add maxedapps/agent-skills \
   --skill use-subagents \
   --skill use-pi-subagents \
   --skill web-research \
-  --skill vps-setup-hardening \
-  --skill video-editing
+  --skill vps-setup-hardening
 ```
 
 Review each skill and its compatibility requirements before use. `code-review`, `create-plan`, and `implement-plan` **delegate by default** whenever a safe capability exists — not only for “hard” work. Parallelism changes scheduling only; synthesis, integration, dispositions, acceptance, cleanup, and user decisions stay with the parent. Material ambiguity and complexity-increasing review remedies escalate to the user rather than shaky assumptions. No catalog skill is a hard runtime dependency of another. Worktree isolate/integrate/remove policy is canonical in `use-subagents` and mandatory after lanes finish; harness launchers (e.g. `use-pi-subagents`) own only their runtime-state cleanup.
@@ -98,10 +94,6 @@ Evidence-bound generic and plan-backed reviews. Delegates read-only lanes by def
 ### `decomplex`
 
 Reviews proposed or existing source, plans, architecture, tests, configuration, dependencies, and review recommendations for evidenced unnecessary complexity. It supports Prevention, Audit, and Finding triage modes; writes one advisory `.reviews/` report; and never edits reviewed targets.
-
-### `video-editing`
-
-Tutorial post-production: continuous-take cleanup, seam/cadence review, optional face PiP, reusable spotlight/lower-third graphics, clip-only annotation renders, and caption/transcript delivery. Graphics use config-driven Pillow overlays plus FFmpeg; local text boxes can use macOS Apple Vision.
 
 ### `explain`
 
