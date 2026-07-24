@@ -4,6 +4,7 @@ set -Eeuo pipefail
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck source=skills/vps-setup-hardening/scripts/lib/common.sh
 source "$SCRIPT_DIR/lib/common.sh"
+SKILL_DIR=$(skill_dir)
 
 usage() {
   cat <<'EOF'
@@ -143,6 +144,28 @@ if [[ $PROFILE == ubuntu ]]; then
     if aa-status --enabled >/dev/null 2>&1; then pass 'AppArmor is enabled'; else check_warn 'AppArmor is not enabled'; fi
   else
     check_warn 'AppArmor status utility was not found.'
+  fi
+
+  FAIL2BAN_SOURCE="$SKILL_DIR/assets/config/10-agent-recipes-sshd.local"
+  FAIL2BAN_DESTINATION=/etc/fail2ban/jail.d/10-agent-recipes-sshd.local
+  if [[ -f $FAIL2BAN_DESTINATION ]] \
+    && cmp -s -- "$FAIL2BAN_SOURCE" "$FAIL2BAN_DESTINATION"; then
+    pass 'Managed Fail2Ban sshd configuration is current'
+  else
+    fail 'Managed Fail2Ban sshd configuration is missing or changed'
+  fi
+  if have fail2ban-client \
+    && systemctl is-enabled --quiet fail2ban.service \
+    && systemctl is-active --quiet fail2ban.service; then
+    pass 'Fail2Ban service is enabled and active'
+    if fail2ban-client -t >/dev/null 2>&1 \
+      && fail2ban-client status sshd >/dev/null 2>&1; then
+      pass 'Fail2Ban configuration is valid and the sshd jail is active'
+    else
+      fail 'Fail2Ban configuration is invalid or the sshd jail is unavailable'
+    fi
+  else
+    fail 'Fail2Ban is not installed, enabled, and active'
   fi
 
   if [[ -f /etc/apt/apt.conf.d/20auto-upgrades ]] \

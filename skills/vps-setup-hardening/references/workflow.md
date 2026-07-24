@@ -67,6 +67,7 @@ If `/tmp` is `noexec`, stage under the connected user's home. Transfer `scripts/
 cd <remote-temporary-directory>
 test -f scripts/lib/common.sh
 test -f assets/config/00-agent-recipes-hardening.conf
+test -f assets/config/10-agent-recipes-sshd.local
 test -f assets/config/20auto-upgrades
 test -f assets/config/52agent-recipes-unattended-upgrades
 test -f assets/config/60-agent-recipes-journal.conf
@@ -118,6 +119,7 @@ Common success criteria before continuing:
 - basic administration tools present;
 - time synchronization active;
 - journald persistent and size-bounded;
+- on Ubuntu, Fail2Ban active with the managed `sshd` jail;
 - SSH and the current session remain usable;
 - reboot requirement recorded but deferred.
 

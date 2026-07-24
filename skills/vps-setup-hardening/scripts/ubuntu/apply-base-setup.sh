@@ -11,8 +11,8 @@ usage() {
 Usage: sudo ./scripts/ubuntu/apply-base-setup.sh --ingress host|external
 
 Ubuntu 24.04/26.04 base setup: full APT upgrade, unattended security updates
-(automatic reboot disabled), time synchronization, and bounded persistent
-journald. Never schedules automatic reboots.
+(automatic reboot disabled), time synchronization, bounded persistent journald,
+and an enabled Fail2Ban sshd jail. Never schedules automatic reboots.
 
 Ingress strategy:
   host      Prepare UFW without activating it. Valid only when Docker will not
@@ -43,6 +43,24 @@ configure_journal() {
   systemctl restart systemd-journald.service
 }
 
+configure_fail2ban() {
+  local source destination changed=false
+  source="$SKILL_DIR/assets/config/10-agent-recipes-sshd.local"
+  destination=/etc/fail2ban/jail.d/10-agent-recipes-sshd.local
+  cmp -s -- "$source" "$destination" || changed=true
+  install_managed_file "$source" "$destination"
+  fail2ban-client -t
+  systemctl enable fail2ban.service
+  if ! systemctl is-active --quiet fail2ban.service; then
+    systemctl start fail2ban.service
+  elif [[ $changed == true ]]; then
+    fail2ban-client reload
+  fi
+  fail2ban-client status sshd >/dev/null \
+    || die 'Fail2Ban started but the managed sshd jail is unavailable.'
+  log 'Fail2Ban is active with the managed sshd jail.'
+}
+
 ensure_time_sync() {
   local service
   for service in chrony.service chronyd.service systemd-timesyncd.service; do
@@ -68,7 +86,7 @@ ensure_time_sync() {
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
 apt-get -y dist-upgrade
-APT_PACKAGES=(ca-certificates curl git gnupg openssh-client sudo unattended-upgrades)
+APT_PACKAGES=(ca-certificates curl fail2ban git gnupg openssh-client sudo unattended-upgrades)
 if [[ $INGRESS == host ]]; then
   if have ufw; then
     log 'UFW is already installed.'
@@ -89,6 +107,7 @@ systemctl enable --now apt-daily.timer apt-daily-upgrade.timer || true
 
 ensure_time_sync
 configure_journal
+configure_fail2ban
 
 log "Ubuntu base setup completed with ingress strategy: $INGRESS."
 if [[ -e /var/run/reboot-required ]]; then

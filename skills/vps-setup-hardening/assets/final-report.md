@@ -12,7 +12,7 @@
 - **SSH:** <path, port, authentication; public vs tailnet-only>
 - **Ingress:** <UFW host | provider firewall | EC2 Security Group>; enforcement boundary; IPv4/IPv6/UDP scope
 - **Updates:** <Ubuntu unattended security updates, auto-reboot false | AL2023 pinned release version; no automatic release claim>
-- **Security controls:** <AppArmor | SELinux mode>
+- **Security controls:** <AppArmor | SELinux mode; Ubuntu Fail2Ban sshd jail state>
 - **Time:** <synchronization>
 - **Optional tools:** <Tailscale / Docker Engine+Compose+Buildx / Node.js+npm versions>
 - **Containers/published ports:** <state or none>

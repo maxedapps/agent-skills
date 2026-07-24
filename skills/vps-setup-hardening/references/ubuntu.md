@@ -7,6 +7,7 @@ Load only after inspection classifies the host as `ubuntu`. Supported: Ubuntu 24
 | Area | Behavior |
 |---|---|
 | Updates | APT full upgrade; Ubuntu unattended security updates; automatic reboot disabled |
+| SSH abuse control | Fail2Ban enabled with a managed systemd-backed sshd jail; not an ingress boundary |
 | Ingress without Docker | UFW host firewall |
 | Ingress with Docker | Independently verified provider firewall only; do not install or rely on UFW for Docker |
 | Docker | Docker official APT repository; Engine, Compose, Buildx, `hello-world` required |
@@ -25,7 +26,7 @@ sudo ./scripts/ubuntu/apply-base-setup.sh --ingress external
 
 `--ingress host` is valid only when Docker will not be installed. `host` + Docker is rejected later by verification and must not be selected.
 
-Confirm: packages upgraded; `unattended-upgrades` configured; no automatic reboot; time sync active; journald persistent/bounded; SSH session usable.
+Confirm: packages upgraded; `unattended-upgrades` configured; no automatic reboot; time sync active; journald persistent/bounded; Fail2Ban active with the `sshd` jail; SSH session usable.
 
 ## Administrator and SSH
 
@@ -136,8 +137,10 @@ sudo ./scripts/verify-setup.sh \
   --confirmed-external-ingress-tested
 ```
 
-Profile checks include UFW or external mode, AppArmor, unattended-upgrade configuration, and Ubuntu reboot marker.
+Profile checks include UFW or external mode, AppArmor, the managed Fail2Ban sshd jail, unattended-upgrade configuration, and the Ubuntu reboot marker.
 
 ## Maintenance note
+
+Fail2Ban only throttles repeated SSH authentication failures. It does not replace key-only SSH, Tailscale access testing, provider firewall restrictions, or external exposure scans.
 
 Third-party Docker/NodeSource/Tailscale repositories are not covered by Ubuntu unattended security updates the same way as archive packages. Apply normal full upgrades during routine maintenance and report that work.

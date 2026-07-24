@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import {
+  chmodSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+  rmSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,6 +16,10 @@ import test from 'node:test';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SKILL_ROOT = path.resolve(__dirname, '..');
 const COMMON = path.join(SKILL_ROOT, 'scripts/lib/common.sh');
+const FAIL2BAN_CONFIG = path.join(
+  SKILL_ROOT,
+  'assets/config/10-agent-recipes-sshd.local',
+);
 const SCRIPTS = {
   inspect: path.join(SKILL_ROOT, 'scripts/inspect-system.sh'),
   configureAdmin: path.join(SKILL_ROOT, 'scripts/configure-admin-user.sh'),
@@ -171,6 +182,31 @@ test('AL base accepts concrete releasever shape then demands root (no mutation)'
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test('ubuntu profile manages and verifies a systemd-backed Fail2Ban sshd jail', () => {
+  const baseHelp = run('bash', [SCRIPTS.ubuntuBase, '--help']);
+  assert.equal(baseHelp.status, 0, baseHelp.stderr);
+  assert.match(baseHelp.stdout, /Fail2Ban sshd jail/i);
+
+  const config = readFileSync(FAIL2BAN_CONFIG, 'utf8');
+  assert.match(config, /^\[sshd\]$/m);
+  assert.match(config, /^enabled = true$/m);
+  assert.match(config, /^backend = systemd$/m);
+  assert.match(config, /^bantime\.increment = true$/m);
+
+  const base = readFileSync(SCRIPTS.ubuntuBase, 'utf8');
+  assert.match(base, /apt-get install[\s\S]*fail2ban|APT_PACKAGES=.*fail2ban/);
+  assert.match(base, /fail2ban-client -t/);
+  assert.match(base, /fail2ban-client reload/);
+  assert.match(base, /fail2ban-client status sshd/);
+  assert.doesNotMatch(base, /systemctl restart fail2ban/);
+
+  const verify = readFileSync(SCRIPTS.verify, 'utf8');
+  assert.match(verify, /Managed Fail2Ban sshd configuration is current/);
+  assert.match(verify, /Fail2Ban service is enabled and active/);
+  assert.match(verify, /fail2ban-client -t/);
+  assert.match(verify, /fail2ban-client status sshd/);
 });
 
 test('ubuntu firewall unknown-rule path is documented in help and rejects removed docker flags', () => {

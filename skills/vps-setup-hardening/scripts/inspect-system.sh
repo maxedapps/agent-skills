@@ -218,6 +218,28 @@ esac
 if have timedatectl; then
   timedatectl status || true
 fi
+if have fail2ban-client; then
+  printf 'Fail2Ban service: enabled=%s active=%s\n' \
+    "$(systemctl is-enabled fail2ban.service 2>/dev/null || printf 'no')" \
+    "$(systemctl is-active fail2ban.service 2>/dev/null || printf 'no')"
+  if [[ $(id -u) -eq 0 ]]; then
+    if fail2ban-client status sshd >/dev/null 2>&1; then
+      echo 'Fail2Ban sshd jail: active'
+    else
+      echo 'Fail2Ban sshd jail: unavailable'
+    fi
+  elif have sudo && sudo -n true 2>/dev/null; then
+    if sudo -n fail2ban-client status sshd >/dev/null 2>&1; then
+      echo 'Fail2Ban sshd jail: active'
+    else
+      echo 'Fail2Ban sshd jail: unavailable'
+    fi
+  else
+    echo 'Fail2Ban sshd jail: run as root to inspect'
+  fi
+else
+  echo 'Fail2Ban: not installed'
+fi
 if have aa-status; then
   aa-status 2>/dev/null | head -n 8 || true
 elif have getenforce; then
