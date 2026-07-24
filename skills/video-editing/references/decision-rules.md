@@ -1,84 +1,92 @@
-# Decision rules — content + edges
-
-## TOC
-- Mental model
-- Drop / keep
-- Edge classes (critical)
-- Real take
-- Pauses
-- Face crop summary
+# Decision rules — content, cadence, and edges
 
 ## Mental model
 
 ```text
-[false starts…][REAL TAKE with local flubs…]
+[false starts…][successful performance with local repairs]
 ```
 
-Keep-list of **successful performances**, not silence removal.
+A keep-list selects successful performances; it is not a silence-removal list.
+Decide separately:
 
-Axes:
-1. What content stays
-2. How edges land (no aborted prep)
+1. content that stays;
+2. semantic outgoing `join`: `repair`, `continuation`, `sentence`, or `section`;
+3. cadence/pause intent;
+4. `in`/`out` edge hygiene at an actual cut.
 
-## Always DROP
+Source-gap duration is only an advisory clue. Deleted material may be long even when
+the assembled continuation should be tight.
 
-- Before real take
-- False start intros superseded later
-- Abandoned lines when restart follows
-- Frustration / off-mic asides
-- Lone reset tokens
-- Weaker duplicate questions
-- Explicit discards (`Nah.`)
+## Keep / drop
 
-## Always KEEP
+**Drop:** pre-take setup, superseded false starts, abandoned lines, frustration/asides,
+lone resets, weaker duplicates, and explicit discards.
 
-- Successful completion after stump/restart
-- Bridge lines needed for teaching continuity
+**Keep:** successful completion, required teaching bridges, stylistic `uh`/`um` or
+rhetorical repeats that sound natural, and short breaths inside uninterrupted speech.
 
-## Usually KEEP (style)
+## Semantic join and cadence
 
-- `uh`/`um`, rhetorical repeats, short breaths **inside finished thoughts**
+Set `join` on the outgoing keep:
 
-## Edge classes (critical)
+| `join` | Meaning | Candidate clean-timeline review threshold |
+|---|---|---:|
+| `repair` | Removed restart/flub; one thought continues | about 0.7 s |
+| `continuation` | Related clause continues | about 0.7 s |
+| `sentence` | Closely related sentence | about 1.0 s |
+| `section` | Real topic/section transition | about 1.5 s |
 
-Set on each keep (`classify_joins.py` helps; override when wrong):
+Ordinary untagged sentence gaps become review candidates around 1.2 s. These are
+practical listening defaults, not auto-delete limits. Shorter can still sound wrong;
+longer can be intentional. Prefer smooth flow and allow jump cuts, but never compress
+every boundary into breathless pacing.
 
-| `out` | Meaning | Tail policy |
-|---|---|---|
-| `surgical` | Mid-phrase fix / tight continuation after removed restart | End on last good phoneme (+ tiny release). **No** trailing breath into next attempt |
-| `soft` | Normal sentence boundary | Short natural release |
-| `section` | Topic change | Allow a real breath |
+Use `pause: {"intent":"retained","accepted":true,"reason":"..."}` only after
+listening to an intentional outgoing pause. Record reviewed internal source-timeline
+exceptions in top-level `accepted_pauses`. `build_filter.py` maps those into the
+final plan for `audit_pauses.py`.
 
-| `in` | Meaning |
+## Edge hygiene at every actual cut
+
+`in`/`out` describe the physical cut, not semantics:
+
+| Tag | Policy |
 |---|---|
-| `tight` | Land on first good attack (after surgical previous) |
-| `natural` | Slight lead-in OK |
+| `out: surgical` | End after the last desired phoneme/release; no orphaned breath or prep for deleted material |
+| `out: soft` | Keep a short natural release, then cut cleanly |
+| `out: section` | Preserve section cadence, but still remove cut-adjacent prep belonging to a discarded attempt |
+| `in: tight` | Land on the first desired attack after a surgical outgoing cut |
+| `in: natural` | Keep a slight clean lead-in |
 
-### Anti-pattern
+Distinguish:
+
+- **internal breath:** between desired words in uninterrupted kept speech—normally keep;
+- **cut-adjacent orphan:** breath, mouth noise, gesture, or speech preparation immediately
+  before jumping to another range—remove from every actual cut.
+
+Anti-pattern:
 
 ```text
-[good ending][silence][mouth/hands start next try] CUT → other take
+[desired speech][quiet][prep for discarded try] CUT → another take
 ```
 
-Fix: pull `end` earlier (`tighten_edges.py` + manual check).
+`tighten_edges.py` uses energy only to flag/trim conservative endpoint candidates. It
+does not recognize breaths semantically; long/ambiguous late energy stays unresolved.
+Listen to every changed and unresolved assembled seam.
 
-### Pads
+## Pads and verification
 
-`build_filter.py` applies small pads from tags (`PAD_IN`/`PAD_OUT` in `_common.py`). Do not use large global `pad_out`.
+`build_filter.py` resolves class pads from `_common.py`. Reviewed per-keep numeric
+`pad_in`/`pad_out` overrides class and global fallback values and is retained in the
+edit plan. Avoid large global padding.
 
-## Real take
+Final cadence approval must use actual clean-output audio with final/preview SRT:
 
-First intro that continues into the full unique body without starting over.
-
-## Pauses
-
-| Kind | Action |
-|---|---|
-| In deleted ranges | Gone |
-| Long thinks between ideas | Exclude |
-| Inside finished thought | Keep |
-| Prep before cut to other take | **Remove** |
-| Section boundary | Short breath OK |
+1. render;
+2. extract assembled seams from the rendered media/edit plan;
+3. listen to every seam, not a continuous source interval containing deleted material;
+4. run `audit_pauses.py` for same-cue/internal and inter-cue candidates;
+5. listen and shorten only where flow improves; document accepted exceptions.
 
 ## Face crop summary
 

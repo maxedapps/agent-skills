@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
-"""Classify keep-list edges as surgical|soft|section from gaps + optional SRT.
+"""Annotate missing keep-list edge classes from advisory source-gap heuristics.
 
-Writes an updated keep-list (stdout JSON summary; optional --output).
+Source gaps describe removed source material, not the desired clean-timeline pause.
+Existing semantic ``join`` values and explicit ``in``/``out`` edge classes are
+therefore preserved unless the legacy ``--force`` option is requested. The
+incoming edge is derived only after the preceding final outgoing class is known.
 
-Rules (defaults):
-- gap to next keep < 0.8s  -> out=surgical
-- gap < 2.5s               -> out=soft
-- else                     -> out=section
-- last keep                -> out=section
-- in=tight if previous out surgical else natural
+Stdout: JSON summary. Stderr: diagnostics. Exit 0 success, 2 input error.
 """
 
 from __future__ import annotations
@@ -21,35 +19,49 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _common import load_keeps_file, write_keeps_file  # noqa: E402
 
+VALID_IN = ("tight", "natural")
+VALID_OUT = ("surgical", "soft", "section")
+VALID_JOIN = ("repair", "continuation", "sentence", "section")
 
-def classify(keeps: list[dict], g_surg: float, g_soft: float) -> list[dict]:
+
+def suggested_out(gap: float, g_surg: float, g_soft: float) -> str:
+    if gap < g_surg:
+        return "surgical"
+    if gap < g_soft:
+        return "soft"
+    return "section"
+
+
+def classify(
+    keeps: list[dict], g_surg: float, g_soft: float, *, force: bool = False
+) -> list[dict]:
+    """Fill missing edge classes while retaining source-gap suggestions for audit."""
     out: list[dict] = []
-    for i, k in enumerate(keeps):
-        item = dict(k)
-        if i + 1 >= len(keeps):
-            item["out"] = "section"
-            item["in"] = item.get("in") or "natural"
+    for i, keep in enumerate(keeps):
+        item = dict(keep)
+        if i + 1 < len(keeps):
+            gap = float(keeps[i + 1]["start"]) - float(keep["end"])
+            suggestion = suggested_out(gap, g_surg, g_soft)
+            item["_source_gap_s"] = round(gap, 3)
+            item["_gap_to_next"] = round(gap, 3)  # legacy audit key
+            item["_suggested_out"] = suggestion
         else:
-            gap = keeps[i + 1]["start"] - k["end"]
-            if gap < g_surg:
-                item["out"] = "surgical"
-            elif gap < g_soft:
-                item["out"] = "soft"
-            else:
-                item["out"] = "section"
-            item["_gap_to_next"] = round(gap, 3)
+            suggestion = "section"
+
+        if force or item.get("out") not in VALID_OUT:
+            item["out"] = suggestion
+        # ``join`` is editorial intent. Never infer or overwrite it from source gap.
         out.append(item)
 
-    # set in based on previous out
+    # Derive incoming tightness from the FINAL preceding out class. Preserve an
+    # explicit incoming review unless --force requests legacy full reclassification.
     for i, item in enumerate(out):
         if i == 0:
-            item["in"] = item.get("in") or "natural"
+            if force or item.get("in") not in VALID_IN:
+                item["in"] = "natural"
             continue
-        prev_out = out[i - 1].get("out")
-        if prev_out == "surgical":
-            item["in"] = "tight"
-        elif item.get("in") in (None, ""):
-            item["in"] = "natural"
+        if force or item.get("in") not in VALID_IN:
+            item["in"] = "tight" if out[i - 1].get("out") == "surgical" else "natural"
     return out
 
 
@@ -62,48 +74,46 @@ def main() -> int:
     ap.add_argument(
         "--force",
         action="store_true",
-        help="Overwrite existing in/out tags",
+        help="Legacy mode: overwrite explicit in/out tags (not recommended after authoring)",
     )
     args = ap.parse_args()
 
+    if args.surgical_gap < 0 or args.soft_gap <= args.surgical_gap:
+        print("error: require 0 <= surgical-gap < soft-gap", file=sys.stderr)
+        return 2
     try:
         meta, keeps = load_keeps_file(args.keeps)
     except Exception as exc:  # noqa: BLE001
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
-    classified = classify(keeps, args.surgical_gap, args.soft_gap)
-    if not args.force:
-        # preserve explicit tags
-        for old, new in zip(keeps, classified):
-            if old.get("out") in ("surgical", "soft", "section"):
-                new["out"] = old["out"]
-            if old.get("in") in ("tight", "natural"):
-                new["in"] = old["in"]
+    classified = classify(keeps, args.surgical_gap, args.soft_gap, force=args.force)
+    counts = {name: 0 for name in VALID_OUT}
+    for keep in classified:
+        name = str(keep.get("out", "soft"))
+        counts[name] = counts.get(name, 0) + 1
 
-    counts = {"surgical": 0, "soft": 0, "section": 0}
-    for k in classified:
-        counts[str(k.get("out", "soft"))] = counts.get(str(k.get("out", "soft")), 0) + 1
-
-    out_path = args.output
-    if out_path:
-        # strip helper field before write? keep gap as useful audit
-        write_keeps_file(out_path, meta if isinstance(meta, dict) else {"keeps": classified}, classified)
+    if args.output:
+        write_keeps_file(args.output, meta, classified)
 
     summary = {
         "input": str(args.keeps),
-        "output": str(out_path) if out_path else None,
+        "output": str(args.output) if args.output else None,
+        "forced": args.force,
+        "source_gap_is_advisory": True,
         "counts": counts,
         "keeps": [
             {
-                "start": k["start"],
-                "end": k["end"],
-                "in": k.get("in"),
-                "out": k.get("out"),
-                "gap_to_next": k.get("_gap_to_next"),
-                "note": k.get("note", ""),
+                "start": keep["start"],
+                "end": keep["end"],
+                "join": keep.get("join"),
+                "in": keep.get("in"),
+                "out": keep.get("out"),
+                "source_gap_s": keep.get("_source_gap_s"),
+                "suggested_out": keep.get("_suggested_out"),
+                "note": keep.get("note", ""),
             }
-            for k in classified
+            for keep in classified
         ],
     }
     json.dump(summary, sys.stdout, indent=2)

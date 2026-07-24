@@ -28,7 +28,10 @@ metadata:
 - **Face cam:** read [`references/face-pip.md`](references/face-pip.md) before any PiP work.
 - **Glitches:** read [`references/failure-modes.md`](references/failure-modes.md) when output has caption, join, render, sync, or crop problems.
 - For editing, source of truth is **timed speech (SRT)**, not silence detection.
-- Keep **successful performances**, including clean attacks/releases. Never leave prep-breath / mouth-start into a deleted attempt (`out: surgical`).
+- Keep successful performances and short natural breaths inside uninterrupted speech.
+- At every jump cut, remove adjacent orphaned breath/prep/motion belonging to deleted material; join the last clean release to the next clean attack.
+- Keep pauses short for smooth flow, especially mid-sentence and between related sentences. Cadence thresholds propose listening review—never universal silence deletion. Jump cuts are allowed.
+- Listen to assembled/rendered seams and run final cadence QA on actual clean-output audio plus final/preview SRT.
 - Use bundled [`scripts/`](scripts/). Re-encode cuts. Put all temps under `work/`.
 
 ## Canonical pipelines
@@ -37,7 +40,8 @@ metadata:
 edit: inspect → caption source once → parse SRT → draft keep-list
   → classify_joins → tighten_edges (wav)
   → build_filter + cut-SRT preview → scan_flubs + read prose
-  → render master → optional face PiP (sync + crop suggest + overlay)
+  → render master → audition assembled seams → audit clean-output pauses
+  → optional face PiP (sync + crop suggest + overlay)
   → final SRT → export 2K deliverable → cleanup_work
 
 captions/transcript only: inspect → choose caption provider → transcribe source once
@@ -50,11 +54,13 @@ captions/transcript only: inspect → choose caption provider → transcribe sou
 SK=.agents/skills/video-editing/scripts
 
 python3 $SK/parse_srt.py work/captions/srt/NAME.srt --format report
-python3 $SK/classify_joins.py --keeps work/edit/keep-list.json --output work/edit/keep-list.json --force
+python3 $SK/classify_joins.py --keeps work/edit/keep-list.json --output work/edit/keep-list.json
 python3 $SK/tighten_edges.py --keeps work/edit/keep-list.json --wav work/analysis/audio.wav --output work/edit/keep-list.json
 python3 $SK/build_filter.py --video SRC.mp4 --keeps work/edit/keep-list.json --out-dir work/edit --srt work/captions/srt/NAME.srt
 python3 $SK/scan_flubs.py work/edit/clean-preview.txt --strict
 bash $SK/render_clean.sh --video SRC.mp4 --filter work/edit/filter.txt --output work/edit/master-4k.mp4
+python3 $SK/extract_joins.py --video work/edit/master-4k.mp4 --plan work/edit/edit-plan.json --timeline output --out-dir work/joins
+python3 $SK/audit_pauses.py --media work/edit/master-4k.mp4 --srt work/edit/clean-preview.srt --plan work/edit/edit-plan.json --strict
 
 # optional face:
 python3 $SK/sync_audio_offset.py --screen SRC.mp4 --face FACE.mov
@@ -77,8 +83,8 @@ bash $SK/cleanup_work.sh --project-root . --also-masters
 | [`references/deliverables.md`](references/deliverables.md) | 2K/SRT/VTT/TXT + cleanup |
 | [`references/face-pip.md`](references/face-pip.md) | Sync, crop, PiP |
 | [`references/failure-modes.md`](references/failure-modes.md) | Fixes |
-| [`assets/keep-list.schema.json`](assets/keep-list.schema.json) | keep-list shape (`in`/`out`) |
-| [`assets/keep-list.example.json`](assets/keep-list.example.json) | Example keeps |
+| [`assets/keep-list.schema.json`](assets/keep-list.schema.json) | Semantic joins/cadence, edge hygiene, padding, and accepted pauses |
+| [`assets/keep-list.example.json`](assets/keep-list.example.json) | Example semantic joins and reviewed pause exceptions |
 | [`assets/edit-report.md`](assets/edit-report.md) | Final report template |
 | [`assets/terms.txt`](assets/terms.txt) | Standard STT domain terms (`stt --terms`) |
 | [`scripts/`](scripts/) | All tools (`--help`) |
@@ -88,7 +94,8 @@ bash $SK/cleanup_work.sh --project-root . --also-masters
 - Editing: `deliverables/` has **2K mp4 + SRT** only, plus requested VTT/TXT
 - Captions/transcript only: requested SRT/VTT/TXT files parse/read correctly and match the unedited source timeline/content; no copied video unless requested
 - Edited preview/final transcript is one continuous take; `scan_flubs --strict` clean enough
-- Surgical joins have no dangling prep silence/motion
+- Every assembled jump-cut seam was listened to; no cut-adjacent orphaned breath/prep remains
+- Clean-output pause candidates were reviewed; intentional retained pauses are documented and natural internal breaths remain
 - Face PiP (if any): verified offset; crop preview person-dominant
 - Temps cleaned; sources preserved; no sample frames left in root
 

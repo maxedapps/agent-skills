@@ -1,197 +1,48 @@
 {
-  "source": "agent-skills-1.mp4",
-  "output": "agent-skills-1-clean.mp4",
-  "source_duration_s": 1750.72,
+  "source": "source.mp4",
+  "output": "work/edit/master-4k.mp4",
+  "source_duration_s": 180.0,
   "pad_in": 0.03,
-  "pad_out": 0.1,
+  "pad_out": 0.05,
   "merge_gap": 0.15,
-  "keeps": [
+  "accepted_pauses": [
     {
-      "start": 417.53,
-      "end": 424.04,
-      "note": "intro",
-      "in": "natural",
-      "out": "section"
-    },
-    {
-      "start": 428.89,
-      "end": 457.9,
-      "note": "problem + skill definition",
-      "in": "tight",
-      "out": "soft"
-    },
-    {
-      "start": 462.45,
-      "end": 472.54,
-      "note": "Because a skill is just a prompt",
-      "in": "tight",
-      "out": "soft"
-    },
-    {
-      "start": 475.232,
-      "end": 540.462,
-      "note": "worth noting through plans."
-    },
-    {
-      "start": 543.45,
-      "end": 585.44,
-      "note": "public repo + generate-image / fal"
-    },
-    {
-      "start": 591.33,
-      "end": 598.89,
-      "note": "gpt image hardcoded"
-    },
-    {
-      "start": 602.27,
-      "end": 670.21,
-      "note": "why skill+script / utility"
-    },
-    {
-      "start": 675.43,
-      "end": 770.48,
-      "note": "knowledge gap through create skills"
-    },
-    {
-      "start": 776.74,
-      "end": 803.46,
-      "note": "create-skill skill ... features"
-    },
-    {
-      "start": 806.38,
-      "end": 887.152,
-      "note": "docs idea through when I | ask the "
-    },
-    {
-      "start": 888.26,
-      "end": 910.65,
-      "note": "agent to create a plan | reliable activation ... It includes stuff | like research, perform research"
-    },
-    {
-      "start": 917.49,
-      "end": 956.55,
-      "note": "delegate/subagents/... encoded in here"
-    },
-    {
-      "start": 959.39,
-      "end": 973.081,
-      "note": "so that plan reviewed ... should follow | certain plans and uh"
-    },
-    {
-      "start": 973.937,
-      "end": 978.8,
-      "note": "also should follow + review intro"
-    },
-    {
-      "start": 979.22,
-      "end": 1060.197,
-      "note": "review system through work on a plan."
-    },
-    {
-      "start": 1064.13,
-      "end": 1081.71,
-      "note": "put into a prompt ... skill"
-    },
-    {
-      "start": 1086.17,
-      "end": 1102.609,
-      "note": "write your own skills | especially great starting "
-    },
-    {
-      "start": 1102.909,
-      "end": 1103.47,
-      "note": "points."
-    },
-    {
-      "start": 1103.76,
-      "end": 1122.19,
-      "note": "refine them ... it is simple"
-    },
-    {
-      "start": 1139.99,
-      "end": 1211.43,
-      "note": "A good skill is lean"
-    },
-    {
-      "start": 1214.46,
-      "end": 1255.15,
-      "note": "skills evolve ... how much"
-    },
-    {
-      "start": 1255.37,
-      "end": 1275.39,
-      "note": "code we read ... or you"
-    },
-    {
-      "start": 1275.677,
-      "end": 1285.8,
-      "note": "frequently correct ... half a"
-    },
-    {
-      "start": 1285.97,
-      "end": 1298.39,
-      "note": "year ago ... don't just collect"
-    },
-    {
-      "start": 1307.32,
-      "end": 1351.73,
-      "note": "four types"
-    },
-    {
-      "start": 1388.4,
-      "end": 1439.51,
-      "note": "py sub-agents"
-    },
-    {
-      "start": 1444.96,
-      "end": 1448.53,
-      "note": "efficiently work with CLI"
-    },
-    {
-      "start": 1465.25,
-      "end": 1469.3,
-      "note": "executables as I like to call them"
-    },
-    {
-      "start": 1471.67,
-      "end": 1524.95,
-      "note": "which would ... with an agent."
-    },
-    {
-      "start": 1528.4,
-      "end": 1537.1,
-      "note": "And I describe workflow ... scripts and configs"
-    },
-    {
-      "start": 1540.85,
-      "end": 1548.14,
-      "note": "to again combine deterministic with LLMs"
-    },
-    {
-      "start": 1555.07,
-      "end": 1561.32,
-      "note": "skills can be really useful"
-    },
-    {
-      "start": 1573.41,
-      "end": 1597.25,
-      "note": "where to put skills ... global skill"
-    },
-    {
-      "start": 1599.69,
-      "end": 1637.04,
-      "note": "because I may want ... lean as possible"
-    },
-    {
-      "start": 1638.87,
-      "end": 1647.69,
-      "note": "few skills as possible"
-    },
-    {
-      "start": 1653.75,
-      "end": 1748.06,
-      "note": "agents.md vs skills outro"
+      "start": 70.2,
+      "end": 71.0,
+      "reason": "reviewed internal breath; delivery remains natural"
     }
   ],
-  "note": "Example from agent-skills-1; edge tags illustrative \u2014 run classify_joins+tighten_edges on real jobs"
+  "keeps": [
+    {
+      "start": 12.4,
+      "end": 38.2,
+      "note": "successful introduction",
+      "join": "repair",
+      "pause": { "intent": "short" },
+      "in": "natural",
+      "out": "surgical"
+    },
+    {
+      "start": 44.1,
+      "end": 112.8,
+      "note": "main explanation after restart",
+      "join": "sentence",
+      "in": "tight",
+      "out": "soft",
+      "pad_out": 0.05
+    },
+    {
+      "start": 116.0,
+      "end": 171.5,
+      "note": "final section and conclusion",
+      "join": "section",
+      "pause": {
+        "intent": "retained",
+        "accepted": true,
+        "reason": "reviewed closing cadence"
+      },
+      "in": "natural",
+      "out": "section"
+    }
+  ]
 }

@@ -2,6 +2,8 @@
 """Build ffmpeg filter_complex + edit plan from a keep-list JSON.
 
 Also optionally rewrites captions onto the clean timeline via cut_srt logic.
+Semantic join/pause metadata and reviewed pause exemptions are retained in the
+plan. Per-keep numeric ``pad_in``/``pad_out`` overrides class/global padding.
 
 Stdout: summary JSON
 Stderr: diagnostics
@@ -67,7 +69,8 @@ def finalize_ranges(
     merge_gap: float,
     src_dur: float,
 ) -> list[dict]:
-    # merge tiny gaps first on raw keeps (preserve stricter edge tags)
+    # Merge tiny source gaps first. The merged segment keeps the first incoming
+    # edge and the LAST keep's outgoing join/edge metadata.
     merged: list[dict] = []
     for k in keeps:
         if merged and k["start"] - merged[-1]["end"] < merge_gap:
@@ -77,16 +80,20 @@ def finalize_ranges(
             extra = k.get("note") or ""
             if extra:
                 prev["note"] = (note + " | " + extra).strip(" |")
-            # keep the more surgical out / tighter in when merging
-            rank_out = {"surgical": 0, "soft": 1, "section": 2}
-            if rank_out.get(str(k.get("out")), 9) < rank_out.get(str(prev.get("out")), 9):
-                prev["out"] = k.get("out")
-            if k.get("in") == "tight":
-                prev["in"] = "tight"
+            for key in ("out", "join", "pause", "pad_out"):
+                if key in k:
+                    prev[key] = k[key]
+            if k.get("accepted_pauses"):
+                prev.setdefault("accepted_pauses", []).extend(k["accepted_pauses"])
         else:
             merged.append(dict(k))
 
     final: list[dict] = []
+    output_cursor = 0.0
+    core_keys = {
+        "start", "end", "note", "in", "out", "join", "pause",
+        "pad_in", "pad_out", "accepted_pauses",
+    }
     for i, k in enumerate(merged):
         pin, pout = _pad_for_keep(k, default_in=pad_in, default_out=pad_out)
         s = max(0.0, float(k["start"]) - pin)
@@ -94,25 +101,67 @@ def finalize_ranges(
         if final:
             s = max(s, final[-1]["end"] + 0.001)
         if i + 1 < len(merged):
-            # never eat into the next keep; leave a hairline gap for surgical joins
+            # Never eat into the next keep.
             nxt_pin, _ = _pad_for_keep(merged[i + 1], default_in=pad_in, default_out=pad_out)
             limit = float(merged[i + 1]["start"]) - nxt_pin - 0.01
             e = min(e, limit)
         if e <= s:
             s, e = float(k["start"]), float(k["end"])
-        final.append(
-            {
-                "start": round(s, 3),
-                "end": round(e, 3),
-                "dur": round(e - s, 3),
-                "note": k.get("note", ""),
-                "in": k.get("in"),
-                "out": k.get("out"),
-                "pad_in_applied": round(pin, 3),
-                "pad_out_applied": round(pout, 3),
-            }
-        )
+        dur = e - s
+        audit_metadata = {
+            key: value for key, value in k.items()
+            if key not in core_keys and not str(key).startswith("_")
+        }
+        item = {
+            "start": round(s, 3),
+            "end": round(e, 3),
+            "dur": round(dur, 3),
+            "output_start": round(output_cursor, 3),
+            "output_end": round(output_cursor + dur, 3),
+            "note": k.get("note", ""),
+            "join": k.get("join"),
+            "pause": k.get("pause"),
+            "in": k.get("in"),
+            "out": k.get("out"),
+            "pad_in_applied": round(pin, 3),
+            "pad_out_applied": round(pout, 3),
+        }
+        if k.get("accepted_pauses"):
+            item["accepted_pauses"] = k["accepted_pauses"]
+        if audit_metadata:
+            item["metadata"] = audit_metadata
+        final.append(item)
+        output_cursor += dur
     return final
+
+
+def map_accepted_pauses(exemptions: list[dict], ranges: list[dict]) -> list[dict]:
+    """Map reviewed source-timeline pause ranges onto the assembled timeline."""
+    mapped: list[dict] = []
+    for exemption in exemptions:
+        try:
+            start = float(exemption["start"])
+            end = float(exemption["end"])
+        except (KeyError, TypeError, ValueError):
+            raise ValueError("accepted_pauses entries require numeric start/end") from None
+        if end <= start:
+            raise ValueError("accepted_pauses entry end must be after start")
+        for segment in ranges:
+            overlap_start = max(start, float(segment["start"]))
+            overlap_end = min(end, float(segment["end"]))
+            if overlap_end <= overlap_start:
+                continue
+            item = dict(exemption)
+            item["source_start"] = round(overlap_start, 3)
+            item["source_end"] = round(overlap_end, 3)
+            item["start"] = round(
+                float(segment["output_start"]) + overlap_start - float(segment["start"]), 3
+            )
+            item["end"] = round(
+                float(segment["output_start"]) + overlap_end - float(segment["start"]), 3
+            )
+            mapped.append(item)
+    return mapped
 
 
 def write_filter(ranges: list[dict], path: Path) -> None:
@@ -220,6 +269,13 @@ def main() -> int:
     if not ranges:
         print("error: no ranges", file=sys.stderr)
         return 2
+    try:
+        accepted_pauses = map_accepted_pauses(
+            meta.get("accepted_pauses", []) if isinstance(meta, dict) else [], ranges
+        )
+    except ValueError as exc:
+        print(f"error: bad accepted pause: {exc}", file=sys.stderr)
+        return 2
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
     filter_path = args.out_dir / "filter.txt"
@@ -241,6 +297,7 @@ def main() -> int:
         "pad_out": pad_out,
         "merge_gap": merge_gap,
         "segments": ranges,
+        "accepted_pauses": accepted_pauses,
         "filter": str(filter_path.resolve()),
     }
     plan_path.write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")

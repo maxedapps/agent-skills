@@ -22,11 +22,23 @@
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Pause then sudden jump mid-thought | Soft pad on surgical join | `out: surgical` + `tighten_edges.py` |
-| Mouth/hands start, then cut away | Out-point after prep for deleted attempt | Out earlier at phoneme decay; re-listen join WAV |
+| Pause then sudden jump mid-thought | Soft pad on repair/continuation join | Set semantic `join`, use `out: surgical` / `in: tight`, then listen to the assembled seam |
+| Mouth/hands start, then cut away | Out-point after prep for deleted attempt | Out earlier at phoneme decay; re-render and listen to the assembled seam |
 | Face continues a discarded sentence energy | Same | Tighten; re-check face joins |
-| Robot pacing everywhere | Over-tightened section boundaries | Allow `section` breaths |
-| classify_joins wrong on long think inside one idea | Gap heuristic only | Manually set `out`/`in` tags |
+| Robot pacing everywhere | Candidate thresholds used as delete targets | Restore natural internal breaths and short sentence/section pauses |
+| Authored class changes unexpectedly | Source gap treated as semantic truth or `--force` used | Restore explicit `join`/edges; rerun classifier without `--force` |
+| `tighten_edges` reports ambiguous late energy | Energy cannot identify breath/prep semantically | Set the endpoint manually after listening |
+
+## Cadence audit
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Long same-cue silence flagged | Internal breath/think exceeds continuation review default | Listen on actual clean output; keep if natural, otherwise shorten deliberately |
+| Related sentences drag | Inter-cue pause around/above 1.0 s | Review flow and allow a jump cut; never auto-delete all silence |
+| Normal/section breaks feel breathless | Review thresholds were mistaken for targets | Restore a short natural pause; document reviewed exceptions |
+| Audit context is wrong | Stale SRT or missing semantic plan | Use matching final/preview SRT and pass final `edit-plan.json` |
+| Accepted pause still fails strict mode | Exception uses the wrong timeline | Rebuild source exception through the plan or pass output-time exemptions |
+| Join WAV contains deleted material | Continuous source interval was auditioned | Use rendered output mode or disjoint source mode in `extract_joins.py` |
 
 ## Face PiP / crop
 

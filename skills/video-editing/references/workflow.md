@@ -35,8 +35,12 @@ project/
 ### A — Inspect
 `ffprobe` sources. Create `work/` + `deliverables/`.
 
-### B — Optional audio map
-`analyze_audio.py --extract` for first-sound context only.
+### B — Audio map
+Extract the analysis WAV used for conservative cut-edge cleanup and final pause review:
+
+```bash
+python3 scripts/analyze_audio.py --video SOURCE.mp4 --wav work/analysis/audio.wav --extract
+```
 
 ### C — Caption source once
 Follow `captions.md`: use local `stt` if on PATH; otherwise **ask the user** how to obtain SRT+TXT (do not silently pick a cloud tool). Land files at `work/captions/srt/` + `work/captions/txt/`.
@@ -51,17 +55,19 @@ Mark real-take start, restarts, stumps, abandoned branches.
 ### E — Draft keep-list
 Author `work/edit/keep-list.json` (`assets/keep-list.schema.json`).
 
-Order: drop pre-take → abandoned sections → restart winners → intra-cue surgery (`time_at` / `energy_at`) → edge classes.
+Order: drop pre-take → abandoned sections → restart winners → intra-cue surgery (`time_at` / `energy_at`) → semantic outgoing `join`/pause intent → physical `in`/`out` edge hygiene.
+
+Use `join: repair|continuation|sentence|section` independently of source-gap length. Keep short internal breaths. Split distracting long pauses—especially mid-sentence or between related sentences—while retaining enough separation for natural phrasing. Record only listened-to intentional exceptions in `accepted_pauses` / `pause.accepted`.
 
 ### F — Classify + tighten edges
 ```bash
-python3 scripts/classify_joins.py --keeps work/edit/keep-list.json --output work/edit/keep-list.json --force
+python3 scripts/classify_joins.py --keeps work/edit/keep-list.json --output work/edit/keep-list.json
 python3 scripts/tighten_edges.py \
   --keeps work/edit/keep-list.json \
   --wav work/analysis/audio.wav \
   --output work/edit/keep-list.json
 ```
-Manually override tags when gap heuristic is wrong (closely related clauses with longer think pause still `surgical` if a restart was removed between them).
+Source-gap classes are advisory; explicit semantic joins and edge tags survive. Do not use `--force` after authoring. `tighten_edges.py` conservatively changes only actual cut endpoints and reports ambiguous energy; it does not recognize breaths semantically. Listen to every changed or unresolved seam.
 
 ### G — Build + validate without re-ASR
 ```bash
@@ -81,13 +87,25 @@ python3 scripts/extract_joins.py --video SOURCE.mp4 --keeps work/edit/keep-list.
 ```
 Iterate E–G until prose is one performance and surgical tails are clean.
 
-### H — Render master
+### H — Render master and approve cadence
 ```bash
 bash scripts/render_clean.sh \
   --video SOURCE.mp4 \
   --filter work/edit/filter.txt \
   --output work/edit/master-4k.mp4
+
+python3 scripts/extract_joins.py \
+  --video work/edit/master-4k.mp4 \
+  --plan work/edit/edit-plan.json \
+  --timeline output --out-dir work/joins
+
+python3 scripts/audit_pauses.py \
+  --media work/edit/master-4k.mp4 \
+  --srt work/edit/clean-preview.srt \
+  --plan work/edit/edit-plan.json --strict
 ```
+
+Listen to every assembled seam and pause candidate. Candidate defaults are about 0.7 s for repair/continuation, 1.0 s for a related sentence, 1.2 s ordinary, and 1.5 s for a section. They trigger review rather than automatic deletion. Keep short internal breaths; remove cut-adjacent orphan breath/prep at every jump cut. Document intentional exceptions, rebuild, and rerun strict audit.
 
 ### I — Optional face PiP
 1. `sync_audio_offset.py --screen SOURCE.mp4 --face FACE.mov` → require verify_delta ≈ 0
@@ -122,12 +140,13 @@ Report with `assets/edit-report.md`.
 | `analyze_audio.py` | Extract wav / silence map |
 | `time_at.py` | Proportional cue timestamp guess |
 | `energy_at.py` | RMS envelope printout |
-| `classify_joins.py` | Tag `in`/`out` from gaps |
-| `tighten_edges.py` | Snap edges via energy (kill prep tails) |
+| `classify_joins.py` | Preserve authored intent; annotate advisory source-gap edge suggestions |
+| `tighten_edges.py` | Conservative actual-cut energy cleanup + unresolved reporting |
 | `cut_srt.py` | Keep-list → rewritten SRT/TXT |
-| `build_filter.py` | Keep-list → filter + plan (+ cut SRT); respects edge pads |
+| `build_filter.py` | Keep-list → metadata-preserving filter + plan (+ cut SRT) |
 | `scan_flubs.py` | Residual flub patterns |
-| `extract_joins.py` | Boundary WAV clips |
+| `extract_joins.py` | Rendered seams or assembled disjoint source tail/head WAVs |
+| `audit_pauses.py` | Review-only clean-output silence/SRT cadence audit |
 | `render_clean.sh` | Master render |
 | `sync_audio_offset.py` | Face/screen audio offset |
 | `suggest_face_crop.py` | Multi-frame crop suggestion + preview |
@@ -140,6 +159,7 @@ Report with `assets/edit-report.md`.
 
 - `deliverables/` has 2K mp4 + srt (+ requested optionals only)
 - One opening; complete arc; hard flubs clean enough
-- No surgical dangling prep
+- Every assembled jump-cut seam was listened to; no cut-adjacent orphaned prep/breath remains
+- Clean-output internal/inter-cue pause candidates were reviewed; accepted exceptions are documented and section cadence is not breathless
 - Face (if any): good offset + person-centered crop
 - Temps cleaned; sources kept
