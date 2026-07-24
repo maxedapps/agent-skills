@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "edit-tutorial-take/keep-list.schema.json",
+  "title": "Tutorial take keep-list",
+  "type": "object",
+  "required": ["keeps"],
+  "additionalProperties": true,
+  "properties": {
+    "source": { "type": "string" },
+    "output": { "type": "string" },
+    "source_duration_s": { "type": "number", "minimum": 0 },
+    "pad_in": {
+      "type": "number",
+      "minimum": 0,
+      "default": 0.03,
+      "description": "Global tiny default only; surgical joins should use out/in tags instead of large global pads"
+    },
+    "pad_out": { "type": "number", "minimum": 0, "default": 0.05 },
+    "merge_gap": { "type": "number", "minimum": 0, "default": 0.15 },
+    "keeps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["start", "end"],
+        "additionalProperties": true,
+        "properties": {
+          "start": { "type": "number", "minimum": 0 },
+          "end": { "type": "number", "minimum": 0 },
+          "note": { "type": "string" },
+          "in": {
+            "type": "string",
+            "enum": ["tight", "natural"],
+            "description": "How aggressively to land the in-point"
+          },
+          "out": {
+            "type": "string",
+            "enum": ["surgical", "soft", "section"],
+            "description": "Edge class for tail padding / tighten policy"
+          }
+        }
+      }
+    }
+  }
+}
