@@ -13,3 +13,4 @@ X
 xAI
 Qwen
 Kimi
+fal.ai
