@@ -30,8 +30,8 @@
 ## Reproduce (lean)
 ```bash
 # keep-list + plan retained only if present under work/edit/
-python3 .agents/skills/edit-tutorial-take/scripts/build_filter.py ...
-bash .agents/skills/edit-tutorial-take/scripts/export_final_video.sh \
+python3 .agents/skills/video-editing/scripts/build_filter.py ...
+bash .agents/skills/video-editing/scripts/export_final_video.sh \
   --input work/edit/master-4k.mp4 \
   --output deliverables/REPLACE_FINAL_MP4
 ```

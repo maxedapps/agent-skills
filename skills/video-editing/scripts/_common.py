@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared helpers for edit-tutorial-take scripts."""
+"""Shared helpers for video-editing scripts."""
 
 from __future__ import annotations
 

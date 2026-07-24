@@ -1,5 +1,5 @@
 ---
-name: edit-tutorial-take
+name: video-editing
 description: >-
   Turns raw tutorial/talking-head recordings into one publishable continuous take
   by removing false starts, stumbles, abandoned lines, and bad dead air; optional
@@ -41,7 +41,7 @@ inspect → caption source once → parse SRT → draft keep-list
 ### Essential commands
 
 ```bash
-SK=.agents/skills/edit-tutorial-take/scripts
+SK=.agents/skills/video-editing/scripts
 
 python3 $SK/parse_srt.py work/captions/srt/NAME.srt --format report
 python3 $SK/classify_joins.py --keeps work/edit/keep-list.json --output work/edit/keep-list.json --force

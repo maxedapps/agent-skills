@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "edit-tutorial-take/keep-list.schema.json",
+  "$id": "video-editing/keep-list.schema.json",
   "title": "Tutorial take keep-list",
   "type": "object",
   "required": ["keeps"],
