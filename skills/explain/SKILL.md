@@ -1,20 +1,26 @@
 ---
 name: explain
 description: >-
-  Produces concise, evidence-grounded Markdown explanations and standalone HTML
-  for code, systems, data relationships, and prior plans, reviews, or agent
-  statements. Use this skill when the user explicitly asks to explain, walk
-  through, clarify, or visualize one of those subjects. Do not use for
-  implementation or fixes, performing a new code review, slide creation,
-  exhaustive documentation, or render-only conversion of supplied Markdown.
+  Runs a manually initiated explanation workflow that produces concise,
+  evidence-grounded Markdown and standalone HTML for code, systems, data
+  relationships, and prior plans, reviews, or agent statements. Use this skill
+  when, and only when, the user explicitly invokes explain by name. Do not use
+  for ordinary Q&A, implementation or fixes, performing a new code review, slide
+  creation, exhaustive documentation, or render-only conversion of supplied
+  Markdown.
 license: MIT
 compatibility: >-
   Requires Node.js 20+, npm dependencies installed once in the skill directory,
   and local file-write access. The renderer uses the platform's default-browser
   opener unless --no-open is passed. Rendered HTML is standalone and offline.
+  Strict manual-only invocation is supported by Pi, Claude Code, and Codex;
+  other harnesses may ignore invocation-control metadata.
+disable-model-invocation: true
 metadata:
-  short-description: Explain code, systems, and prior decisions as standalone HTML
+  short-description: Manually explain code, systems, and prior decisions as HTML
 ---
+
+> **Manual-only gate:** If the user did not explicitly invoke `explain` by name, stop without drafting Markdown/HTML or installing renderer dependencies. Explain that this skill is manual-only.
 
 # Explain
 

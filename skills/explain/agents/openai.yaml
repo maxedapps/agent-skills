@@ -1,0 +1,7 @@
+interface:
+  display_name: "Explain"
+  short_description: "Manually explain code, systems, and prior decisions as HTML"
+  default_prompt: "Explain the specified subject using the supplied context."
+
+policy:
+  allow_implicit_invocation: false

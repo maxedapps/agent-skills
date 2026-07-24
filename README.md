@@ -5,7 +5,7 @@
 - `code-review` — perform adaptable generic, scoped, and plan-backed implementation reviews.
 - `decomplex` — prevent, audit, and triage unnecessary complexity without editing reviewed targets.
 - `video-editing` — clean raw tutorial/talking-head takes into one continuous cut; optional face PiP; ship 2K mp4 + SRT.
-- `explain` — produce context-grounded Markdown explanations and standalone HTML that opens in the default browser unless suppressed.
+- `explain` — manually produce context-grounded Markdown explanations and standalone HTML that opens in the default browser unless suppressed.
 - `create-plan` — create, review, and improve researched, implementation-ready plans before coding.
 - `create-skill` — create, rewrite, and review concise, actionable Agent Skills.
 - `create-slides` — create polished, dependency-free HTML slide decks from a tested stepped-reveal starter.
@@ -63,17 +63,20 @@ npx skills add maxedapps/agent-skills \
 
 Review each skill and its compatibility requirements before use. `code-review`, `create-plan`, and `implement-plan` **delegate by default** whenever a safe capability exists — not only for “hard” work. Parallelism changes scheduling only; synthesis, integration, dispositions, acceptance, cleanup, and user decisions stay with the parent. Material ambiguity and complexity-increasing review remedies escalate to the user rather than shaky assumptions. No catalog skill is a hard runtime dependency of another. Worktree isolate/integrate/remove policy is canonical in `use-subagents` and mandatory after lanes finish; harness launchers (e.g. `use-pi-subagents`) own only their runtime-state cleanup.
 
-### Manual-only VPS skill
+### Manual-only skills
 
-`vps-setup-hardening` performs production-impacting remote work and pauses for human authentication, independent access/exposure tests, provider firewall changes, access closure, and reboot approval. It is never intended for automatic selection.
+These skills are never intended for automatic selection:
 
-Invoke it explicitly after installation:
+- `explain` — structured Markdown/HTML explanations with optional browser open
+- `vps-setup-hardening` — production-impacting remote work with human authentication, independent access/exposure tests, provider firewall changes, access closure, and reboot approval gates
 
-- Pi: `/skill:vps-setup-hardening <target and preferences>`
-- Claude Code: `/vps-setup-hardening <target and preferences>`
-- Codex: `$vps-setup-hardening <target and preferences>`
+Invoke them explicitly after installation:
 
-Pi and Claude Code honor `disable-model-invocation: true`; Codex honors the bundled `policy.allow_implicit_invocation: false`. Other agents may ignore invocation-control metadata, so strict manual-only prevention is not claimed for them. The skill also contains a defensive in-body stop rule.
+- Pi: `/skill:explain <subject>` or `/skill:vps-setup-hardening <target and preferences>`
+- Claude Code: `/explain <subject>` or `/vps-setup-hardening <target and preferences>`
+- Codex: `$explain <subject>` or `$vps-setup-hardening <target and preferences>`
+
+Pi and Claude Code honor `disable-model-invocation: true`; Codex honors the bundled `policy.allow_implicit_invocation: false`. Other agents may ignore invocation-control metadata, so strict manual-only prevention is not claimed for them. Each skill also contains a defensive in-body stop rule.
 
 ## Runtime and related skills
 
@@ -98,7 +101,7 @@ Reviews proposed or existing source, plans, architecture, tests, configuration, 
 
 ### `explain`
 
-Produces concise, context-grounded Markdown plus polished standalone HTML for code, systems, and prior plans, reviews, or agent decisions. Explanations can use tables, syntax-highlighted code, and an optional Mermaid diagram. The Node 20+ renderer opens completed HTML in the default browser by default; pass `--no-open` for CI, tests, SSH/headless/remote work, or other contexts where browser side effects are inappropriate. After a one-time `npm ci --ignore-scripts --no-audit --no-fund` from the installed skill directory, generated HTML is standalone/offline and needs no server or network access.
+Manual-only. Produces concise, context-grounded Markdown plus polished standalone HTML for code, systems, and prior plans, reviews, or agent decisions. Explanations can use tables, syntax-highlighted code, and an optional Mermaid diagram. The Node 20+ renderer opens completed HTML in the default browser by default; pass `--no-open` for CI, tests, SSH/headless/remote work, or other contexts where browser side effects are inappropriate. After a one-time `npm ci --ignore-scripts --no-audit --no-fund` from the installed skill directory, generated HTML is standalone/offline and needs no server or network access.
 
 ### `create-plan`
 
@@ -148,7 +151,7 @@ for d in skills/*; do
 done
 ```
 
-`skills-ref` 0.1.5 reports `disable-model-invocation` as an unexpected field even though current Pi and Claude Code support it. For `vps-setup-hardening`, retain that required safety field and treat only that exact diagnostic as a known external-validator limitation; all other diagnostics remain failures.
+`skills-ref` 0.1.5 reports `disable-model-invocation` as an unexpected field even though current Pi and Claude Code support it. For manual-only skills (`explain`, `vps-setup-hardening`), retain that required safety field and treat only that exact diagnostic as a known external-validator limitation; all other diagnostics remain failures.
 
 Validate catalog metadata and local Markdown links:
 
