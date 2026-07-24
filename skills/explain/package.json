@@ -1,0 +1,17 @@
+{
+  "name": "@maxed-skills/explain-renderer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test scripts/render-explainer.test.mjs"
+  },
+  "dependencies": {
+    "markdown-it": "14.3.0",
+    "mermaid": "11.16.0",
+    "shiki": "4.3.1"
+  }
+}

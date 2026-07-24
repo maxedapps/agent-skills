@@ -5,6 +5,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 const MAX_DIAGNOSTICS = 50;
+const IGNORED_DIRECTORY_NAMES = new Set(['node_modules']);
 const HELP = `Usage: node scripts/validate-skill-links.mjs <file-or-directory> [...]
 
 Recursively inspect Markdown files and verify their relative link targets.
@@ -54,6 +55,7 @@ async function collectMarkdownFiles(inputPath, files) {
   for (const entry of entries) {
     const entryPath = path.join(absolute, entry.name);
     if (entry.isDirectory()) {
+      if (IGNORED_DIRECTORY_NAMES.has(entry.name)) continue;
       await collectMarkdownFiles(entryPath, files);
     } else if (entry.isFile() && path.extname(entry.name).toLowerCase() === '.md') {
       files.add(entryPath);

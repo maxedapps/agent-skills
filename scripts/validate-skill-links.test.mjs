@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,6 +20,33 @@ async function withTempDir(run) {
     await rm(root, { recursive: true, force: true });
   }
 }
+
+test('prunes node_modules while still checking source Markdown links', async () => {
+  await withTempDir(async (root) => {
+    const dependencyDirectory = join(root, 'node_modules', 'example-package');
+    await mkdir(dependencyDirectory, { recursive: true });
+    await writeFile(
+      join(dependencyDirectory, 'README.md'),
+      '[ignored dependency link](missing-dependency.md)\n',
+      'utf8',
+    );
+    await writeFile(join(root, 'target.md'), '# Target\n', 'utf8');
+    const source = join(root, 'source.md');
+    await writeFile(source, '[source link](target.md)\n', 'utf8');
+
+    const valid = runValidator(root);
+    assert.equal(valid.status, 0, valid.stderr);
+    assert.match(valid.stdout, /Checked 1 local Markdown link in 2 Markdown files/);
+    assert.doesNotMatch(valid.stdout, /missing-dependency\.md/);
+
+    await writeFile(source, '[broken source link](missing-source.md)\n', 'utf8');
+    const broken = runValidator(root);
+    assert.equal(broken.status, 1);
+    assert.match(broken.stderr, /missing-source\.md/);
+    assert.doesNotMatch(broken.stderr, /missing-dependency\.md/);
+    assert.match(broken.stderr, /Checked 1 local Markdown link in 2 Markdown files/);
+  });
+});
 
 test('ignores links in multiline code spans and indented code while checking adjacent links', async () => {
   await withTempDir(async (root) => {

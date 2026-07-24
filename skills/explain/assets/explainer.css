@@ -1,0 +1,280 @@
+:root {
+  color-scheme: light dark;
+  --background: #f7f8fa;
+  --surface: #ffffff;
+  --surface-subtle: #eef1f5;
+  --text: #18202a;
+  --muted: #596575;
+  --border: #cdd4de;
+  --accent: #0759b5;
+  --focus: #006edb;
+  --error: #a52222;
+  --radius: 0.55rem;
+  --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: 1.65;
+  overflow-wrap: break-word;
+}
+
+body {
+  margin: 0;
+}
+
+.explainer-shell {
+  width: min(100% - 2rem, 72rem);
+  margin-inline: auto;
+  padding-block: clamp(2rem, 6vw, 5rem);
+}
+
+.explainer {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 1.5);
+  box-shadow: 0 0.5rem 2rem rgb(20 35 55 / 8%);
+  padding: clamp(1.25rem, 4vw, 4rem);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  line-height: 1.2;
+  margin-block: 1.8em 0.65em;
+  scroll-margin-top: 1rem;
+}
+
+h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  letter-spacing: -0.035em;
+  margin-top: 0;
+}
+
+h2 {
+  border-bottom: 1px solid var(--border);
+  font-size: clamp(1.45rem, 3vw, 2.1rem);
+  padding-bottom: 0.3em;
+}
+
+p,
+ul,
+ol,
+blockquote,
+pre,
+table,
+figure {
+  margin-block: 1rem;
+}
+
+ul,
+ol {
+  padding-left: 1.5rem;
+}
+
+a {
+  color: var(--accent);
+  text-underline-offset: 0.16em;
+}
+
+a:hover {
+  text-decoration-thickness: 0.14em;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 0.15rem;
+}
+
+blockquote {
+  border-left: 0.25rem solid var(--accent);
+  color: var(--muted);
+  margin-inline: 0;
+  padding: 0.15rem 0 0.15rem 1.15rem;
+}
+
+code,
+pre {
+  font-family: var(--font-mono);
+}
+
+:not(pre) > code {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 0.3rem;
+  font-size: 0.9em;
+  padding: 0.12em 0.35em;
+}
+
+pre {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  line-height: 1.5;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 1rem;
+  tab-size: 2;
+  white-space: pre;
+}
+
+.shiki {
+  font-size: 0.9rem;
+}
+
+.table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  min-width: 32rem;
+  width: 100%;
+}
+
+th,
+td {
+  border: 1px solid var(--border);
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: var(--surface-subtle);
+}
+
+.markdown-image-placeholder {
+  background: var(--surface-subtle);
+  border: 1px dashed var(--border);
+  border-radius: 0.3rem;
+  color: var(--muted);
+  display: inline-block;
+  padding: 0.15em 0.45em;
+}
+
+.mermaid-diagram {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 1rem;
+}
+
+.mermaid-output {
+  min-width: min-content;
+  text-align: center;
+}
+
+.mermaid-output svg {
+  display: block;
+  height: auto;
+  margin-inline: auto;
+  max-width: 100%;
+}
+
+.mermaid-diagram[data-state="rendered"] .mermaid-source {
+  display: none;
+}
+
+.mermaid-error {
+  color: var(--error);
+  font-weight: 650;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #11151b;
+    --surface: #191f27;
+    --surface-subtle: #232b35;
+    --text: #e8edf4;
+    --muted: #a8b3c1;
+    --border: #3a4655;
+    --accent: #80b9ff;
+    --focus: #92c4ff;
+    --error: #ff9b9b;
+  }
+
+  .explainer {
+    box-shadow: none;
+  }
+
+  .shiki,
+  .shiki span {
+    background-color: var(--shiki-dark-bg) !important;
+    color: var(--shiki-dark) !important;
+  }
+}
+
+@media (max-width: 40rem) {
+  .explainer-shell {
+    width: 100%;
+    padding: 0;
+  }
+
+  .explainer {
+    border-inline: 0;
+    border-radius: 0;
+    padding: 1.25rem;
+  }
+
+  .mermaid-output {
+    min-width: 32rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  :root {
+    --background: #ffffff;
+    --surface: #ffffff;
+    --surface-subtle: #f1f1f1;
+    --text: #000000;
+    --muted: #333333;
+    --border: #777777;
+    --accent: #000000;
+  }
+
+  .explainer-shell {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+
+  .explainer {
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  pre,
+  blockquote,
+  table,
+  .mermaid-diagram {
+    break-inside: avoid;
+  }
+}
