@@ -1,4 +1,5 @@
 <!-- Replace every REPLACE_ME marker before validation. Delete every unused section. -->
+<!-- Keep the body compact and scan-friendly. Prefer short bullets and numbered steps; use prose only for necessary nuance. Move conditional detail into references/. -->
 ---
 name: REPLACE_ME
 description: REPLACE_ME. Use this skill when REPLACE_ME. Do not use when REPLACE_ME.

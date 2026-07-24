@@ -30,6 +30,9 @@ Follow user and higher-priority constraints. Keep one coherent job. Preserve beh
 - Use: `[Third-person capability]. Use this skill when [intents/triggers]. Do not use when/for [material near misses].`
 - Keep the description under 1024 characters. Focus on intent, outcomes, and adjacent boundaries—not mechanics.
 - Keep `SKILL.md` concise and actionable. Put critical constraints, mandatory resources, fragile sequencing, validation, and safety early.
+- Default to short headings, compact bullets, numbered procedures, and small tables. Use prose paragraphs only when they communicate necessary nuance more clearly.
+- Keep each bullet focused on one instruction or tightly coupled behavior. Prefer direct wording; remove throat-clearing, repeated rationale, and paragraph-length bullets.
+- Match the surrounding skill catalog's density. A longer main file requires execution-critical justification; move conditional detail into `references/`.
 - Use progressive disclosure deliberately. Do not squeeze useful reusable detail into `SKILL.md` merely to avoid a resource.
 - Use `references/` for detailed workflows, schemas, examples, tool guidance, and gotchas.
 - Use `assets/` for reusable templates and static output shapes.
@@ -72,6 +75,7 @@ Follow user and higher-priority constraints. Keep one coherent job. Preserve beh
 - Include only rules needed after activation.
 - Define critical constraints, sequence, resources, validation, failure handling, and safety.
 - Remove redundant explanation, excessive menus, stale examples, vague guidance, and unrelated content.
+- Perform a compression pass: shorten wording, split overloaded bullets, convert scannable prose to lists, and remove content that does not change execution.
 - Create supporting resources when detail is reusable or would crowd the main file.
 - Make scripts non-interactive. Support `--help`, bounded output, clear exit codes, and safe idempotent defaults.
 - Require `--dry-run` or confirmation for destructive scripts.

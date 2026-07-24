@@ -24,7 +24,9 @@ Complete this before finalizing, reviewing, or substantially revising an Agent S
 - The workflow is concrete enough to execute without guessing; defaults replace unnecessary menus.
 - Prescriptiveness matches risk, and failure/cleanup/recovery behavior is explicit where material.
 - Generic explanations, duplicated policy, transcript history, redundant examples, and unrelated guidance are removed.
-- `SKILL.md` remains concise (normally below roughly 500 lines/5,000 tokens); conditional bulk is progressively disclosed.
+- The main file matches nearby catalog density and is normally under roughly 150 lines; longer files retain only execution-critical material and move conditional detail into resources.
+- The body favors short headings, compact bullets, numbered procedures, and small tables. Prose is retained only where it improves clarity.
+- Bullets express one instruction or tightly coupled behavior; paragraph-length bullets, repeated rationale, and introductory filler are absent.
 - Cross-skill references use skill names, not relative paths to another skill's `SKILL.md`.
 
 ## Resources and progressive disclosure
