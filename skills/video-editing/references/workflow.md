@@ -133,7 +133,7 @@ Report with `assets/edit-report.md`.
 | `suggest_face_crop.py` | Multi-frame crop suggestion + preview |
 | `export_final_video.sh` | Default 2K deliverable encode |
 | `srt_to_vtt.py` | SRT → VTT |
-| `cleanup_work.sh` | Delete disposable work artifacts |
+| `cleanup_work.sh` | Delete disposable edit artifacts; `--caption-work` removes caption-only work after delivery |
 | `_common.py` | Shared helpers (not CLI) |
 
 ## Stop conditions

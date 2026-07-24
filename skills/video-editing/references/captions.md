@@ -1,8 +1,9 @@
-# Captions for tutorial-take editing
+# Captions and transcripts
 
 ## TOC
 - Provider selection (critical)
 - Local `stt` (preferred when available)
+- Caption/transcript-only jobs
 - Iteration policy (critical)
 - Final captions + deliverables
 - On-disk layout
@@ -90,23 +91,49 @@ pnpm --filter @academind/generate-captions cli -- \
 
 Add `--force` to regenerate. Output layout is already `work/captions/srt|txt|…`.
 
+## Caption/transcript-only jobs
+
+When no video edit is requested, stop after transcription and delivery:
+
+1. Inspect the source with `ffprobe`; confirm the requested output formats and language expectations.
+2. Follow the provider order above and transcribe the **unedited source once**.
+3. Validate every requested artifact:
+   - SRT: parse with `parse_srt.py`; confirm cues exist and timestamps are ordered.
+   - VTT: derive from the validated SRT with `srt_to_vtt.py`; do not maintain it separately.
+   - TXT: read end-to-end for obvious omissions, repetitions, or hallucinated text; spot-check against the media.
+4. Copy only the requested artifacts to `deliverables/`. Do not create, edit, re-encode, or copy a video unless the user asks.
+5. After confirming delivery, run `cleanup_work.sh --project-root . --caption-work`; preserve the source media.
+
+Format defaults when the user does not specify an extension:
+
+| Request | Deliver |
+|---|---|
+| captions / subtitles | SRT |
+| transcript | TXT |
+| captions and transcript | SRT + TXT |
+| VTT / WebVTT | VTT derived from SRT |
+
+`stt` may generate SRT, TXT, VTT, and `words.json` together. Treat unrequested outputs as work artifacts, not deliverables.
+
 ## Iteration policy (critical)
 
 **Do not re-caption the clean cut on every edit pass.**
 
 | When | Action |
 |---|---|
-| Start of job | Caption **source once** → SRT+TXT under `work/captions/` |
-| While refining keep-list | Rewrite SRT with `cut_srt.py` / `build_filter.py --srt` |
-| Join QA | `extract_joins.py` + energy; optional |
-| After final timeline is locked | Ensure a **final .srt** matching deliverable timeline (cut-SRT verified, or one ASR pass **only if needed**) |
+| Start of any job | Caption **source once** → SRT+TXT under `work/captions/` |
+| Caption/transcript-only job | Validate source-timeline outputs and deliver requested formats; no keep-list or re-ASR loop |
+| While refining an edit keep-list | Rewrite SRT with `cut_srt.py` / `build_filter.py --srt` |
+| Join QA for an edit | `extract_joins.py` + energy; optional |
+| After an edited timeline is locked | Ensure a **final .srt** matching deliverable timeline (cut-SRT verified, or one ASR pass **only if needed**) |
 
 ## Final captions + deliverables
 
-- **Default ship:** `deliverables/*.srt` with the final mp4
+- **Editing default:** final MP4 + timeline-matched SRT
+- **Caption/transcript-only default:** requested timed-text/transcript files only; do not copy the source video
 - **VTT:** only if requested → `scripts/srt_to_vtt.py final.srt -o final.vtt`
-- **TXT:** only if requested → export plain transcript from final captions
-- Never maintain VTT by hand; always derive from final SRT
+- **TXT:** deliver when requested; use the source/final STT transcript matching the delivered timeline
+- Never maintain VTT by hand; always derive from the validated SRT
 
 See `deliverables.md`.
 

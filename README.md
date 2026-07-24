@@ -4,7 +4,7 @@
 
 - `code-review` — perform adaptable generic, scoped, and plan-backed implementation reviews.
 - `decomplex` — prevent, audit, and triage unnecessary complexity without editing reviewed targets.
-- `video-editing` — clean raw tutorial/talking-head takes into one continuous cut; optional face PiP; ship 2K mp4 + SRT.
+- `video-editing` — clean tutorial/talking-head takes into one continuous cut, or create captions/subtitles/transcripts without editing.
 - `explain` — manually produce context-grounded Markdown explanations and standalone HTML that opens in the default browser unless suppressed.
 - `create-plan` — create, review, and improve researched, implementation-ready plans before coding.
 - `create-skill` — create, rewrite, and review concise, actionable Agent Skills.

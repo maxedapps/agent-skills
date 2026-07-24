@@ -52,9 +52,11 @@
 | Mistake | Do instead |
 |---|---|
 | Re-ASR clean cut every iteration | Cut source SRT through keep-list |
+| Run editing/render steps for a captions-only request | Transcribe and validate the unedited source; deliver requested text formats only |
 | Trust cut-SRT alone for seam phonetics | Energy + join WAVs; optional one final ASR |
-| Ship video without final SRT | Deliverables require mp4 + srt |
-| Hand-maintain SRT and VTT separately | Generate VTT from final SRT only |
+| Ship an edited video without final SRT | Editing deliverables require MP4 + SRT |
+| Copy/re-encode source video for transcript-only work | Deliver TXT only unless the user requests other artifacts |
+| Hand-maintain SRT and VTT separately | Generate VTT from validated SRT only |
 
 ## Render / deliverable pitfalls
 

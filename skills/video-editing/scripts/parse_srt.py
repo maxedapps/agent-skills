@@ -72,6 +72,24 @@ def parse_srt(text: str) -> list[dict]:
     return cues
 
 
+def validate_cue_timing(cues: list[dict]) -> None:
+    """Reject reversed cue ranges or source-order timestamp regressions."""
+    previous_start = -1.0
+    for position, cue in enumerate(cues, start=1):
+        start = float(cue["start"])
+        end = float(cue["end"])
+        if end <= start:
+            raise ValueError(
+                f"cue {position} has non-positive duration ({start:.3f} -> {end:.3f})"
+            )
+        if start < previous_start:
+            raise ValueError(
+                f"cue {position} starts before the previous cue "
+                f"({start:.3f} < {previous_start:.3f})"
+            )
+        previous_start = start
+
+
 def find_gaps(cues: list[dict], min_gap: float) -> list[dict]:
     gaps = []
     for a, b in zip(cues, cues[1:]):
@@ -152,6 +170,11 @@ def main() -> int:
     cues = parse_srt(text)
     if not cues:
         print("error: no cues parsed", file=sys.stderr)
+        return 2
+    try:
+        validate_cue_timing(cues)
+    except ValueError as exc:
+        print(f"error: invalid cue timing: {exc}", file=sys.stderr)
         return 2
 
     openings = args.opening or ["let's talk"]
