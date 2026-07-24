@@ -39,7 +39,7 @@ project/
 `analyze_audio.py --extract` for first-sound context only.
 
 ### C — Caption source once
-`captions.md` → `work/captions/` (SRT+TXT).
+Follow `captions.md`: use local `stt` if on PATH; otherwise **ask the user** how to obtain SRT+TXT (do not silently pick a cloud tool). Land files at `work/captions/srt/` + `work/captions/txt/`.
 
 ### D — Parse SRT
 ```bash

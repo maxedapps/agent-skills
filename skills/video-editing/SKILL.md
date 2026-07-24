@@ -9,8 +9,8 @@ description: >-
   captions-only jobs without editing, silence-removal-only exports, general VFX,
   multi-cam films, or music/podcast edits without a timed speech keep-list.
 compatibility: >-
-  Requires ffmpeg/ffprobe and Python 3. Caption generation prefers
-  ~/development/projects/academind-tools generate-captions (ElevenLabs).
+  Requires ffmpeg/ffprobe and Python 3. Caption generation prefers local `stt`
+  on PATH when available; otherwise ask the user (see references/captions.md).
 metadata:
   short-description: Clean tutorial takes; ship 2K mp4 + SRT
 ---
@@ -20,7 +20,7 @@ metadata:
 ## Critical rules
 
 - **Read first:** [`references/workflow.md`](references/workflow.md) + [`references/decision-rules.md`](references/decision-rules.md).
-- **Captions:** [`references/captions.md`](references/captions.md) — source once; iterate with cut-SRT.
+- **Captions:** [`references/captions.md`](references/captions.md) — prefer `stt` if on PATH; else **ask user** (suggest install `stt` / existing SRT / ElevenLabs). Source once; iterate with cut-SRT. Never silent provider switch.
 - **Ship:** [`references/deliverables.md`](references/deliverables.md) — default **2K mp4 + SRT**; VTT/TXT only on request; **cleanup temps before finish**.
 - **Face cam:** [`references/face-pip.md`](references/face-pip.md) before any PiP work.
 - **Glitches:** [`references/failure-modes.md`](references/failure-modes.md).
