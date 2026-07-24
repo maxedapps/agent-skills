@@ -1,0 +1,15 @@
+# Standard domain terms for local Qwen STT (stt --terms).
+# One term per line. Blank lines and # comments are ignored.
+Maximilian Schwarzmüller
+Manuel Lorenz
+Academind
+ChatGPT
+OpenAI
+Pi
+Claude Code
+Anthropic
+Grok
+X
+xAI
+Qwen
+Kimi

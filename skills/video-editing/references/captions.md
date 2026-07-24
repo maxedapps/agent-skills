@@ -26,6 +26,27 @@ pnpm --filter @academind/generate-captions cli -- \
 
 Force regenerate: add `--force`.
 
+## Local Qwen STT (`stt`) + standard terms
+
+When using the Apple Silicon Qwen CLI (`~/development/projects/stt`) instead of (or in addition to) ElevenLabs:
+
+- **Standard terms asset:** [`assets/terms.txt`](../assets/terms.txt) — Academind people/product/AI names for soft vocabulary bias.
+- Copy into the project (or pass the skill path with `--terms`). Do not hand-maintain a divergent default list per project unless the shoot needs extra terms.
+
+```bash
+SK_TERMS=~/development/projects/maxed-skills/skills/video-editing/assets/terms.txt
+# optional project overlay: append shoot-specific lines to work/captions/terms.txt
+cp "$SK_TERMS" work/captions/terms.txt
+
+cd ~/development/projects/stt
+uv run stt "/ABS/PATH/video.mp4" \
+  -o "/ABS/PATH/work/captions" \
+  --terms "/ABS/PATH/work/captions/terms.txt" \
+  --overwrite
+```
+
+`stt` writes `<stem>.srt`, `<stem>.txt`, `<stem>.vtt`, and `<stem>.words.json`. Prefer the `.srt` + `.txt` for the edit loop; keep extra formats only if useful.
+
 ## Iteration policy (critical)
 
 **Do not re-caption the clean cut on every edit pass.**
@@ -58,7 +79,7 @@ Cutting the source SRT through the keep-list answers:
 
 ## Fallbacks
 
-If academind-tools is unavailable, ask which STT to use. Do not silently switch stacks unless allowed.
+If academind-tools is unavailable, prefer local `stt` (Qwen) with [`assets/terms.txt`](../assets/terms.txt), or ask which STT to use. Do not silently switch stacks unless allowed.
 
 ## On-disk caption locations
 

@@ -73,6 +73,7 @@ bash $SK/cleanup_work.sh --project-root . --also-masters
 | [`assets/keep-list.schema.json`](assets/keep-list.schema.json) | keep-list shape (`in`/`out`) |
 | [`assets/keep-list.example.json`](assets/keep-list.example.json) | Example keeps |
 | [`assets/edit-report.md`](assets/edit-report.md) | Final report template |
+| [`assets/terms.txt`](assets/terms.txt) | Standard STT domain terms (`stt --terms`) |
 | [`scripts/`](scripts/) | All tools (`--help`) |
 
 ## Validation before done
