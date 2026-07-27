@@ -3,7 +3,8 @@ name: create-slides
 description: >-
   Creates and materially redesigns polished, dependency-free HTML slide decks
   from styled templates, with stepped and automatic reveal animations, a
-  cross-slide title morph, and PDF plus MP4 export at 1080p, 2K and 4K.
+  cross-slide title morph, and PDF plus MP4 export at 1080p, 2K and 4K with
+  reveals optionally timed to a narration/caption track.
   Use this skill when asked to create, build, redesign, or export a slide deck,
   presentation, pitch deck, talk, tutorial/video slides, course slides, slide
   b-roll for a video, or keynote-style slides as a web page. Do not use for
@@ -83,7 +84,10 @@ metadata:
 8. Verify: `npm run qa`, and fix everything it reports.
 9. Export if asked — [`references/export.md`](references/export.md):
    `npm run pdf`, `npm run record` / `record:2k` / `record:4k`, then
-   `npm run audit`.
+   `npm run audit`. When the deck backs a recorded voiceover, time the reveals
+   from the caption file: a sidecar `timings/<video>.json` per video, validated
+   with `node tools/record.mjs --timing <file> --plan`. Timings never go in the
+   markup — the deck only gains a `data-slide` handle per timed slide.
 10. Report the files, how to open them, the controls, the template used, every
     assumption, and sources for any researched claim or asset.
 
@@ -95,7 +99,7 @@ metadata:
 | [`references/web-slides.md`](references/web-slides.md) | Before editing markup — DOM/state contract, runtime API, composition QA |
 | [`references/templates.md`](references/templates.md) | Choosing, adapting, or authoring a template |
 | [`references/motion.md`](references/motion.md) | Adding any reveal, morph, or animation |
-| [`references/export.md`](references/export.md) | Producing a PDF or video |
+| [`references/export.md`](references/export.md) | Producing a PDF or video, or timing reveals to narration |
 | `assets/core/` | `slides.css`, `slides.js`, `morph.js` — copied verbatim into every deck |
 | `assets/templates/<name>/` | One complete look: `theme.css`, `skeleton.html`, `fonts.json`, `template.md` |
 | `assets/tools/` | `fonts` · `qa` · `export-pdf` · `record` · `audit-video` |

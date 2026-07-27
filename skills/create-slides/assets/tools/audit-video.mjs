@@ -16,6 +16,15 @@
  *                recorded an empty stage.
  *   spec         dimensions, real frame rate, duration.
  *
+ * When the folder holds a timings.json (a narration-timed export — see
+ * references/export.md), each clip is additionally checked against what it
+ * declared:
+ *   duration     must match the declared in→out span. A mismatch means the
+ *                capture-clock correction did not take, so every reveal inside
+ *                is off too.
+ *   reveals      the clip must contain at least as many visible changes as the
+ *                slide has steps. Fewer means a step never fired.
+ *
  * Contact sheets of the first second are written next to the clips as
  * <name>.sheet.png so a ghost frame can be seen rather than inferred.
  */
@@ -61,6 +70,33 @@ function dir() {
   return path.join(base, subs.sort((a, b) => statSync(path.join(base, b)).mtimeMs - statSync(path.join(base, a)).mtimeMs)[0]);
 }
 
+/**
+ * How many distinct visible changes the clip contains. A reveal moves the
+ * frame's average luma by far less than one 8-bit step, so this reads
+ * signalstats rather than sampling pixels. Runs of consecutive changing frames
+ * count once, so one fade is one event.
+ */
+function revealEvents(file, eps = 0.005) {
+  const out = execFileSync(
+    'ffmpeg',
+    ['-v', 'error', '-i', file, '-vf', 'signalstats,metadata=print:file=-', '-an', '-f', 'null', '-'],
+    { encoding: 'utf8', maxBuffer: 1 << 28 },
+  );
+  const luma = [];
+  for (const line of out.split('\n')) {
+    const y = /YAVG=([\d.]+)/.exec(line);
+    if (y) luma.push(+y[1]);
+  }
+  let events = 0;
+  let running = false;
+  for (let i = 1; i < luma.length; i++) {
+    const moving = Math.abs(luma[i] - luma[i - 1]) > eps;
+    if (moving && !running) events += 1;
+    running = moving;
+  }
+  return events;
+}
+
 /** Mean colour of a crop, one pixel per frame. */
 function scan(file, crop, pix = 'rgb24') {
   const out = execFileSync(
@@ -81,6 +117,16 @@ if (!clips.length) throw new Error(`no mp4s in ${target}`);
 
 console.log(`auditing ${clips.length} clips in ${path.relative(ROOT, target)}`);
 console.log(bg ? `deck background: rgb(${bg.join(',')})` : '! no --color-bg found; skipping colour check');
+
+// A narration-timed export ships the schedule it was recorded from; when it is
+// here, every clip is also held to it.
+const timingsFile = path.join(target, 'timings.json');
+const declared = new Map();
+if (existsSync(timingsFile)) {
+  const spec = JSON.parse(readFileSync(timingsFile, 'utf8'));
+  for (const c of spec.clips || []) declared.set(c.clip, c);
+  console.log(`timed export: ${spec.video || '?'} — ${declared.size} clip(s) carry a declared schedule`);
+}
 
 const sizes = clips.map((c) => statSync(path.join(target, c)).size);
 const median = [...sizes].sort((a, b) => a - b)[Math.floor(sizes.length / 2)];
@@ -110,7 +156,22 @@ for (const [i, clip] of clips.entries()) {
 
   if (sizes[i] < median * 0.25) issues.push(`only ${(sizes[i] / 1024).toFixed(0)} KB — recorded a blank stage?`);
 
-  console.log(`  ${issues.length ? 'FAIL' : 'ok  '}  ${clip.padEnd(52)} ${spec.join(' ')}`);
+  const want = declared.get(clip);
+  let timed = '';
+  if (want) {
+    // Two frames of slack: the trim lands on a frame boundary either way.
+    const drift = +spec[1] - want.duration;
+    if (Math.abs(drift) > 0.07) {
+      issues.push(`runs ${drift > 0 ? '+' : ''}${drift.toFixed(3)}s against its declared ${want.duration}s — every reveal inside is off`);
+    }
+    const events = revealEvents(file);
+    if (events < want.steps.length) {
+      issues.push(`only ${events} visible change(s) for ${want.steps.length} step(s) — a reveal may not have fired`);
+    }
+    timed = `  ${want.in}→${want.out}`;
+  }
+
+  console.log(`  ${issues.length ? 'FAIL' : 'ok  '}  ${clip.padEnd(52)} ${spec.join(' ')}${timed}`);
   for (const x of issues) console.log(`          ${x}`);
   if (issues.length) problems.push(clip);
 
