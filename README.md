@@ -7,7 +7,7 @@
 - `explain` — manually produce context-grounded Markdown explanations and standalone HTML that opens in the default browser unless suppressed.
 - `create-plan` — create, review, and improve researched, implementation-ready plans before coding.
 - `create-skill` — create, rewrite, and review concise, actionable Agent Skills.
-- `create-slides` — create polished, dependency-free HTML slide decks from a tested stepped-reveal starter.
+- `create-slides` — build, verify and export templated HTML slide decks (PDF + MP4 at 1080p/2K/4K).
 - `generate-image` — generate AI images through fal.ai HTTP queue workflows (Bun CLI; default `openai/gpt-image-2`).
 - `implement-plan` — execute existing Markdown implementation plans with delegation-first tracking and verification.
 - `use-subagents` — portable delegation policy, assignment contracts, worktree isolation/cleanup for any harness.

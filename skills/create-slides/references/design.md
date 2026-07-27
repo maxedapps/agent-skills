@@ -138,7 +138,7 @@ a full-bleed module.
 
 ## Typography, color, imagery
 
-- Type: the starter's token scale keeps sizes consistent; change tokens, not
+- Type: the template's token scale keeps sizes consistent; change tokens, not
   ad-hoc sizes. Prefer one body family with weight contrast; optional
   **serif display** for `h1`/`h2` when the art direction calls for it.
   Keep line lengths short and headlines tight.
@@ -146,9 +146,9 @@ a full-bleed module.
   Check contrast for every text/background pair; never rely on color alone.
   If the brief is “accent on text/UI only,” keep backgrounds pure neutral
   gray/ink gradients — no accent-tinted washes.
-- Themes: optionally start from technical / corporate / playful — starting
-  points to adapt, never constraints. Override accent, surfaces, and type
-  tokens after copy. Playful rounded look is strongest on macOS.
+- Templates: start from the template whose `template.md` frontmatter fits the
+  subject and delivery, then adapt its tokens — never fight it with overrides.
+  If nothing fits, author a new template rather than bending an old one.
 - Imagery: use images that carry information or mood; full-bleed one strong
   image rather than tiling weak ones. No decorative stock filler, no
   unlicensed material.
@@ -164,9 +164,8 @@ a full-bleed module.
 
 ## Layouts and starter primitives
 
-Map common slide shapes to the starter's composable primitives
-(`assets/slides.css`), then layer deck-specific structure (title band,
-body stack) in the theme/override CSS:
+Map common slide shapes to the composable primitives in `core/slides.css` and
+to the components your template provides (listed in its `template.md`):
 
 | Slide shape | Primitives |
 |---|---|
@@ -178,7 +177,7 @@ body stack) in the theme/override CSS:
 | Attributed quote | `quote` |
 | Figure with caption | `media` |
 | Recurring footer chrome | `slide-footer` |
-| Fixed content titles | deck `slide-heading` band (not in starter; add in theme CSS) |
+| Fixed content titles | the template's title band (e.g. `.frame__tag--title`) |
 
 Compose primitives before inventing new CSS; add a new primitive only when a
 layout genuinely recurs and none fits.

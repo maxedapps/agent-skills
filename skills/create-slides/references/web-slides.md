@@ -1,7 +1,8 @@
 # Web Slides: Starter Contract and Techniques
 
-How the copied starter (`index.html`, `slides.css`, `slides.js`, plus
-optionally one `theme-*.css` override) works and where you may extend it. The runtime behavior below is covered by
+How the copied runtime (`core/slides.css`, `core/slides.js`, `core/morph.js`,
+plus a template's `theme.css` and the deck's own `deck.css`) works and where you
+may extend it. The runtime behavior below is covered by
 `scripts/slides-runtime.test.mjs` — documentation and tests agree.
 
 Contents: [DOM and state contract](#dom-and-state-contract) ·
@@ -67,21 +68,20 @@ a competing key listener with its own state).
 
 ## CSS structure
 
-- All theming flows through `:root` tokens: colors, `--font-*`, `--text-*`
-  scale, `--space-*` scale, `--radius`, `--motion-duration`,
-  `--motion-ease`. Restyle a deck by changing tokens first.
-- A shipped theme file (`theme-technical.css`, `theme-corporate.css`, or
-  `theme-playful.css`) is linked AFTER `slides.css`, so its `:root` block
-  overrides the base tokens purely by cascade order, plus at most a few
-  personality rules. Adapt a copied theme's tokens like any others; without
-  a theme link the neutral base applies.
+- All theming flows through `:root` tokens declared by the **template**:
+  colors, `--font-*`, `--text-*` scale, `--space-*` scale, `--radius`,
+  `--motion-duration`, `--motion-ease`. Core declares only `--stage-em`.
+  Restyle a deck by changing tokens first — see `references/templates.md`.
+- Load order is `core/slides.css` → `templates/<name>/theme.css` → `deck.css`,
+  so a template overrides core and a deck overrides its template purely by
+  cascade order. Never reach for `!important` to win that fight.
 - The `.stage` is a responsive 16:9 surface; its `font-size` scales with
   the viewport and everything inside is sized in `em`, so composition is
   identical at any window size. Keep new sizes in `em`/tokens.
 - Layout primitives (`stack`, `cluster`, `split`, `grid`, `media`,
   `statistic`, `quote`, `code`, `full-bleed`, `card`, `slide-header`,
   `slide-footer`) are composable classes — combine them before writing new
-  layout CSS.
+  layout CSS. A template may add its own components; core owns the primitives.
 - Chrome (`slide-header`, `slide-footer`) is absolutely positioned inside
   the slide, so it renders at identical coordinates on every slide
   regardless of content height. Use it for recurring titles, credits, or
@@ -197,15 +197,14 @@ only and must not require extra navigation steps.
 
 ## Extend vs rebuild
 
-- **Edit freely:** `index.html` content and structure; `slides.css` tokens,
-  primitive tweaks, new deck-specific classes and `[data-step-state]`
-  overrides; a copied `theme-*.css` file's tokens and personality rules.
-- **Do not rebuild:** `slides.js` navigation, key handling, or the
+- **Edit freely:** `index.html` content and structure; the template's
+  `theme.css` tokens and component rules; anything in `deck.css`.
+- **Do not rebuild:** `core/slides.js` navigation, key handling, or the
   attribute contract above. Do not add libraries, modules, or a build step,
   and never manage `data-state`/`data-step-state`/`aria-hidden`/`inert` by
   hand.
 - Only when the user explicitly requests different navigation behavior may
-  `slides.js` change; prefer layering on the exposed controller
+  `core/slides.js` change; prefer layering on the exposed controller
   (`SlidesRuntime.controller.send(...)` from your own listener) over
   editing the reducer, and mirror any real runtime change in the skill's
   `scripts/slides-runtime.test.mjs`.
@@ -213,13 +212,14 @@ only and must not require extra navigation steps.
 ## Browser QA checklist
 
 Before browser QA (or when no browser is at hand yet), you can verify the
-deck's step map headlessly: `require()` the copied `slides.js` in Node and
+deck's step map headlessly: `require()` the copied `core/slides.js` in Node and
 feed each node's attribute strings through `stepPair`/`finalStep` to
 confirm every slide's expected final step and grouping.
 
 ### Runtime
 
-Run in a real browser (e.g. `agent-browser`) on the finished deck:
+`npm run qa` automates everything in this section; run it before reporting a
+deck finished. What it checks, in a real browser:
 
 - ArrowRight/ArrowDown through every step of every slide to the end; then
   ArrowLeft/ArrowUp all the way back — each reveal, group, and exit fires

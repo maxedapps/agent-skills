@@ -2,85 +2,121 @@
 name: create-slides
 description: >-
   Creates and materially redesigns polished, dependency-free HTML slide decks
-  with vanilla CSS, vanilla JavaScript, and a tested stepped-reveal starter.
-  Use this skill when asked to create, build, or redesign a slide deck,
-  presentation, pitch deck, talk, tutorial/video slides, or keynote-style
-  slides as a web page. Do not use for ordinary websites or apps, editing
-  proprietary slide files (PowerPoint, Keynote, Google Slides), research-only
-  requests without a deck deliverable, or generating slide images only.
+  from styled templates, with stepped and automatic reveal animations, a
+  cross-slide title morph, and PDF plus MP4 export at 1080p, 2K and 4K.
+  Use this skill when asked to create, build, redesign, or export a slide deck,
+  presentation, pitch deck, talk, tutorial/video slides, course slides, slide
+  b-roll for a video, or keynote-style slides as a web page. Do not use for
+  ordinary websites or apps, editing proprietary slide files (PowerPoint,
+  Keynote, Google Slides), research-only requests without a deck deliverable,
+  or generating slide images only.
 license: MIT
 compatibility: >-
-  Decks open from local files with no server, build step, or network access.
-  Validation requires a browser or browser-automation capability.
+  Decks open from local files with no server or network access. Validation
+  requires a browser or browser-automation capability. Export additionally
+  needs Node, Playwright installed into the deck, and ffmpeg on PATH; video
+  capture above 1080p needs ffmpeg and a POSIX shell.
 metadata:
-  short-description: Create or redesign dependency-free HTML slide decks from a tested starter
+  short-description: Build, verify and export templated HTML slide decks
 ---
 
 # Create Slides
 
 ## Critical rules
 
-- No libraries, CDNs, frameworks, or build steps. The deck must open directly from a local `index.html`.
-- Never invent facts, statistics, quotes, images, or licenses. Research unknown or current claims with the `web-research` skill and cite sources; record where every asset came from.
+- No libraries, CDNs, frameworks, or build steps in the deck itself. It must
+  open directly from a local `index.html`.
+- **Never rebuild `core/slides.js`.** Navigation, key handling and the
+  `data-enter`/`data-exit` contract are fixed. Extend by layering on
+  `SlidesRuntime.controller`, the way `core/morph.js` does.
+- **Never edit `core/slides.css` per deck.** Override in the template's
+  `theme.css`, or in `deck.css`.
+- Fonts must be inlined as data URIs (`tools/fonts.mjs`). `@font-face` files
+  are blocked over `file://`, so a deck opened by double-click loses them.
+- Never invent facts, statistics, quotes, images, or licenses. Research current
+  claims with the `web-research` skill, cite sources, and record where every
+  asset came from.
+- Derive tokens and content from the subject; derive the *look* from a template.
+  Do not invent a new layout system mid-pass.
+- Write semantic HTML: real headings, lists, figures, one
+  `<section class="slide">` per slide in DOM order.
+- **"Use the space" ≠ stretching boxes to fill the viewport.** It means stable
+  hierarchy, content-sized modules, comfortable gaps, and intentional empty
+  margin.
+- **Slide roles may differ in one deck.** A centred cover and a fixed title
+  band on content slides are complementary, not contradictory.
+- **Verify before reporting done.** `npm run qa` for the deck, `npm run audit`
+  after any recording. Never call a deck or an export finished on the strength
+  of having looked at it.
+- **User-owned copy is sacred.** After the user edits text, change layout and
+  CSS only — never rewrite their wording unless asked.
 - State every assumption explicitly in the final report.
-- Derive the design from the content (subject, brand, data), not generic decoration.
-- Write semantic HTML: real headings, lists, figures, and one `<section class="slide">` per slide in DOM order.
-- Keep the copied `slides.js` as the canonical runtime. Do not rebuild or replace navigation unless the user explicitly requests different behavior.
-- **Lock art direction before building HTML** when delivery, reveal model, or composition is unspecified — see workflow step 2. Do not invent a full layout system mid-pass.
-- **“Use the space” ≠ stretch boxes to fill the viewport.** It means stable hierarchy, content-sized modules, comfortable gaps, and intentional empty margin. Never grow cards/panels just to eat leftover height unless the user explicitly asks for full-bleed fill.
-- **Slide roles may differ in one deck.** Cover/close can be vertically centered while content slides use a fixed top title band — these are complementary, not mutually exclusive.
-- **User-owned copy is sacred.** After the user edits text (or says they did), change layout/CSS/structure only. Do not rewrite, “improve,” or restyle wording unless they ask.
 
 ## Workflow
 
-1. Inspect all supplied material (text, data, images, brand constraints, venue, delivery mode) before asking anything.
-2. If consequential unknowns remain, ask **one grouped art-direction question** covering only the gaps (skip items the user already stated). Defaults in brackets apply when proceeding on assumptions:
+1. Inspect everything supplied — content, data, brand, delivery mode, and any
+   script or captions the deck must back.
+2. If consequential unknowns remain, ask **one grouped question** covering only
+   the gaps. Defaults in brackets when proceeding on assumptions:
    - **Delivery:** live talk | **recorded video/tutorial** | self-paced send
-   - **Reveal model:** multi-step narrative | **one-step staggered** | none
-   - **Cover treatment:** **vertically centered** | top-aligned (and whether close matches cover)
-   - **Content treatment:** **title-band + body-upper** | title-band + body-center-remaining | free flow
-   - **Density:** sparse keynote | **tutorial-comfortable** (roomy row gaps, not cramped)
-   - **Type:** system sans | **serif display titles** + sans body
-   - **Color:** accent on text/UI only vs accent washes in backgrounds; light/dark base
-   - Otherwise proceed on stated assumptions and record them.
-3. Research missing or current facts with the `web-research` skill before writing slide content.
-4. Read [`references/design.md`](references/design.md), then outline the story as slide titles only and check it carries the message before writing any slide body. Pick named **layout contracts** from that file for cover vs content slides.
-5. Choose an art direction derived from the content — starting from the neutral base or one shipped theme (technical / corporate / playful) — and express it as token values (color, type, spacing). Themes are starting points; override tokens to match the locked art direction.
-6. Copy [`assets/index.html`](assets/index.html), [`assets/slides.css`](assets/slides.css), and [`assets/slides.js`](assets/slides.js) verbatim into the deck directory; optionally also copy exactly one chosen theme file and link it after `slides.css`.
-7. Read [`references/web-slides.md`](references/web-slides.md), then replace the sample content in `index.html` (including `<title>`), implement the chosen layout contracts and reveal model, keep only the primitives and `data-enter`/`data-exit` steps the deck needs, and adjust `slides.css` tokens for the art direction. Leave `slides.js` unchanged.
-8. Validate every slide and every step in a browser using the exact checks below — **runtime and composition**.
-9. Report the deck files, how to open them, the key controls, sources, assumptions, and the layout contracts used.
+   - **Reveal model:** multi-step | **one-step staggered** | none
+   - **Density:** sparse keynote | **tutorial-comfortable**
+   - **Template:** whichever fits, unless one is named
+3. Research unknown or current facts before writing any slide body.
+4. Read [`references/design.md`](references/design.md). Outline the deck as
+   **titles only** and check that sequence carries the message before writing
+   any body copy.
+5. Pick a template: read each `assets/templates/*/template.md` frontmatter and
+   choose on fit — see [`references/templates.md`](references/templates.md).
+6. Scaffold the deck:
+   - `assets/core/` → `core/`
+   - the template's `theme.css` → `theme.css`, `skeleton.html` → `index.html`,
+     `fonts.json` → `fonts.json`
+   - `assets/tools/` → `tools/`, `assets/starter/*` → deck root
+     (`gitignore` → `.gitignore`)
+   - create an empty `deck.css`
+   - `npm install && node tools/fonts.mjs`
+7. Adapt **tokens only** to the subject, then write the slides. Read
+   [`references/web-slides.md`](references/web-slides.md) for the DOM contract
+   and layout contracts, and [`references/motion.md`](references/motion.md)
+   before adding any reveal.
+8. Verify: `npm run qa`, and fix everything it reports.
+9. Export if asked — [`references/export.md`](references/export.md):
+   `npm run pdf`, `npm run record` / `record:2k` / `record:4k`, then
+   `npm run audit`.
+10. Report the files, how to open them, the controls, the template used, every
+    assumption, and sources for any researched claim or asset.
 
 ## Resources
 
-- [`references/design.md`](references/design.md) — audience/outcome, story, density (including video), layout contracts, “use the space,” hierarchy, type/color, anti-patterns. Read before outlining or choosing art direction (workflow steps 2–5).
-- [`references/web-slides.md`](references/web-slides.md) — starter DOM/state contract, title-band/stagger techniques, motion/a11y, extension boundaries, runtime + composition QA. Read before editing the copied starter (workflow step 7).
-- [`assets/index.html`](assets/index.html), [`assets/slides.css`](assets/slides.css), [`assets/slides.js`](assets/slides.js) — the runnable starter deck, theme, and runtime. Copy all three verbatim into the deck directory at workflow step 6, then edit only `index.html` and `slides.css`.
-- [`assets/theme-technical.css`](assets/theme-technical.css), [`assets/theme-corporate.css`](assets/theme-corporate.css), [`assets/theme-playful.css`](assets/theme-playful.css) — optional pre-built token overrides (dark technical, serif corporate, rounded playful). Copy at most one, only when its personality fits; link after `slides.css` and adapt tokens. Do not treat theme accent washes as mandatory.
+| Path | Read when |
+|---|---|
+| [`references/design.md`](references/design.md) | Before outlining — audience, story shape, density, layout contracts, anti-patterns |
+| [`references/web-slides.md`](references/web-slides.md) | Before editing markup — DOM/state contract, runtime API, composition QA |
+| [`references/templates.md`](references/templates.md) | Choosing, adapting, or authoring a template |
+| [`references/motion.md`](references/motion.md) | Adding any reveal, morph, or animation |
+| [`references/export.md`](references/export.md) | Producing a PDF or video |
+| `assets/core/` | `slides.css`, `slides.js`, `morph.js` — copied verbatim into every deck |
+| `assets/templates/<name>/` | One complete look: `theme.css`, `skeleton.html`, `fonts.json`, `template.md` |
+| `assets/tools/` | `fonts` · `qa` · `export-pdf` · `record` · `audit-video` |
+| `assets/starter/` | `package.json`, `vite.config.js`, `gitignore` |
+| `scripts/slides-runtime.test.mjs` | Guards the runtime contract; run after any change to it |
 
-## Validation
+## Assets and provenance
 
-### Runtime
-
-- Open the deck's `index.html` in a browser (`agent-browser` or similar); traverse every step of every slide with ArrowRight, then back with ArrowLeft; expect intended reveals/exits, boundary crossings into the previous slide's final step, and no wrap at either end.
-- Press Shift+ArrowRight and Shift+ArrowLeft across several slides; expect direct jumps to the next slide at step 0 and the previous slide at its final step.
-- Check the browser console; expect no errors.
-- Emulate `prefers-reduced-motion: reduce`; expect identical content states without movement (including zero stagger delay).
-- Inspect the deck directory; expect `index.html`, `slides.css`, `slides.js`, plus optionally the one copied theme CSS, plus only provenance-documented local assets, and no external URLs in markup or CSS.
-- Stop any browser or server processes started for validation.
-
-### Composition (fail the deck if any fail)
-
-- **Title lock:** on content slides using a title band, title/eyebrow Y positions match across slides (measure in the browser if unsure).
-- **No stretch-fill:** cards/panels are content-sized (or equal-height within a row from content), not grown to the footer with large empty interiors.
-- **Spacing:** comfortable gap under the title band and between major body rows — not title↔body cramped with a huge empty lower third, and not rows stacked flush.
-- **Role split:** cover uses the chosen cover treatment; content slides do not accidentally inherit cover centering (or vice versa) unless intended.
-- **Accent scope:** if “accent on text/UI only,” backgrounds are neutral (no accent-tinted washes).
-- **Reveal model:** multi-step decks need multiple ArrowRight presses per slide by design; one-step staggered decks should advance the whole body on a single step (final step typically `1` for body content).
+- Logos: take the vendor's own site icon first. Aggregators go stale — building
+  one deck, a major product had no entry at all, another name resolved to an
+  unrelated company, and a third offered only a retired one-colour mark.
+- Verify the mark is current, record every source in a `CREDITS.md` beside the
+  files, and never draw an approximation of a real logo.
+- Light-on-dark app icons need a full-bleed tile, not a white one.
 
 ## Constraints
 
-- Adapt content and design per deck; never fork the runtime contract described in `references/web-slides.md` without an explicit user request.
-- Keep decks self-contained: no network requests at presentation time, no telemetry, no remote fonts.
-- Do not add presenter consoles, autoplay, URL routing, touch gestures, or export tooling unless the user asks for them.
-- Prefer CSS/structure fixes over content rewrites when polishing layout.
+- Do not add presenter consoles, autoplay, URL routing, or touch gestures
+  unless asked.
+- Do not fork the runtime contract in `references/web-slides.md` without an
+  explicit request; mirror any real runtime change in
+  `scripts/slides-runtime.test.mjs`.
+- Decks stay self-contained: no network requests at presentation time, no
+  telemetry, no remote fonts.

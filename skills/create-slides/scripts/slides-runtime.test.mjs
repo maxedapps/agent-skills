@@ -11,6 +11,7 @@ const runtimePath = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
   '..',
   'assets',
+  'core',
   'slides.js'
 );
 const R = require(runtimePath);

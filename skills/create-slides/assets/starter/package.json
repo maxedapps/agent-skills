@@ -1,0 +1,21 @@
+{
+  "name": "slide-deck",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "fonts": "node tools/fonts.mjs",
+    "pdf": "node tools/export-pdf.mjs",
+    "record": "node tools/record.mjs",
+    "record:2k": "node tools/record.mjs --size 1440",
+    "record:4k": "node tools/record.mjs --size 2160",
+    "qa": "node tools/qa.mjs",
+    "audit": "node tools/audit-video.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.0",
+    "vite": "^7.1.14"
+  }
+}

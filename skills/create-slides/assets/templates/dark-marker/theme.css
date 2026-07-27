@@ -1,0 +1,1259 @@
+/*
+ * Template: dark-marker
+ *
+ * Dark board, subtle dot grid, a thick light frame that the slide title breaks
+ * through, hand-drawn irregular corners and a marker-pen highlight.
+ *
+ * Loaded AFTER core/slides.css. Owns three things:
+ *   1. the token block below — the adjustable surface (see template.md)
+ *   2. the chrome: frame, border labels, cover treatment
+ *   3. this template's component vocabulary
+ */
+
+:root {
+  /* Color tokens (dark gray board; all text pairs meet WCAG AA on their surfaces) */
+  --color-bg: #2b2e33;
+  --color-surface: #33373d;
+  --color-border: #4d525a;
+  --color-text: #f4f2ee;
+  --color-muted: #b3b8c0;
+  --color-accent: #ffc46b;
+  --color-accent-ink: #2b2e33;
+
+  /* Deck-specific */
+  --color-frame: #f6f4f0;
+  /* The stage's em, expressed viewport-relative so lengths derived from it stay
+     correct on elements that set their own font-size. */
+  --stage-em: min(2.4vh, 1.35vw);
+  --frame-border: calc(0.45 * var(--stage-em));
+  /* Sized against the viewport, not in fixed px, so the grid keeps the same
+     density when the deck is rendered at 1440p or 4K. The dot itself is a
+     percentage of its tile, so it scales with it. Both the slide and the
+     border-label masks use viewport units, which keeps their grids aligned. */
+  --dot-color: rgba(255, 255, 255, 0.09);
+  --dots: radial-gradient(circle, var(--dot-color) 6.4%, transparent 7.7%);
+  --dots-size: 2.037vh 2.037vh;
+
+  /* Typography tokens */
+  --font-display: "Rubik", system-ui, -apple-system, sans-serif;
+  --font-body: "Shantell Sans", "Comic Sans MS", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  --text-sm: 0.8em;
+  --text-base: 1em;
+  --text-lg: 1.4em;
+  --text-xl: 2em;
+  --text-2xl: 3em;
+  --leading-tight: 1.15;
+  --leading-body: 1.5;
+
+  /* Spacing tokens */
+  --space-2xs: 0.25em;
+  --space-xs: 0.5em;
+  --space-sm: 0.75em;
+  --space-md: 1.25em;
+  --space-lg: 2em;
+  --space-xl: 3.25em;
+
+  --radius: 0.5em;
+  --motion-duration: 400ms;
+  --motion-ease: cubic-bezier(0.22, 0.9, 0.35, 1);
+}
+
+/* --- Deck: dotted board + broken white frame --------------------------- */
+
+/* The dot grid is viewport-anchored (background-attachment: fixed) so the
+   small patches behind the frame labels line up pixel-perfectly with the
+   slide behind them — that is what lets a label "cut" the white border. */
+.slide {
+  padding: 0;
+  justify-content: stretch;
+  background-color: var(--color-bg);
+  background-image: var(--dots);
+  background-size: var(--dots-size);
+  background-attachment: fixed;
+}
+
+.frame {
+  position: absolute;
+  inset: 2.4em 3em;
+  border: var(--frame-border) solid var(--color-frame);
+}
+
+.frame__inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-lg) var(--space-xl);
+}
+
+.frame__inner--center {
+  justify-content: center;
+}
+
+/* The label that sits *in* the border: same background as the slide, so it
+   masks the white line behind it. */
+.frame__tag {
+  position: absolute;
+  background-color: var(--color-bg);
+  background-image: var(--dots);
+  background-size: var(--dots-size);
+  background-attachment: fixed;
+  /* The containing block is the frame's padding box, i.e. the inner edge of the
+     border. Pull back half a border width so the label centres on the rule. */
+  top: calc(var(--frame-border) / -2);
+  left: 2.2em;
+  translate: 0 -50%;
+  padding: 0 0.6em;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.frame__tag--title {
+  font-size: 1.9em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--color-text);
+  line-height: 1;
+  padding: 0.1em 0.55em;
+}
+
+/* --- Cover ------------------------------------------------------------- */
+
+.cover {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs);
+}
+
+.cover h1 {
+  font-size: 5.2em;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.cover__rule {
+  width: 15em;
+  color: var(--color-accent);
+  margin-top: var(--space-2xs);
+}
+
+.cover__sub {
+  font-size: var(--text-xl);
+  color: var(--color-muted);
+  margin-top: var(--space-xs);
+}
+
+/* --- Statement slide + cross-slide title morph ------------------------- */
+
+/* Geometrically similar to .frame__tag--title (same family, weight, tracking,
+   line-height and em padding) so the two can be scaled onto each other. */
+/* Fades out faster than its slide, so the statement hands the question over
+   to the incoming title while the two still overlap exactly. */
+.big-question {
+  transition: opacity 160ms linear;
+  font-size: 3.4em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  padding: 0.1em 0.55em;
+  text-align: center;
+  margin-inline: auto;
+}
+
+/* While its slide is hidden, the border title is parked on top of the
+   statement (offsets measured by morph.js); showing the slide transitions
+   it back into the border. */
+.slide:not([data-state="current"]) .big-question {
+  opacity: 0;
+}
+
+/* Eased in and out with a short hold at the start, so the move only gets
+   going once the crossfade has taken the handover. */
+.frame__tag--morph {
+  transition:
+    translate 700ms cubic-bezier(0.65, 0, 0.3, 1) 60ms,
+    scale 700ms cubic-bezier(0.65, 0, 0.3, 1) 60ms;
+  /* The border mask moves to a pseudo-element: scaled mid-flight it would
+     show up as a patch of mismatched dot grid over the frame. */
+  background-color: transparent;
+  background-image: none;
+}
+
+.frame__tag--morph::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--color-bg);
+  background-image: var(--dots);
+  background-size: var(--dots-size);
+  background-attachment: fixed;
+  opacity: 0;
+  transition: opacity 100ms linear;
+}
+
+/* Only masks once the title has arrived on the border line. */
+.slide[data-state="current"] .frame__tag--morph::before {
+  opacity: 1;
+  transition: opacity 200ms linear 560ms;
+}
+
+.slide:not([data-state="current"]) .frame__tag--morph {
+  translate: var(--morph-x, 0px) calc(-50% + var(--morph-y, 0px));
+  scale: var(--morph-scale, 1);
+}
+
+/* morph.js measures the final border position through this class, so it has
+   to beat the parked state above regardless of specificity. */
+.frame__tag--morph.is-measuring {
+  translate: 0 -50% !important;
+  scale: 1 !important;
+  transition: none !important;
+}
+
+/* --- Statement slides --------------------------------------------------- */
+
+.big-statement {
+  font-size: 2.5em;
+  font-weight: 600;
+  line-height: 1.28;
+  letter-spacing: -0.01em;
+  text-align: center;
+  max-width: 19em;
+  margin-inline: auto;
+}
+
+.big-statement--sm {
+  font-size: 2.1em;
+  max-width: 21em;
+}
+
+/* --- Scattered tool logos ---------------------------------------------- */
+
+.scatter {
+  position: relative;
+  flex: 1;
+}
+
+.tool {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  translate: -50% -50%;
+  rotate: var(--rot, 0deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 9em;
+}
+
+.tool__tile {
+  width: 6.4em;
+  height: 6.4em;
+  background: var(--color-frame);
+  border-radius: 1.6em;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0.5em 1.4em rgba(0, 0, 0, 0.35);
+}
+
+.tool__tile img {
+  width: 60%;
+  height: 60%;
+  object-fit: contain;
+}
+
+/* Logos that already ship as a full app icon fill their tile. */
+.tool__tile--full img {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+/* App icons drawn light-on-dark keep their own backdrop instead of the
+   white tile, so the corners match the icon rather than showing through. */
+.tool__tile--dark {
+  background: #09090b;
+}
+
+/* The logos are not stepped: they drift in on their own once the slide
+   arrives, staggered by --stagger. */
+.slide[data-state="current"] .tool {
+  animation: tool-in 420ms var(--motion-ease) both;
+  animation-delay: calc(300ms + var(--stagger, 0) * 110ms);
+}
+
+@keyframes tool-in {
+  from {
+    opacity: 0;
+    translate: -50% calc(-50% + 0.8em);
+  }
+  to {
+    opacity: 1;
+    translate: -50% -50%;
+  }
+}
+
+.tool figcaption {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 0.95em;
+  color: var(--color-text);
+  text-align: center;
+}
+
+/* --- Content slides: lede + body stack --------------------------------- */
+
+.slide-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.lede {
+  max-width: 46em;
+  margin-inline: auto;
+  text-align: center;
+  font-size: 1.35em;
+  line-height: 1.5;
+}
+
+.lede__tail {
+  display: block;
+  margin-top: var(--space-xs);
+  font-size: 0.85em;
+  color: var(--color-muted);
+}
+
+/* Text-marker highlight: a swept gradient with soft ends, so it reads like
+   a highlighter stroke rather than a filled box. */
+.marker {
+  /* Derived from the accent token so a re-themed deck re-colours the pen. */
+  background-image: linear-gradient(
+    104deg,
+    color-mix(in srgb, var(--color-accent) 0%, transparent) 0.4%,
+    color-mix(in srgb, var(--color-accent) 92%, transparent) 2.4%,
+    color-mix(in srgb, var(--color-accent) 92%, transparent) 97.6%,
+    color-mix(in srgb, var(--color-accent) 0%, transparent) 99.6%
+  );
+  color: var(--color-accent-ink);
+  padding: 0.1em 0.4em;
+  border-radius: 0.35em 0.7em 0.4em 0.6em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* --- Flow diagram ------------------------------------------------------ */
+
+.flow {
+  display: grid;
+  grid-template-columns: 1fr 5em 1.4fr 5em 1fr;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.flow > figcaption {
+  grid-column: 1 / -1;
+  margin-top: var(--space-lg);
+  text-align: center;
+  font-size: var(--text-base);
+  color: var(--color-muted);
+  max-width: 42em;
+  justify-self: center;
+}
+
+.flow > figcaption em {
+  color: var(--color-text);
+  font-style: normal;
+  font-weight: 700;
+}
+
+/* Slightly irregular corners: the hand-drawn touch of the body type,
+   carried into the boxes. */
+.flow__node {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md) var(--space-md);
+  border: 0.15em solid var(--color-border);
+  border-radius: 2.6em 0.7em 2.2em 0.9em / 1em 2.4em 0.8em 2.2em;
+  background: var(--color-surface);
+}
+
+.flow__node h3 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.flow__node--loop {
+  border-color: var(--color-accent);
+  border-width: 0.2em;
+  border-radius: 0.9em 2.4em 0.8em 2.2em / 2.4em 0.8em 2.6em 0.9em;
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+}
+
+.flow__node--loop h3 {
+  color: var(--color-accent);
+}
+
+.flow__note {
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+.flow__list {
+  padding-left: 1.1em;
+  gap: var(--space-2xs);
+  color: var(--color-muted);
+}
+
+.loop {
+  list-style: none;
+  padding-left: 0;
+  gap: var(--space-2xs);
+  counter-reset: loop;
+}
+
+.loop li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  counter-increment: loop;
+}
+
+.loop li::before {
+  content: counter(loop);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-accent-ink);
+  background: var(--color-accent);
+  border-radius: 50%;
+  width: 1.7em;
+  height: 1.7em;
+  display: grid;
+  place-items: center;
+  flex: none;
+  align-self: center;
+}
+
+.loop__repeat {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  margin-top: var(--space-2xs);
+  font-size: var(--text-sm);
+  color: var(--color-accent);
+}
+
+.loop__repeat svg {
+  width: 1.3em;
+  height: 1.3em;
+  flex: none;
+}
+
+.flow__arrow {
+  width: 100%;
+  height: auto;
+  color: var(--color-accent);
+}
+
+/* Workflow slide: the path is plain, only the AI-powered bits stay amber. */
+.flow__arrow--plain {
+  color: var(--color-muted);
+}
+
+/* --- Workflow slide: one defined step ---------------------------------- */
+
+.flow__node--step {
+  border-color: var(--color-muted);
+  border-style: dashed;
+}
+
+.options {
+  list-style: none;
+  padding-left: 0;
+  gap: var(--space-xs);
+}
+
+/* Each example is its own box inside the "one defined step" wrapper. */
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-bg);
+  border: 0.12em solid var(--color-border);
+  border-radius: 1.2em 0.4em 1em 0.5em / 0.5em 1.1em 0.4em 1.2em;
+}
+
+.badge {
+  flex: none;
+  font-family: var(--font-display);
+  font-size: 0.65em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  border: 0.12em solid var(--color-border);
+  border-radius: 0.9em;
+  padding: 0.15em 0.6em;
+  min-width: 4.8em;
+  text-align: center;
+}
+
+.badge--ai {
+  color: var(--color-accent-ink);
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.step__once {
+  margin-top: var(--space-2xs);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+/* --- Tool chips -------------------------------------------------------- */
+
+.tools {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.tools__label {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.tools__label strong {
+  color: var(--color-text);
+}
+
+.tools__list {
+  list-style: none;
+  padding-left: 0;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-xs);
+}
+
+.chip {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  border: 0.12em solid var(--color-border);
+  border-radius: 1.1em 0.4em 1em 0.5em / 0.5em 1em 0.4em 1.1em;
+  padding: 0.25em 0.9em;
+}
+
+/* --- LLM refresher ------------------------------------------------------ */
+
+.predict__text {
+  font-size: var(--text-lg);
+  line-height: 1.3;
+}
+
+/* Bars are relative only — they show ranking, not measured probabilities. */
+.odds {
+  list-style: none;
+  padding-left: 0;
+  gap: var(--space-2xs);
+}
+
+.odds li {
+  display: grid;
+  grid-template-columns: 4.2em 1fr;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.odds__word {
+  font-size: var(--text-sm);
+  text-align: right;
+}
+
+.odds__bar {
+  height: 0.75em;
+  width: var(--p);
+  border-radius: 1em;
+  background: var(--color-accent);
+}
+
+.odds li:not(:first-child) .odds__bar {
+  background: var(--color-border);
+}
+
+.payoff {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  text-align: center;
+  font-size: 1.2em;
+  max-width: 44em;
+  margin-inline: auto;
+}
+
+.payoff--quiet {
+  font-size: var(--text-base);
+  color: var(--color-muted);
+}
+
+/* --- Agent = model + exposed tools -------------------------------------- */
+
+.toolbelt {
+  display: grid;
+  grid-template-columns: auto 6em 1fr;
+  align-items: center;
+  gap: var(--space-md);
+  max-width: 52em;
+  margin-inline: auto;
+}
+
+.toolbelt__brain {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-md) var(--space-lg);
+  border: 0.2em solid var(--color-accent);
+  border-radius: 2.6em 0.7em 2.2em 0.9em / 1em 2.4em 0.8em 2.2em;
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-lg);
+  color: var(--color-accent);
+}
+
+.toolbelt__brain svg {
+  width: 2.6em;
+  height: 2.6em;
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.toolbelt__rack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: 0.15em dashed var(--color-muted);
+  border-radius: 0.9em 2.4em 0.8em 2.2em / 2.4em 0.8em 2.6em 0.9em;
+}
+
+.toolbelt__label {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.toolbelt__chips {
+  list-style: none;
+  padding-left: 0;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+/* --- The capability ladder ---------------------------------------------- */
+
+.levels {
+  list-style: none;
+  padding-left: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+  align-items: stretch;
+}
+
+.level {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  text-align: center;
+  background: var(--color-surface);
+  border: 0.15em solid var(--color-border);
+  border-radius: 1.8em 0.6em 1.6em 0.7em / 0.7em 1.7em 0.6em 1.6em;
+}
+
+/* Each rung is a little warmer than the one before it. */
+.level--mid {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  border-radius: 0.7em 1.7em 0.6em 1.6em / 1.6em 0.6em 1.8em 0.7em;
+}
+
+.level--top {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+}
+
+.level__given {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.level__chips {
+  list-style: none;
+  padding-left: 0;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2xs);
+}
+
+.chip--new {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.chip--empty {
+  color: var(--color-muted);
+  border-style: dashed;
+  min-width: 3.5em;
+  text-align: center;
+}
+
+.level__drop {
+  width: 1.5em;
+  height: 2.1em;
+  margin: var(--space-2xs) 0;
+  fill: none;
+  stroke: var(--color-muted);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.level--top .level__drop {
+  stroke: var(--color-accent);
+}
+
+.level h3 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.level--top h3 {
+  color: var(--color-accent);
+}
+
+.level p:last-child {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  line-height: 1.35;
+}
+
+/* --- The helper program it writes for itself ---------------------------- */
+
+.mini-code {
+  margin-top: var(--space-2xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-bg);
+  border: 0.12em solid var(--color-border);
+  border-radius: 0.6em;
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  line-height: 1.5;
+  color: var(--color-muted);
+  text-align: left;
+  white-space: pre;
+}
+
+/* ::first-line needs the block box, not the inline <code>. */
+.mini-code::first-line {
+  color: var(--color-accent);
+}
+
+/* --- A tool call, named ------------------------------------------------- */
+
+.chip--call {
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  letter-spacing: 0.02em;
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  border-radius: 0.6em;
+  padding: 0.2em 0.7em;
+  white-space: nowrap;
+}
+
+.tool-call {
+  margin-top: var(--space-2xs);
+}
+
+/* --- A worked run ------------------------------------------------------- */
+
+.ask {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+  max-width: 46em;
+  margin-inline: auto;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-surface);
+  border: 0.15em solid var(--color-border);
+  border-radius: 2.2em 0.7em 2em 0.8em / 0.8em 2em 0.7em 2.2em;
+}
+
+.ask .tool__tile {
+  width: 3.4em;
+  height: 3.4em;
+  border-radius: 0.9em;
+  flex: none;
+  box-shadow: none;
+}
+
+.ask__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.ask__text {
+  font-size: var(--text-lg);
+}
+
+.ask__note {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.trace {
+  list-style: none;
+  padding-left: 0;
+  gap: var(--space-sm);
+  max-width: 46em;
+  margin-inline: auto;
+  width: 100%;
+}
+
+.trace__row {
+  display: grid;
+  grid-template-columns: 2.2em 8.5em 1fr;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.trace__num {
+  display: grid;
+  place-items: center;
+  width: 2.2em;
+  height: 2.2em;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.trace__row .chip--call {
+  justify-self: start;
+}
+
+.trace__row p {
+  color: var(--color-muted);
+}
+
+.trace__row strong {
+  color: var(--color-text);
+}
+
+/* --- Building blocks ---------------------------------------------------- */
+
+.slide-body--tight {
+  gap: var(--space-md);
+}
+
+/* The loop gets its own band: it is the engine, not one of the parts. */
+.engine {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  max-width: 44em;
+  margin-inline: auto;
+  padding: var(--space-sm) var(--space-md);
+  border: 0.18em solid var(--color-accent);
+  border-radius: 2.2em 0.7em 2em 0.8em / 0.8em 2em 0.7em 2.2em;
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+  text-align: center;
+}
+
+.engine__icon {
+  width: 1.9em;
+  height: 1.9em;
+  flex: none;
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.engine strong {
+  color: var(--color-accent);
+}
+
+.blocks__label {
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.blocks {
+  list-style: none;
+  padding-left: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-surface);
+  border: 0.15em solid var(--color-border);
+  border-radius: 1.8em 0.6em 1.6em 0.7em / 0.7em 1.7em 0.6em 1.6em;
+}
+
+.block:nth-child(even) {
+  border-radius: 0.7em 1.7em 0.6em 1.6em / 1.6em 0.6em 1.8em 0.7em;
+}
+
+.block__icon {
+  width: 2.2em;
+  height: 2.2em;
+  margin-bottom: var(--space-2xs);
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Loop glyph: a filled head reads far better than a stroked V at icon size. */
+.loop-glyph__head {
+  fill: var(--color-accent);
+  stroke: none;
+}
+
+.block__dot {
+  fill: var(--color-accent);
+  stroke: none;
+}
+
+.block h3 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.block p {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  line-height: 1.35;
+}
+
+/* --- The loop, unrolled ------------------------------------------------ */
+
+.loop-explain {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+}
+
+/* Three stations sit on a ring of radius --r; the ring's centre is pushed
+   down to --cy so the taller top station still fits the box. */
+.dial {
+  --r: 9.5em;
+  --cy: 12.1em;
+  position: relative;
+  width: 27em;
+  height: 19.6em;
+  flex: none;
+}
+
+.dial__ring {
+  position: absolute;
+  left: 50%;
+  top: var(--cy);
+  width: calc(2 * var(--r));
+  height: calc(2 * var(--r));
+  translate: -50% -50%;
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dial__center {
+  position: absolute;
+  left: 50%;
+  top: var(--cy);
+  translate: -50% -50%;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  line-height: 1.35;
+}
+
+.dial__station {
+  position: absolute;
+  left: calc(50% + var(--sx));
+  top: calc(var(--cy) + var(--sy));
+  translate: -50% -50%;
+  width: 9.6em;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-surface);
+  border: 0.15em solid var(--color-border);
+  border-radius: 1.8em 0.6em 1.6em 0.7em / 0.7em 1.7em 0.6em 1.6em;
+  text-align: center;
+}
+
+.dial__station:nth-of-type(3) {
+  border-radius: 0.7em 1.7em 0.6em 1.6em / 1.6em 0.6em 1.8em 0.7em;
+}
+
+.dial__num {
+  display: inline-grid;
+  place-items: center;
+  width: 1.7em;
+  height: 1.7em;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-size: 0.62em;
+  vertical-align: 0.22em;
+}
+
+.dial__station h3 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.dial__station p {
+  margin-top: var(--space-2xs);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  line-height: 1.35;
+}
+
+.loop-exit {
+  width: 5em;
+  flex: none;
+  fill: none;
+  stroke: var(--color-muted);
+  stroke-width: 4.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.done {
+  flex: none;
+  width: 14em;
+  padding: var(--space-md);
+  border: 0.15em solid var(--color-frame);
+  border-radius: 2.2em 0.7em 2em 0.8em / 0.9em 2em 0.7em 2.2em;
+}
+
+.done h3 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.done p {
+  margin-top: var(--space-2xs);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  line-height: 1.4;
+}
+
+/* --- Ways to use an agent ---------------------------------------------- */
+
+.ways {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+  align-items: stretch;
+}
+
+.way {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-md);
+  background: var(--color-surface);
+  border: 0.15em solid var(--color-border);
+  border-radius: 2.6em 0.7em 2.2em 0.9em / 1em 2.4em 0.8em 2.2em;
+}
+
+.way:nth-child(2) {
+  border-radius: 0.9em 2.4em 0.8em 2.2em / 2.4em 0.8em 2.6em 0.9em;
+}
+
+.way h3 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+/* Each option carries the same loop glyph, drawn a different way. */
+.way__icon {
+  width: 2.7em;
+  height: 2.7em;
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.way__icon-loop {
+  stroke-width: 2.7;
+}
+
+.way__icon--wide {
+  width: 5.4em;
+  height: 3.2em;
+  stroke-width: 2.2;
+}
+
+.way__icon-dot {
+  fill: var(--color-accent);
+  stroke: none;
+}
+
+.way__logos {
+  list-style: none;
+  padding-left: 0;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: auto;
+}
+
+.way__logos .tool__tile {
+  width: 3.4em;
+  height: 3.4em;
+  border-radius: 0.9em;
+  box-shadow: none;
+}
+
+.way__list {
+  padding-left: 1.1em;
+  gap: var(--space-2xs);
+  color: var(--color-muted);
+}
+
+.ways--three {
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+.way__chips {
+  list-style: none;
+  padding-left: 0;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+  margin-top: auto;
+}
+
+.way__chips .chip {
+  font-size: 0.78em;
+  padding: 0.2em 0.7em;
+}
+
+/* Ties each option back to the agent loop on the earlier slide. */
+.way__who {
+  padding-top: var(--space-xs);
+  border-top: 0.1em dashed var(--color-border);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.way__who--you {
+  color: var(--color-accent);
+}
+
+/* Trade-off axis under the three options */
+.axis {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  max-width: 52em;
+  margin-inline: auto;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.axis__line {
+  flex: 1;
+  height: 0.16em;
+  border-radius: 1em;
+  background: linear-gradient(90deg, var(--color-border), var(--color-accent));
+}
+
+/* --- Workflow vs agent strip ------------------------------------------- */
+
+.versus {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+  max-width: 52em;
+  margin-inline: auto;
+}
+
+.versus__item {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  border-left: 0.2em solid var(--color-border);
+  padding-left: var(--space-sm);
+  line-height: 1.45;
+}
+
+.versus__item strong {
+  color: var(--color-text);
+}
+
+.versus__item--agent {
+  border-left-color: var(--color-accent);
+}
+
+.versus__item--agent strong {
+  color: var(--color-accent);
+}
+
+.versus__punchline {
+  grid-column: 1 / -1;
+  margin-top: var(--space-xs);
+  text-align: center;
+  color: var(--color-text);
+}
+
+/* One-step staggered reveal: every body node enters on the same keypress,
+   left to right, using transition delay only (no extra steps). */
+[data-enter][data-step-state="active"] {
+  transition-delay: calc(var(--stagger, 0) * 90ms);
+}
