@@ -1,0 +1,239 @@
+/*
+ * Template: minimal-mono
+ *
+ * One monospaced typeface, no colour beyond ink and paper, and rules instead
+ * of boxes: every panel is a line above its content. Austere on purpose.
+ *
+ * Loaded AFTER core/slides.css. Owns the tokens, the chrome, and the look of
+ * the shared archetypes — never their layout.
+ */
+
+:root {
+  /* Colour — ink on paper; the "accent" is simply full-strength ink */
+  --color-bg: #fbfbfa;
+  --color-surface: #ffffff;
+  --color-border: #c7c7c4;
+  --color-text: #16181a;
+  --color-muted: #62666a;
+  --color-accent: #16181a;
+  --color-accent-ink: #fbfbfa;
+  --color-frame: #16181a;
+
+  /* Frame geometry — a single rule across the top */
+  --frame-inset-y: 3em;
+  --frame-inset-x: 3.6em;
+  --frame-border: calc(0.12 * var(--stage-em));
+  --frame-pad-y: var(--space-lg);
+  --frame-pad-x: var(--space-lg);
+  --frame-tag-x: 0.6em;
+
+  /* Type — one family, weight and case carry the hierarchy */
+  --font-display: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-body: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --text-sm: 0.75em;
+  --text-base: 0.92em;
+  --text-lg: 1.15em;
+  --text-xl: 1.6em;
+  --text-2xl: 2.3em;
+  --text-title: 1.5em;
+  --text-cover: 3.6em;
+  --leading-tight: 1.2;
+  --leading-body: 1.55;
+
+  /* Space */
+  --space-2xs: 0.25em;
+  --space-xs: 0.5em;
+  --space-sm: 0.75em;
+  --space-md: 1.2em;
+  --space-lg: 1.9em;
+  --space-xl: 3em;
+
+  /* Shape — nothing is rounded, nothing is filled */
+  --rule: 0.1em;
+  --radius: 0;
+  --radius-card: 0;
+  --radius-chip: 0;
+  --radius-tile: 0;
+
+  --motion-duration: 300ms;
+  --motion-ease: cubic-bezier(0.25, 0.9, 0.35, 1);
+}
+
+/* --- Chrome: one rule, one label ---------------------------------------- */
+
+.frame {
+  border: 0;
+  border-top: var(--frame-border) solid var(--color-frame);
+}
+
+.frame__tag {
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.frame__tag--title {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+/* --- Statements --------------------------------------------------------- */
+
+.cover h1 {
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.cover__rule {
+  width: 8em;
+}
+
+.cover__sub {
+  font-size: var(--text-lg);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Geometrically similar to .frame__tag--title so one scale factor maps the
+   morph: same family, weight, tracking, line-height and em padding. */
+.big-question {
+  font-size: 2.6em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  padding: 0.1em 0.55em;
+}
+
+.big-statement {
+  font-size: 1.9em;
+  font-weight: 400;
+  line-height: 1.4;
+  max-width: 26em;
+}
+
+.big-statement--sm {
+  font-size: 1.6em;
+  max-width: 30em;
+}
+
+/* Inverted ink: the highlight is a solid block, the text drops out white. */
+.marker {
+  background-image: linear-gradient(var(--color-text), var(--color-text));
+  padding: 0.08em 0.3em;
+}
+
+/* --- Archetypes: rules, not boxes --------------------------------------- */
+
+.flow__node,
+.block,
+.level,
+.way,
+.zone,
+.card,
+.verdict,
+.vs-item {
+  background: transparent;
+  border: 0;
+  border-top: var(--rule) solid var(--color-border);
+  padding-inline: 0;
+  padding-top: var(--space-sm);
+}
+
+/* Emphasis is a heavier rule, never a fill. */
+.flow__node--loop,
+.level--top,
+.zone--accent,
+.verdict--yes,
+.vs-item--accent {
+  background: transparent;
+  border-top: 0.24em solid var(--color-text);
+  color: var(--color-text);
+}
+
+.flow__node--loop h3,
+.level--top h3,
+.zone--accent h3,
+.way h3,
+.vs-item--accent {
+  color: var(--color-text);
+}
+
+.level--mid {
+  border-top-color: var(--color-muted);
+}
+
+.verdict {
+  grid-template-columns: 1.8em 1fr;
+  opacity: 1;
+}
+
+.verdict__mark {
+  width: 1.8em;
+  height: 1.8em;
+  stroke-width: 2;
+}
+
+/* Labels are set in caps rather than colour. The frame title is deliberately
+   not in this list: it keeps its size and case so the morph has somewhere to
+   land. */
+.zone__where,
+.verdict h3,
+.level__given,
+.zone__note,
+.axis {
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: var(--text-sm);
+}
+
+.zone__note {
+  color: var(--color-muted);
+  border-top-style: solid;
+}
+
+.loop__repeat {
+  color: var(--color-muted);
+}
+
+.chip {
+  font-size: var(--text-sm);
+  letter-spacing: 0.04em;
+}
+
+.trace__num,
+.loop li::before {
+  border-radius: 0;
+}
+
+.vs-badge {
+  border: 0;
+  border-top: 0.14em solid var(--color-text);
+  border-radius: 0;
+  width: 2.4em;
+  height: auto;
+  text-transform: uppercase;
+  font-size: var(--text-sm);
+  letter-spacing: 0.14em;
+  padding-top: var(--space-2xs);
+}
+
+.tool__tile {
+  background: transparent;
+  border: var(--rule) solid var(--color-border);
+  color: var(--color-text);
+}
+
+.tool figcaption {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Paper prints as paper: drop the board colour from the page. */
+@media print {
+  .slide {
+    background: #fff;
+  }
+}

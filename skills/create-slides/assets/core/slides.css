@@ -1,10 +1,12 @@
 /*
  * create-slides — core stylesheet
  *
- * Structure, the stepped-reveal state machine, layout primitives, the reveal
- * motion vocabulary, print rules and the reduced-motion collapse. Everything
- * here is template-agnostic: it styles nothing that carries a look of its own
- * and reads all colour and type from tokens a template must provide.
+ * Structure, the stepped-reveal state machine, the reveal presets, the shared
+ * archetype layout, print rules and the reduced-motion collapse.
+ *
+ * Core carries no look of its own: every colour, font and length it uses comes
+ * from a token the template defines. It owns *where* things sit; the template
+ * owns *how they look*.
  *
  * Load order:  core/slides.css  ->  theme.css  ->  deck.css
  *
@@ -49,15 +51,16 @@ body {
   font-size: var(--stage-em);
 }
 
-/* --- Slides ----------------------------------------------------------- */
+/* --- Slides ------------------------------------------------------------ */
 
+/* Every template composes inside `.frame`, so the slide itself is a bare
+   canvas: the frame owns the inset and the padding. */
 .slide {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: var(--space-xl);
+  justify-content: stretch;
   background: var(--color-bg);
   opacity: 0;
   visibility: hidden;
@@ -74,31 +77,1095 @@ body {
     visibility 0s;
 }
 
-/* --- Stepped reveal / exit states ------------------------------------- */
+/* --- Reveal presets ------------------------------------------------------
+ * `data-reveal` on the stage sets the deck's motion; the same attribute on a
+ * single node overrides it for that node only (custom properties inherit, and
+ * a node's own declaration wins for itself).
+ *
+ *   rise   fade + lift        (default)
+ *   fade   opacity only
+ *   zoom   scale up into place
+ *   slide  enter from the left
+ *   blur   defocus + fade
+ */
+
+.stage,
+[data-reveal="rise"] {
+  --enter-x: 0;
+  --enter-y: 0.75em;
+  --enter-scale: 1;
+  --exit-y: -0.5em;
+  --word-blur: 10px;
+  --word-rise: 0.45em;
+  --word-scale: 0.94;
+}
+
+[data-reveal="fade"] {
+  --enter-x: 0;
+  --enter-y: 0;
+  --enter-scale: 1;
+  --exit-y: 0;
+  --word-blur: 0px;
+  --word-rise: 0em;
+  --word-scale: 1;
+}
+
+[data-reveal="zoom"] {
+  --enter-x: 0;
+  --enter-y: 0;
+  --enter-scale: 0.96;
+  --exit-y: 0;
+  --word-blur: 0px;
+  --word-rise: 0em;
+  --word-scale: 0.9;
+}
+
+[data-reveal="slide"] {
+  --enter-x: -1.2em;
+  --enter-y: 0;
+  --enter-scale: 1;
+  --exit-y: 0;
+  --word-blur: 0px;
+  --word-rise: 0em;
+  --word-scale: 1;
+}
+
+[data-reveal="blur"] {
+  --enter-x: 0;
+  --enter-y: 0.3em;
+  --enter-scale: 1;
+  --exit-y: -0.3em;
+  --word-blur: 14px;
+  --word-rise: 0.2em;
+  --word-scale: 1;
+}
+
+/* --- Stepped reveal / exit states -------------------------------------- */
 
 [data-enter],
 [data-exit] {
   transition:
     opacity var(--motion-duration) var(--motion-ease),
-    translate var(--motion-duration) var(--motion-ease);
+    translate var(--motion-duration) var(--motion-ease),
+    scale var(--motion-duration) var(--motion-ease);
 }
 
 [data-step-state="before"] {
   opacity: 0;
-  translate: 0 0.75em;
+  translate: var(--enter-x, 0) var(--enter-y, 0.75em);
+  scale: var(--enter-scale, 1);
 }
 
 [data-step-state="active"] {
   opacity: 1;
   translate: 0 0;
+  scale: 1;
 }
 
 [data-step-state="exited"] {
   opacity: 0;
-  translate: 0 -0.5em;
+  translate: 0 var(--exit-y, -0.5em);
 }
 
-/* --- Layout primitives ------------------------------------------------ */
+/* Only the blur preset pays for a filter: it forces a compositing layer, which
+   breaks `background-attachment: fixed` on anything inside it. */
+[data-reveal="blur"] [data-enter],
+[data-reveal="blur"] [data-exit],
+[data-enter][data-reveal="blur"],
+[data-exit][data-reveal="blur"] {
+  transition:
+    opacity var(--motion-duration) var(--motion-ease),
+    translate var(--motion-duration) var(--motion-ease),
+    scale var(--motion-duration) var(--motion-ease),
+    filter var(--motion-duration) var(--motion-ease);
+}
+
+[data-reveal="blur"] [data-step-state="before"],
+[data-step-state="before"][data-reveal="blur"] {
+  filter: blur(8px);
+}
+
+[data-reveal="blur"] [data-step-state="active"],
+[data-step-state="active"][data-reveal="blur"] {
+  filter: blur(0);
+}
+
+/* One-step staggered reveal: every body node enters on the same keypress,
+   in document order, using transition delay only (no extra steps). */
+[data-enter][data-step-state="active"] {
+  transition-delay: calc(var(--stagger, 0) * 90ms);
+}
+
+/* --- Frame: the shell every slide composes inside ----------------------- *
+ * The frame is inset from the stage edge, its inner box carries the padding,
+ * and `.frame__tag` sits centred on the frame's top line. That last rule is
+ * what locks every recurring title to one Y — templates restyle the tag, they
+ * never reposition it.
+ */
+
+.frame {
+  position: absolute;
+  inset: var(--frame-inset-y) var(--frame-inset-x);
+  border: var(--frame-border) solid var(--color-frame);
+}
+
+.frame__inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--frame-pad-y) var(--frame-pad-x);
+}
+
+.frame__inner--center {
+  justify-content: center;
+}
+
+.frame__tag {
+  position: absolute;
+  /* The containing block is the frame's padding box, i.e. the inner edge of the
+     border. Pull back half a border width so the label centres on the rule. */
+  top: calc(var(--frame-border) / -2);
+  left: var(--frame-tag-x);
+  translate: 0 -50%;
+  padding: 0 0.6em;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  /* Masks the line behind it; templates with a texture repeat it here. */
+  background-color: var(--color-bg);
+}
+
+.frame__tag--title {
+  font-size: var(--text-title);
+  color: var(--color-text);
+  line-height: 1;
+  padding: 0.1em 0.55em;
+}
+
+/* --- Cross-slide title morph ------------------------------------------- *
+ * The statement on one slide and the border title on the next are two
+ * elements; morph.js measures both and parks the target on top of the source
+ * while its slide is hidden. Showing the slide moves it into the border.
+ */
+
+.big-question {
+  /* Fades faster than its slide, so the statement hands the question over to
+     the incoming title while the two still overlap exactly. */
+  transition: opacity 160ms linear;
+  text-align: center;
+  margin-inline: auto;
+}
+
+.slide:not([data-state="current"]) .big-question {
+  opacity: 0;
+}
+
+.frame__tag--morph {
+  transition:
+    translate 700ms cubic-bezier(0.65, 0, 0.3, 1) 60ms,
+    scale 700ms cubic-bezier(0.65, 0, 0.3, 1) 60ms;
+  /* The mask moves to a pseudo-element: scaled mid-flight, a patch of
+     background over the frame reads as a mismatched rectangle. */
+  background-color: transparent;
+}
+
+.frame__tag--morph::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--color-bg);
+  opacity: 0;
+  transition: opacity 100ms linear;
+}
+
+/* Only masks once the title has arrived on the frame line. */
+.slide[data-state="current"] .frame__tag--morph::before {
+  opacity: 1;
+  transition: opacity 200ms linear 560ms;
+}
+
+.slide:not([data-state="current"]) .frame__tag--morph {
+  translate: var(--morph-x, 0px) calc(-50% + var(--morph-y, 0px));
+  scale: var(--morph-scale, 1);
+}
+
+/* morph.js measures the final border position through this class, so it has to
+   beat the parked state above regardless of specificity. */
+.frame__tag--morph.is-measuring {
+  translate: 0 -50% !important;
+  scale: 1 !important;
+  transition: none !important;
+}
+
+/* --- Word-by-word statement reveal -------------------------------------- */
+
+/* Split words are inline-block wherever they appear, so the morph source and
+   target keep identical geometry. */
+.w {
+  display: inline-block;
+}
+
+.reveal-words .w {
+  opacity: 0;
+  filter: blur(var(--word-blur, 10px));
+  translate: 0 var(--word-rise, 0.45em);
+  scale: var(--word-scale, 0.94);
+}
+
+/* The words carry the motion, so the heading itself only fades. */
+.reveal-words[data-step-state="before"],
+.reveal-words[data-step-state="exited"] {
+  translate: 0;
+  scale: 1;
+}
+
+/* Two triggers, one animation: statements without a step play as soon as the
+   slide lands, stepped ones wait for the keypress. */
+.slide[data-state="current"] .reveal-words:not([data-step-state]) {
+  --rv-delay: 300ms;
+}
+
+.reveal-words[data-step-state="active"] .w,
+.slide[data-state="current"] .reveal-words:not([data-step-state]) .w {
+  animation: word-in 640ms var(--motion-ease) both;
+  animation-delay: calc(var(--rv-delay, 0ms) + var(--i, 0) * 30ms);
+}
+
+@keyframes word-in {
+  from {
+    opacity: 0;
+    filter: blur(var(--word-blur, 10px));
+    translate: 0 var(--word-rise, 0.45em);
+    scale: var(--word-scale, 0.94);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+/* Sweeping the highlight needs a growable background box. */
+.reveal-words .marker {
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.reveal-words[data-step-state="active"] .marker,
+.slide[data-state="current"] .reveal-words:not([data-step-state]) .marker {
+  animation:
+    word-in 640ms var(--motion-ease) both,
+    marker-sweep 560ms cubic-bezier(0.6, 0, 0.35, 1) both;
+  animation-delay:
+    calc(var(--rv-delay, 0ms) + var(--i, 0) * 30ms),
+    calc(var(--rv-delay, 0ms) + var(--i, 0) * 30ms + 430ms);
+}
+
+/* The ink flips just behind the leading edge of the stroke — keyframed, not
+   linear, or the text goes muddy mid-sweep. */
+@keyframes marker-sweep {
+  0% {
+    background-size: 0% 100%;
+    color: var(--color-text);
+  }
+  28% {
+    color: var(--color-text);
+  }
+  58% {
+    color: var(--color-accent-ink);
+  }
+  100% {
+    background-size: 100% 100%;
+    color: var(--color-accent-ink);
+  }
+}
+
+.marker {
+  color: var(--color-accent-ink);
+  padding: 0.1em 0.4em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* --- Typography --------------------------------------------------------- */
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  line-height: var(--leading-tight);
+}
+
+h1 {
+  font-size: var(--text-2xl);
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: var(--text-xl);
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: var(--text-lg);
+}
+
+ul,
+ol {
+  padding-left: 1.2em;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+a {
+  color: var(--color-accent);
+}
+
+.muted {
+  color: var(--color-muted);
+}
+
+.accent {
+  color: var(--color-accent);
+}
+
+kbd {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  background: var(--color-surface);
+  border: var(--rule) solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-2xs) var(--space-xs);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* --- Cover -------------------------------------------------------------- */
+
+.cover {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs);
+}
+
+.cover h1 {
+  font-size: var(--text-cover);
+}
+
+.cover__rule {
+  width: 15em;
+  color: var(--color-accent);
+  margin-top: var(--space-2xs);
+}
+
+.cover__sub {
+  font-size: var(--text-xl);
+  color: var(--color-muted);
+  margin-top: var(--space-xs);
+}
+
+/* --- Statement slides --------------------------------------------------- */
+
+.big-statement {
+  font-family: var(--font-display);
+  font-size: 2.5em;
+  line-height: 1.28;
+  letter-spacing: -0.01em;
+  text-align: center;
+  max-width: 19em;
+  margin-inline: auto;
+}
+
+.big-statement--sm {
+  font-size: 2.1em;
+  max-width: 21em;
+}
+
+.statement-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+/* --- Content body: lede, payoff ----------------------------------------- */
+
+.slide-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.slide-body--tight {
+  gap: var(--space-md);
+}
+
+.lede {
+  max-width: 46em;
+  margin-inline: auto;
+  text-align: center;
+  font-size: 1.35em;
+  line-height: 1.5;
+}
+
+.lede__tail {
+  display: block;
+  margin-top: var(--space-xs);
+  font-size: 0.85em;
+  color: var(--color-muted);
+}
+
+.payoff {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  text-align: center;
+  font-size: 1.2em;
+  max-width: 44em;
+  margin-inline: auto;
+}
+
+.payoff--quiet {
+  font-size: var(--text-base);
+  color: var(--color-muted);
+}
+
+/* --- Chips -------------------------------------------------------------- */
+
+.chip {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  border: var(--rule) solid var(--color-border);
+  border-radius: var(--radius-chip);
+  padding: 0.25em 0.9em;
+}
+
+.chip--accent {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.chip--empty {
+  color: var(--color-muted);
+  border-style: dashed;
+  min-width: 3.5em;
+  text-align: center;
+}
+
+.chips {
+  list-style: none;
+  padding-left: 0;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-xs);
+}
+
+.tools {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.tools__label {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.tools__label strong {
+  color: var(--color-text);
+}
+
+/* --- Archetype: flow (left-to-right process) ---------------------------- */
+
+.flow {
+  display: grid;
+  grid-template-columns: 1fr 5em 1.4fr 5em 1fr;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.flow > figcaption {
+  grid-column: 1 / -1;
+  margin-top: var(--space-lg);
+  text-align: center;
+  color: var(--color-muted);
+  max-width: 42em;
+  justify-self: center;
+}
+
+.flow__node {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  background: var(--color-surface);
+  border: var(--rule) solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.flow__node--loop {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+}
+
+.flow__node--loop h3 {
+  color: var(--color-accent);
+}
+
+.flow__note {
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+.flow__list {
+  padding-left: 1.1em;
+  gap: var(--space-2xs);
+  color: var(--color-muted);
+}
+
+.flow__arrow {
+  width: 100%;
+  height: auto;
+  color: var(--color-accent);
+}
+
+/* Numbered loop inside a flow node. */
+.loop {
+  list-style: none;
+  padding-left: 0;
+  gap: var(--space-2xs);
+  counter-reset: loop;
+}
+
+.loop li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  counter-increment: loop;
+}
+
+.loop li::before {
+  content: counter(loop);
+  display: grid;
+  place-items: center;
+  flex: none;
+  align-self: center;
+  width: 1.7em;
+  height: 1.7em;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+}
+
+.loop__repeat {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  margin-top: var(--space-2xs);
+  font-size: var(--text-sm);
+  color: var(--color-accent);
+}
+
+.loop__repeat svg {
+  width: 1.3em;
+  height: 1.3em;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+/* A filled head reads far better than a stroked V at icon size. */
+.loop-glyph__head {
+  fill: currentColor;
+  stroke: none;
+}
+
+/* --- Archetype: blocks (icon card grid) --------------------------------- */
+
+.blocks {
+  list-style: none;
+  padding-left: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-surface);
+  border: var(--rule) solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.block__icon {
+  width: 2.2em;
+  height: 2.2em;
+  margin-bottom: var(--space-2xs);
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.block__dot {
+  fill: var(--color-accent);
+  stroke: none;
+}
+
+.block p {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  line-height: 1.35;
+}
+
+/* --- Archetype: levels (escalating tiers) ------------------------------- */
+
+.levels {
+  list-style: none;
+  padding-left: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+  align-items: stretch;
+}
+
+.level {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  text-align: center;
+  background: var(--color-surface);
+  border: var(--rule) solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.level--mid {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+}
+
+.level--top {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+}
+
+.level--top h3 {
+  color: var(--color-accent);
+}
+
+.level__given {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.level__chips {
+  list-style: none;
+  padding-left: 0;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2xs);
+}
+
+.level p:last-child {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  line-height: 1.35;
+}
+
+/* --- Archetype: ways (two or three options) ----------------------------- */
+
+.ways {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+  align-items: stretch;
+}
+
+.ways--three {
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+.way {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--color-surface);
+  border: var(--rule) solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.way h3 {
+  color: var(--color-accent);
+}
+
+.way__icon {
+  width: 2.7em;
+  height: 2.7em;
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.way__icon--wide {
+  width: 5.4em;
+  height: 3.2em;
+  stroke-width: 2.2;
+}
+
+.way__icon-dot {
+  fill: var(--color-accent);
+  stroke: none;
+}
+
+.way__list {
+  padding-left: 1.1em;
+  gap: var(--space-2xs);
+  color: var(--color-muted);
+}
+
+.way__logos,
+.way__chips {
+  list-style: none;
+  padding-left: 0;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: auto;
+}
+
+.way__chips {
+  gap: var(--space-2xs);
+}
+
+.way__logos .tool__tile {
+  width: 3.4em;
+  height: 3.4em;
+  border-radius: var(--radius);
+  box-shadow: none;
+}
+
+.way__who {
+  padding-top: var(--space-xs);
+  border-top: var(--rule) dashed var(--color-border);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+/* Trade-off rule under a row of options. */
+.axis {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  max-width: 52em;
+  margin-inline: auto;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.axis__line {
+  flex: 1;
+  height: 0.16em;
+  border-radius: 1em;
+  background: linear-gradient(90deg, var(--color-border), var(--color-accent));
+}
+
+/* --- Archetype: trace (numbered walkthrough) ---------------------------- */
+
+.trace {
+  list-style: none;
+  padding-left: 0;
+  gap: var(--space-sm);
+  width: 100%;
+  max-width: 46em;
+  margin-inline: auto;
+}
+
+.trace__row {
+  display: grid;
+  grid-template-columns: 2.2em 1fr;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.trace__num {
+  display: grid;
+  place-items: center;
+  width: 2.2em;
+  height: 2.2em;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+}
+
+.trace__row p {
+  color: var(--color-muted);
+}
+
+.trace__row strong {
+  color: var(--color-text);
+}
+
+/* --- Archetype: zones (two panels, wired together) ---------------------- */
+
+.zones {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7em minmax(0, 1fr);
+  align-items: stretch;
+  gap: var(--space-sm);
+  width: 100%;
+  max-width: 56em;
+  margin-inline: auto;
+}
+
+.zone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  padding: var(--space-md);
+  background: var(--color-surface);
+  border: var(--rule) solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.zone--accent {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+}
+
+.zone--accent h3 {
+  color: var(--color-accent);
+}
+
+.zone__where {
+  font-size: var(--text-sm);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.zone__what {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  line-height: 1.4;
+}
+
+.zone__note {
+  margin-top: auto;
+  padding-top: var(--space-xs);
+  border-top: var(--rule) dashed var(--color-border);
+  font-size: var(--text-sm);
+  color: var(--color-accent);
+}
+
+.zone__wire {
+  align-self: center;
+  width: 100%;
+  height: auto;
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 4.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* --- Archetype: verdicts (not this / this) ------------------------------ */
+
+.verdicts {
+  list-style: none;
+  padding-left: 0;
+  gap: var(--space-md);
+  width: 100%;
+  max-width: 56em;
+  margin-inline: auto;
+}
+
+.verdict {
+  display: grid;
+  grid-template-columns: 2.4em 1fr;
+  align-items: start;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  border: var(--rule) solid var(--color-border);
+  border-radius: var(--radius-card);
+  opacity: 0.75;
+}
+
+.verdict--yes {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
+  opacity: 1;
+}
+
+.verdict__mark {
+  width: 2.4em;
+  height: 2.4em;
+  fill: none;
+  stroke: var(--color-muted);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+}
+
+.verdict--yes .verdict__mark {
+  stroke: var(--color-accent);
+}
+
+.verdict h3 {
+  font-size: var(--text-base);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.verdict--yes h3 {
+  color: var(--color-accent);
+}
+
+.verdict p {
+  margin-top: var(--space-2xs);
+  color: var(--color-muted);
+  line-height: 1.4;
+}
+
+/* --- Archetype: vs-pair (two named things) ------------------------------ */
+
+.vs-pair {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-lg);
+  max-width: 46em;
+  margin-inline: auto;
+}
+
+.vs-item {
+  padding: var(--space-sm) var(--space-md);
+  border: var(--rule) solid var(--color-border);
+  border-radius: var(--radius-card);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  text-align: center;
+}
+
+.vs-item--accent {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+.vs-badge {
+  display: grid;
+  place-items: center;
+  width: 3em;
+  height: 3em;
+  border: var(--rule) solid var(--color-frame);
+  border-radius: 50%;
+  font-family: var(--font-display);
+  color: var(--color-frame);
+}
+
+/* --- Archetype: scatter (logos or ideas placed by hand) ----------------- */
+
+.scatter {
+  position: relative;
+  flex: 1;
+}
+
+.tool {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  translate: -50% -50%;
+  rotate: var(--rot, 0deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 9em;
+}
+
+.tool__tile {
+  display: grid;
+  place-items: center;
+  width: 6.4em;
+  height: 6.4em;
+  background: var(--color-frame);
+  border-radius: var(--radius-tile);
+  /* Inline glyphs inside a tile draw in currentColor: it must contrast with
+     the tile, not with the board. */
+  color: var(--color-bg);
+}
+
+.tool__tile img {
+  width: 60%;
+  height: 60%;
+  object-fit: contain;
+}
+
+/* Logos that already ship as a full app icon fill their tile. */
+.tool__tile--full img {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+/* App icons drawn light-on-dark keep their own backdrop, so the corners match
+   the icon instead of showing a white tile through it. */
+.tool__tile--dark {
+  background: #09090b;
+}
+
+.tool figcaption {
+  font-family: var(--font-display);
+  font-size: 0.95em;
+  color: var(--color-text);
+  text-align: center;
+}
+
+/* The tiles are not stepped: they drift in once the slide arrives. */
+.slide[data-state="current"] .tool {
+  animation: tool-in 420ms var(--motion-ease) both;
+  animation-delay: calc(300ms + var(--stagger, 0) * 110ms);
+}
+
+@keyframes tool-in {
+  from {
+    opacity: 0;
+    translate: -50% calc(-50% + 0.8em);
+  }
+  to {
+    opacity: 1;
+    translate: -50% -50%;
+  }
+}
+
+/* --- Layout primitives -------------------------------------------------- */
 
 /* stack: vertical flow with a consistent gap */
 .stack {
@@ -160,14 +1227,14 @@ body {
   gap: var(--space-2xs);
 }
 
-.statistic > .statistic__value {
+.statistic__value {
+  font-family: var(--font-display);
   font-size: var(--text-2xl);
-  font-weight: 700;
   line-height: var(--leading-tight);
   color: var(--color-accent);
 }
 
-.statistic > .statistic__label {
+.statistic__label {
   color: var(--color-muted);
 }
 
@@ -188,37 +1255,35 @@ body {
 /* code: monospace block on a raised surface */
 .code {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: var(--rule) solid var(--color-border);
   border-radius: var(--radius);
   padding: var(--space-md);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
-  line-height: var(--leading-body);
   overflow-x: auto;
   white-space: pre;
-}
-
-/* full-bleed: escape slide padding to touch the stage edges */
-.full-bleed {
-  margin: calc(-1 * var(--space-xl));
-  padding: var(--space-xl);
 }
 
 /* card: raised surface for grid items */
 .card {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
+  border: var(--rule) solid var(--color-border);
+  border-radius: var(--radius-card);
   padding: var(--space-md);
 }
 
-/* slide-header / slide-footer: optional recurring chrome pinned to the
-   slide edges — same coordinates on every slide, independent of content */
+/* full-bleed: escape the frame padding to touch the frame edges */
+.full-bleed {
+  margin: calc(-1 * var(--frame-pad-y)) calc(-1 * var(--frame-pad-x));
+  padding: var(--frame-pad-y) var(--frame-pad-x);
+}
+
+/* slide-header / slide-footer: recurring chrome pinned inside the frame */
 .slide-header,
 .slide-footer {
   position: absolute;
-  left: var(--space-xl);
-  right: var(--space-xl);
+  left: var(--frame-pad-x);
+  right: var(--frame-pad-x);
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -233,204 +1298,6 @@ body {
 
 .slide-footer {
   bottom: var(--space-lg);
-}
-
-/* --- Typography helpers ----------------------------------------------- */
-
-h1,
-h2,
-h3 {
-  font-family: var(--font-display);
-}
-
-h1 {
-  font-size: var(--text-2xl);
-  line-height: var(--leading-tight);
-  letter-spacing: -0.02em;
-}
-
-h2 {
-  font-size: var(--text-xl);
-  line-height: var(--leading-tight);
-  letter-spacing: -0.01em;
-}
-
-h3 {
-  font-size: var(--text-lg);
-  line-height: var(--leading-tight);
-}
-
-.muted {
-  color: var(--color-muted);
-}
-
-.accent {
-  color: var(--color-accent);
-}
-
-.statement {
-  font-size: var(--text-xl);
-  line-height: var(--leading-tight);
-  font-weight: 600;
-  max-width: 18em;
-}
-
-kbd {
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-bottom-width: 2px;
-  border-radius: calc(var(--radius) / 2);
-  padding: var(--space-2xs) var(--space-xs);
-}
-
-ul,
-ol {
-  padding-left: 1.2em;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-}
-
-a {
-  color: var(--color-accent);
-}
-
-:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
-
-/* --- Word-by-word statement reveal --------------------------------------
-   Words rise out of a blur, one after the next; the highlight is then swept
-   across as if someone dragged a marker over it. */
-
-/* Split words are inline-block wherever they appear, so the morph source and
-   target keep identical geometry. */
-.w {
-  display: inline-block;
-}
-
-.reveal-words .w {
-  opacity: 0;
-  filter: blur(10px);
-  translate: 0 0.45em;
-  scale: 0.94;
-}
-
-/* The words carry the motion, so the heading itself only fades. */
-.reveal-words[data-step-state="before"],
-.reveal-words[data-step-state="exited"] {
-  translate: 0;
-}
-
-/* Two triggers: statements without a step play as soon as the slide lands,
-   stepped ones wait for the keypress. Both run the same animation. */
-.slide[data-state="current"] .reveal-words:not([data-step-state]) {
-  --rv-delay: 300ms;
-}
-
-.reveal-words[data-step-state="active"] .w,
-.slide[data-state="current"] .reveal-words:not([data-step-state]) .w {
-  animation: word-in 640ms var(--motion-ease) both;
-  animation-delay: calc(var(--rv-delay, 0ms) + var(--i, 0) * 30ms);
-}
-
-@keyframes word-in {
-  from {
-    opacity: 0;
-    filter: blur(10px);
-    translate: 0 0.45em;
-    scale: 0.94;
-  }
-  to {
-    opacity: 1;
-    filter: blur(0);
-    translate: 0 0;
-    scale: 1;
-  }
-}
-
-/* Sweeping the highlight needs a growable background box. */
-.reveal-words .marker {
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-}
-
-.reveal-words[data-step-state="active"] .marker,
-.slide[data-state="current"] .reveal-words:not([data-step-state]) .marker {
-  animation:
-    word-in 640ms var(--motion-ease) both,
-    marker-sweep 560ms cubic-bezier(0.6, 0, 0.35, 1) both;
-  animation-delay:
-    calc(var(--rv-delay, 0ms) + var(--i, 0) * 30ms),
-    calc(var(--rv-delay, 0ms) + var(--i, 0) * 30ms + 430ms);
-}
-
-/* The ink flips to dark just behind the leading edge of the stroke. */
-@keyframes marker-sweep {
-  0% {
-    background-size: 0% 100%;
-    color: var(--color-text);
-  }
-  28% {
-    color: var(--color-text);
-  }
-  58% {
-    color: var(--color-accent-ink);
-  }
-  100% {
-    background-size: 100% 100%;
-    color: var(--color-accent-ink);
-  }
-}
-
-.statement-stack {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xl);
-}
-
-.vs-pair {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: var(--space-lg);
-  max-width: 46em;
-  margin-inline: auto;
-}
-
-.vs-item {
-  padding: var(--space-sm) var(--space-md);
-  border: 0.15em solid var(--color-border);
-  border-radius: 1.8em 0.6em 1.6em 0.7em / 0.7em 1.7em 0.6em 1.6em;
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  font-weight: 600;
-  text-align: center;
-}
-
-.vs-item--agent {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
-  border-radius: 0.7em 1.7em 0.6em 1.6em / 1.6em 0.6em 1.8em 0.7em;
-}
-
-/* Hand-drawn circle: no two quadrants share a radius. */
-.vs-badge {
-  display: grid;
-  place-items: center;
-  width: 3em;
-  height: 3em;
-  border: 0.16em solid var(--color-frame);
-  border-radius: 50% 46% 53% 47% / 47% 53% 46% 50%;
-  rotate: -6deg;
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: var(--text-base);
-  color: var(--color-frame);
 }
 
 /* --- Print / PDF -------------------------------------------------------- *
@@ -457,7 +1324,7 @@ a {
   }
 
   /* Fixed-attachment backgrounds are not painted in paged media, which would
-     drop the dot grid entirely. */
+     drop a template's texture entirely. */
   .slide,
   .frame__tag,
   .frame__tag--morph::before {
@@ -484,6 +1351,8 @@ a {
   [data-step-state] {
     opacity: 1 !important;
     translate: 0 !important;
+    scale: 1 !important;
+    filter: none !important;
   }
 
   .slide:not([data-state="current"]) .big-question {
@@ -504,14 +1373,14 @@ a {
     color: var(--color-accent-ink) !important;
   }
 
-  /* Scattered logos keep their placement transform. */
+  /* Scattered tiles keep their placement transform. */
   .slide .tool {
     opacity: 1 !important;
     animation: none !important;
     translate: -50% -50% !important;
   }
 
-  /* The morph title belongs on the border, mask included. */
+  /* The morph title belongs on the frame line, mask included. */
   .frame__tag--morph {
     translate: 0 -50% !important;
     scale: 1 !important;
@@ -522,10 +1391,10 @@ a {
   }
 }
 
-/* --- Reduced motion ---------------------------------------------------- */
+/* --- Reduced motion ----------------------------------------------------- */
 
-/* Same content states, no movement: reveals and slide changes become
-   instant opacity flips with zero translation. */
+/* Same content states, no movement: reveals and slide changes become instant
+   opacity flips with zero translation, scale, or blur. */
 @media (prefers-reduced-motion: reduce) {
   .slide,
   .slide[data-state="current"],
@@ -537,19 +1406,29 @@ a {
   [data-step-state="before"],
   [data-step-state="exited"] {
     translate: 0 0;
+    scale: 1;
+    filter: none;
+  }
+
+  /* Same selector shape as the blur preset, or it keeps winning on specificity. */
+  [data-reveal="blur"] [data-step-state="before"],
+  [data-reveal="blur"] [data-step-state="exited"],
+  [data-step-state="before"][data-reveal="blur"],
+  [data-step-state="exited"][data-reveal="blur"] {
+    filter: none;
   }
 
   [data-enter][data-step-state="active"] {
     transition-delay: 0ms !important;
   }
 
-  /* Logos are simply there when the slide arrives. */
+  /* Scattered tiles are simply there when the slide arrives. */
   .slide[data-state="current"] .tool {
     animation: none;
   }
 
-  /* The statement appears on its step as one plain flip: no blur, no drift,
-     and the highlight is already drawn. */
+  /* Statements appear on their step as one plain flip: no blur, no drift, and
+     the highlight already drawn. */
   .reveal-words .w,
   .reveal-words .marker {
     animation: none !important;

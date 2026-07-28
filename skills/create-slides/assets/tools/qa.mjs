@@ -77,6 +77,14 @@ note(nav.start.slide === 0 && nav.start.step === 0, 'returns to the first slide'
 note(nav.noWrapEnd && nav.noWrapStart, 'does not wrap at either end');
 note(nav.boundaryOk, 'backward boundary lands on the previous slide’s final step');
 
+// --- reveal presets -----------------------------------------------------
+const PRESETS = ['rise', 'fade', 'zoom', 'slide', 'blur'];
+const presets = await page.evaluate(() =>
+  [...document.querySelectorAll('[data-reveal]')].map((n) => n.getAttribute('data-reveal')),
+);
+const unknown = [...new Set(presets)].filter((p) => !PRESETS.includes(p));
+note(unknown.length === 0, 'every data-reveal names a known preset', unknown.join(', '));
+
 // --- composition --------------------------------------------------------
 const comp = await page.evaluate(() => {
   const stage = document.querySelector('.stage').getBoundingClientRect();

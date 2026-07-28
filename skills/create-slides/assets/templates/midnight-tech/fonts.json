@@ -1,0 +1,17 @@
+{
+  "display": {
+    "family": "Space Grotesk",
+    "weights": "400..700",
+    "token": "--font-display"
+  },
+  "body": {
+    "family": "IBM Plex Sans",
+    "weights": "400..600",
+    "token": "--font-body"
+  },
+  "mono": {
+    "family": "JetBrains Mono",
+    "weights": "400..700",
+    "token": "--font-mono"
+  }
+}

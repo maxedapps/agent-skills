@@ -1,0 +1,12 @@
+{
+  "display": {
+    "family": "Sora",
+    "weights": "400..800",
+    "token": "--font-display"
+  },
+  "body": {
+    "family": "Manrope",
+    "weights": "400..800",
+    "token": "--font-body"
+  }
+}

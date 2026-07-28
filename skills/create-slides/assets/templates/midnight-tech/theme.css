@@ -1,0 +1,220 @@
+/*
+ * Template: midnight-tech
+ *
+ * Near-black board with a faint engineering grid, a thin bracketed frame,
+ * squared corners, a monospaced eyebrow and one cyan accent.
+ *
+ * Loaded AFTER core/slides.css. Owns the tokens, the chrome, and the look of
+ * the shared archetypes — never their layout.
+ */
+
+:root {
+  /* Colour — every text/surface pair meets WCAG AA */
+  --color-bg: #0b0f14;
+  --color-surface: #141b24;
+  --color-border: #26313f;
+  --color-text: #e7eef7;
+  --color-muted: #93a4b8;
+  --color-accent: #3ad6c8;
+  --color-accent-ink: #04191c;
+  --color-frame: #2b3a4c;
+
+  /* Frame geometry */
+  --frame-inset-y: 2.6em;
+  --frame-inset-x: 3.2em;
+  --frame-border: calc(0.14 * var(--stage-em));
+  --frame-pad-y: var(--space-lg);
+  --frame-pad-x: var(--space-xl);
+  --frame-tag-x: 2.4em;
+
+  /* Texture: a viewport-anchored grid, so label masks line up with the board */
+  --grid-color: rgba(150, 200, 255, 0.05);
+  --grid: linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  --grid-size: 3.148vh 3.148vh;
+
+  /* Type */
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --text-sm: 0.8em;
+  --text-base: 1em;
+  --text-lg: 1.35em;
+  --text-xl: 1.95em;
+  --text-2xl: 2.9em;
+  --text-title: 1.8em;
+  --text-cover: 5em;
+  --leading-tight: 1.1;
+  --leading-body: 1.5;
+
+  /* Space */
+  --space-2xs: 0.25em;
+  --space-xs: 0.5em;
+  --space-sm: 0.75em;
+  --space-md: 1.25em;
+  --space-lg: 2em;
+  --space-xl: 3.25em;
+
+  /* Shape — squared off, drawn with a ruler */
+  --rule: 0.12em;
+  --radius: 0.25em;
+  --radius-card: 0.25em;
+  --radius-chip: 0.25em;
+  --radius-tile: 0.5em;
+
+  --motion-duration: 340ms;
+  --motion-ease: cubic-bezier(0.3, 0.85, 0.35, 1);
+}
+
+/* --- Chrome: grid board, bracketed frame -------------------------------- */
+
+.slide {
+  background-image: var(--grid);
+  background-size: var(--grid-size);
+  background-attachment: fixed;
+}
+
+/* Corner brackets: the frame reads as a viewport, not a picture frame. */
+.frame::before,
+.frame::after {
+  content: "";
+  position: absolute;
+  width: 1.5em;
+  height: 1.5em;
+  border: 0.2em solid var(--color-accent);
+}
+
+.frame::before {
+  top: -0.2em;
+  right: -0.2em;
+  border-left: 0;
+  border-bottom: 0;
+}
+
+.frame::after {
+  bottom: -0.2em;
+  left: -0.2em;
+  border-right: 0;
+  border-top: 0;
+}
+
+.frame__tag {
+  background-image: var(--grid);
+  background-size: var(--grid-size);
+  background-attachment: fixed;
+  font-family: var(--font-mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.frame__tag--title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  text-transform: none;
+  color: var(--color-text);
+}
+
+.frame__tag--morph {
+  background-image: none;
+}
+
+.frame__tag--morph::before {
+  background-image: var(--grid);
+  background-size: var(--grid-size);
+  background-attachment: fixed;
+}
+
+/* --- Statements --------------------------------------------------------- */
+
+.cover h1 {
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+.cover__rule {
+  width: 12em;
+}
+
+.cover__sub {
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+  letter-spacing: 0.06em;
+}
+
+/* Geometrically similar to .frame__tag--title so one scale factor maps the
+   morph: same family, weight, tracking, line-height and em padding. */
+.big-question {
+  font-size: 3.3em;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1;
+  padding: 0.1em 0.55em;
+}
+
+.big-statement {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* A selection block, not a pen stroke. */
+.marker {
+  background-image: linear-gradient(var(--color-accent), var(--color-accent));
+  border-radius: 0.12em;
+}
+
+/* --- Archetypes --------------------------------------------------------- */
+
+.flow__node h3,
+.way h3,
+.level h3,
+.zone h3,
+.block h3 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Monospaced micro-labels tie the diagrams back to the eyebrow. */
+.zone__where,
+.verdict h3,
+.level__given,
+.zone__note,
+.axis {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.chip {
+  font-family: var(--font-mono);
+  font-size: 0.75em;
+  letter-spacing: 0.04em;
+}
+
+.trace__num,
+.loop li::before {
+  font-family: var(--font-mono);
+  border-radius: 0.25em;
+}
+
+.vs-badge {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  text-transform: uppercase;
+  border-radius: 0.25em;
+  border-width: 0.14em;
+}
+
+.tool__tile {
+  background: var(--color-surface);
+  border: var(--rule) solid var(--color-border);
+  color: var(--color-text);
+}
+
+.tool figcaption {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  color: var(--color-muted);
+}

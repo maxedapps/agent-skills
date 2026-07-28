@@ -1,0 +1,166 @@
+/*
+ * Template: light-editorial
+ *
+ * Warm paper, a serif display face, hairline rules instead of heavy boxes, and
+ * one rust accent used sparingly. Prints well and reads calmly on a projector.
+ *
+ * Loaded AFTER core/slides.css. Owns the tokens, the chrome, and the look of
+ * the shared archetypes — never their layout.
+ */
+
+:root {
+  /* Colour — every text/surface pair meets WCAG AA */
+  --color-bg: #f7f3ea;
+  --color-surface: #fffdf7;
+  --color-border: #d5cdbc;
+  --color-text: #221f1a;
+  --color-muted: #6b6559;
+  --color-accent: #a8431f;
+  --color-accent-ink: #fdf8ef;
+  --color-frame: #c4baa6;
+
+  /* Frame geometry — a hairline box, generous margins */
+  --frame-inset-y: 2.8em;
+  --frame-inset-x: 3.6em;
+  --frame-border: calc(0.11 * var(--stage-em));
+  --frame-pad-y: var(--space-lg);
+  --frame-pad-x: var(--space-xl);
+  --frame-tag-x: 2em;
+
+  /* Type */
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --text-sm: 0.8em;
+  --text-base: 1em;
+  --text-lg: 1.35em;
+  --text-xl: 1.9em;
+  --text-2xl: 2.9em;
+  --text-title: 1.75em;
+  --text-cover: 4.6em;
+  --leading-tight: 1.12;
+  --leading-body: 1.55;
+
+  /* Space */
+  --space-2xs: 0.25em;
+  --space-xs: 0.5em;
+  --space-sm: 0.75em;
+  --space-md: 1.25em;
+  --space-lg: 2em;
+  --space-xl: 3.25em;
+
+  /* Shape — squared off, hairline weight */
+  --rule: 0.09em;
+  --radius: 0.2em;
+  --radius-card: 0.2em;
+  --radius-chip: 0.2em;
+  --radius-tile: 0.4em;
+
+  --motion-duration: 380ms;
+  --motion-ease: cubic-bezier(0.22, 0.9, 0.35, 1);
+}
+
+/* --- Chrome ------------------------------------------------------------- */
+
+.frame__tag {
+  font-family: var(--font-body);
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.frame__tag--title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  text-transform: none;
+}
+
+/* --- Statements --------------------------------------------------------- */
+
+.cover h1 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.cover__rule {
+  width: 11em;
+}
+
+.cover__sub {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  letter-spacing: 0.04em;
+}
+
+/* Geometrically similar to .frame__tag--title so one scale factor maps the
+   morph: same family, weight, tracking, line-height and em padding. */
+.big-question {
+  font-size: 3.2em;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1;
+  padding: 0.1em 0.55em;
+}
+
+.big-statement {
+  font-weight: 500;
+  line-height: 1.24;
+}
+
+/* A printed highlight: solid ink, hard edges. */
+.marker {
+  background-image: linear-gradient(var(--color-accent), var(--color-accent));
+  border-radius: 0.1em;
+}
+
+/* --- Archetypes: hairlines, not boxes ----------------------------------- */
+
+.flow__node,
+.block,
+.level,
+.way,
+.zone,
+.card,
+.verdict {
+  box-shadow: none;
+}
+
+/* Accent tints stay pale on paper. */
+.flow__node--loop,
+.level--top,
+.zone--accent,
+.verdict--yes {
+  background: color-mix(in srgb, var(--color-accent) 6%, var(--color-surface));
+}
+
+.vs-item--accent {
+  background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+}
+
+/* Section labels pick up the eyebrow's letterspacing. */
+.zone__where,
+.verdict h3,
+.level__given {
+  font-family: var(--font-body);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: var(--text-sm);
+}
+
+.vs-badge {
+  font-family: var(--font-display);
+  font-style: italic;
+  border-width: 0.08em;
+}
+
+.tool__tile {
+  background: var(--color-surface);
+  border: var(--rule) solid var(--color-border);
+  color: var(--color-text);
+}
+
+.tool figcaption {
+  font-family: var(--font-body);
+  color: var(--color-muted);
+}

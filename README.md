@@ -7,7 +7,7 @@
 - `explain` — manually produce context-grounded Markdown explanations and standalone HTML that opens in the default browser unless suppressed.
 - `create-plan` — create, review, and improve researched, implementation-ready plans before coding.
 - `create-skill` — create, rewrite, and review concise, actionable Agent Skills.
-- `create-slides` — build, verify and export templated HTML slide decks (PDF + MP4 at 1080p/2K/4K).
+- `create-slides` — build, verify and export templated HTML slide decks from five looks (PDF + MP4 at 1080p/2K/4K).
 - `generate-image` — generate AI images through fal.ai HTTP queue workflows (Bun CLI; default `openai/gpt-image-2`).
 - `implement-plan` — execute existing Markdown implementation plans with delegation-first tracking and verification.
 - `use-subagents` — portable delegation policy, assignment contracts, worktree isolation/cleanup for any harness.
@@ -109,7 +109,7 @@ Creates, rewrites, reviews, and evidence-backed improves Agent Skills with liter
 
 ### `create-slides`
 
-Creates and materially redesigns polished, dependency-free HTML slide decks (vanilla HTML/CSS/JS) from a tested stepped-reveal starter, with optional themes, art-direction intake (cover vs content layout contracts, reveal model, density), and runtime **plus composition** QA. Decks open from a local `index.html` with no server, build step, or network access; validation requires a browser or browser-automation capability.
+Creates and materially redesigns polished, dependency-free HTML slide decks (vanilla HTML/CSS/JS) from five templates — `dark-marker`, `light-editorial`, `midnight-tech`, `bold-keynote`, `minimal-mono` — that share one archetype vocabulary, five named reveal presets, a cross-slide title morph, and runtime **plus composition** QA. Art-direction intake asks for the look, delivery mode, reveal model and density. Decks open from a local `index.html` with no server, build step, or network access; PDF and MP4 export (1080p/2K/4K, reveals optionally timed to a caption track) need Node, Chrome and ffmpeg.
 
 ### `generate-image`
 

@@ -1,0 +1,12 @@
+{
+  "display": {
+    "family": "Fraunces",
+    "weights": "400..700",
+    "token": "--font-display"
+  },
+  "body": {
+    "family": "Inter",
+    "weights": "400..600",
+    "token": "--font-body"
+  }
+}

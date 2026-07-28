@@ -1,0 +1,237 @@
+/*
+ * Template: bold-keynote
+ *
+ * No frame, no texture, no hairlines: solid colour fields, very large type and
+ * one saturated accent that fills whole panels instead of outlining them.
+ *
+ * Loaded AFTER core/slides.css. Owns the tokens, the chrome, and the look of
+ * the shared archetypes — never their layout.
+ */
+
+:root {
+  /* Colour — every text/surface pair meets WCAG AA */
+  --color-bg: #17141f;
+  --color-surface: #241e33;
+  --color-border: #3a3350;
+  --color-text: #fdf7f2;
+  --color-muted: #b9aec6;
+  --color-accent: #ff5f3d;
+  --color-accent-ink: #1c0c06;
+  --color-frame: #6b5f7d;
+
+  /* Frame geometry — the frame is an invisible margin, not a border */
+  --frame-inset-y: 3em;
+  --frame-inset-x: 4em;
+  --frame-border: 0px;
+  --frame-pad-y: var(--space-lg);
+  --frame-pad-x: var(--space-lg);
+  --frame-tag-x: 0.4em;
+
+  /* Type */
+  --font-display: "Sora", system-ui, -apple-system, sans-serif;
+  --font-body: "Manrope", system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --text-sm: 0.82em;
+  --text-base: 1.05em;
+  --text-lg: 1.45em;
+  --text-xl: 2.1em;
+  --text-2xl: 3.2em;
+  --text-title: 2.2em;
+  --text-cover: 6.4em;
+  --leading-tight: 1.05;
+  --leading-body: 1.45;
+
+  /* Space */
+  --space-2xs: 0.25em;
+  --space-xs: 0.5em;
+  --space-sm: 0.8em;
+  --space-md: 1.3em;
+  --space-lg: 2.2em;
+  --space-xl: 3.4em;
+
+  /* Shape — hard edges */
+  --rule: 0.14em;
+  --radius: 0;
+  --radius-card: 0;
+  --radius-chip: 0;
+  --radius-tile: 0;
+
+  --motion-duration: 420ms;
+  --motion-ease: cubic-bezier(0.2, 0.85, 0.3, 1);
+}
+
+/* --- Chrome: none, beyond a fixed label line ---------------------------- */
+
+.frame__tag {
+  background-color: transparent;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.frame__tag--title {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-transform: none;
+  padding-left: 0;
+}
+
+.frame__tag--morph::before {
+  display: none;
+}
+
+/* The cover is one solid accent field. */
+.slide--cover {
+  background-color: var(--color-accent);
+  background-image: none;
+}
+
+.slide--cover .frame__tag,
+.slide--cover .cover h1,
+.slide--cover .cover__sub,
+.slide--cover .cover__rule {
+  color: var(--color-accent-ink);
+}
+
+/* --- Statements --------------------------------------------------------- */
+
+.cover h1 {
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.cover__rule {
+  width: 9em;
+}
+
+.cover__sub {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* Geometrically similar to .frame__tag--title so one scale factor maps the
+   morph: same family, weight, tracking, line-height and em padding. */
+.big-question {
+  font-size: 3.8em;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  padding: 0.1em 0;
+}
+
+.big-statement {
+  font-size: 3em;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  max-width: 16em;
+}
+
+.big-statement--sm {
+  font-size: 2.5em;
+  max-width: 18em;
+}
+
+/* A painted block behind the words. */
+.marker {
+  background-image: linear-gradient(var(--color-accent), var(--color-accent));
+  padding: 0.06em 0.28em;
+}
+
+/* --- Archetypes: filled panels, no outlines ----------------------------- */
+
+.flow__node,
+.block,
+.level,
+.way,
+.zone,
+.card,
+.verdict,
+.vs-item {
+  border-color: transparent;
+}
+
+.verdict {
+  background: var(--color-surface);
+}
+
+/* The accent variants are filled, not tinted. */
+.flow__node--loop,
+.level--top,
+.zone--accent,
+.verdict--yes,
+.vs-item--accent {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-ink);
+  opacity: 1;
+}
+
+.flow__node--loop h3,
+.flow__node--loop p,
+.flow__node--loop .loop__repeat,
+.level--top h3,
+.level--top p,
+.zone--accent h3,
+.zone--accent p,
+.verdict--yes h3,
+.verdict--yes p,
+.vs-item--accent {
+  color: var(--color-accent-ink);
+}
+
+.flow__node--loop .loop li::before {
+  background: var(--color-accent-ink);
+  color: var(--color-accent);
+}
+
+.verdict--yes .verdict__mark {
+  stroke: var(--color-accent-ink);
+}
+
+.flow__node h3,
+.way h3,
+.level h3,
+.zone h3,
+.block h3 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.zone__where,
+.verdict h3,
+.level__given {
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: var(--text-sm);
+}
+
+.chip {
+  background: var(--color-surface);
+  border-color: transparent;
+  font-weight: 700;
+}
+
+.chip--accent {
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+.vs-badge {
+  border: 0;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.9em;
+}
+
+.tool__tile {
+  background: var(--color-text);
+}
+
+.tool figcaption {
+  font-family: var(--font-body);
+  font-weight: 700;
+}

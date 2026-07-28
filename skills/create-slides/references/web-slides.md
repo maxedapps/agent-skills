@@ -1,259 +1,152 @@
-# Web Slides: Starter Contract and Techniques
+# Deck Contract
 
-How the copied runtime (`core/slides.css`, `core/slides.js`, `core/morph.js`,
-plus a template's `theme.css` and the deck's own `deck.css`) works and where you
-may extend it. The runtime behavior below is covered by
-`scripts/slides-runtime.test.mjs` — documentation and tests agree.
+How the copied runtime works and where you may extend it. Everything about the
+runtime below is covered by `scripts/slides-runtime.test.mjs` — docs and tests
+agree.
 
-Contents: [DOM and state contract](#dom-and-state-contract) ·
-[Navigation](#navigation) · [Runtime API](#runtime-api) ·
-[CSS structure](#css-structure) ·
-[Layout implementation notes](#layout-implementation-notes) ·
-[Motion](#motion-and-choreography) ·
-[One-step staggered reveals](#one-step-staggered-reveals) ·
-[Responsive and print](#responsive-and-print) ·
-[Accessibility](#accessibility) · [Extend vs rebuild](#extend-vs-rebuild) ·
-[Browser QA checklist](#browser-qa-checklist)
+Contents: [DOM and state](#dom-and-state-contract) · [Navigation](#navigation) ·
+[Runtime API](#runtime-api) · [CSS layers](#css-layers-and-tokens) ·
+[Composition](#composition-contract) · [Reveals](#reveals) ·
+[Accessibility](#accessibility) · [Extend vs rebuild](#extend-vs-rebuild)
 
 ## DOM and state contract
 
-- Slides are `<section class="slide">` elements inside `.stage`, presented
-  in DOM order. Content lives entirely in HTML.
-- Stepped nodes opt in with positive-integer `data-enter` and/or
-  `data-exit` attributes (`"1"`, `"2"`, …; zero, negatives, floats, and
-  non-numeric values are ignored).
+- Slides are `<section class="slide">` inside `.stage`, presented in DOM order.
+  Content lives entirely in HTML.
+- Every slide composes inside `.frame` → `.frame__inner`. The frame owns the
+  inset and padding; the slide itself is a bare canvas.
+- Stepped nodes opt in with positive-integer `data-enter` / `data-exit`
+  (`"1"`, `"2"`, …; zero, negatives, floats and non-numeric values are ignored).
   - `data-enter="n"`: hidden (`before`) while step < n, then `active`.
   - `data-exit="n"`: `exited` from step >= n. Exit-only nodes start visible.
-  - Equal values on several nodes group them: they change together.
-  - **Invalid pair rule:** if a node has both and exit <= enter, BOTH
-    attributes are ignored — the node behaves as unstepped (always visible
-    on its slide) and adds nothing to the slide's final step.
-- A slide's final step is the maximum valid enter/exit value across its
-  nodes, or 0 when none exist. Step 0 is the initial state.
-- The runtime writes state the CSS styles against — never set these
-  attributes manually:
-  - slides: `data-state="current"|"hidden"`, `aria-hidden`, and `inert`
-    (hidden slides are removed from focus and interaction order);
-  - stepped nodes: `data-step-state="before"|"active"|"exited"`.
-- Rendering is a pure function of (current slide, current step); there is
-  no per-slide history, and hidden slides render at step 0.
+  - Equal values group nodes: they change together on one keypress.
+  - **Invalid pair rule:** if a node has both and exit <= enter, BOTH are
+    ignored — it behaves as unstepped and adds nothing to the slide's final step.
+- A slide's final step is the maximum valid value across its nodes, or 0.
+- The runtime writes the state that CSS styles against — never set these by hand:
+  slides get `data-state="current"|"hidden"`, `aria-hidden` and `inert`; stepped
+  nodes get `data-step-state="before"|"active"|"exited"`.
+- Rendering is a pure function of (slide, step). No per-slide history; hidden
+  slides render at step 0.
+- `data-slide="slug"` is optional and used only by timed video exports
+  ([export.md](export.md)).
 
 ## Navigation
 
-- ArrowRight/ArrowDown: one step forward, then the next slide at step 0.
-- ArrowLeft/ArrowUp: one step back; crossing a boundary opens the previous
-  slide at its final step.
-- Shift+Arrow: jump — next slide at step 0, or previous slide at its final
-  step. If the target slide does not exist, slide and step stay unchanged.
-- Never wraps. Ignores non-arrow keys, IME composition, Ctrl/Alt/Meta
-  combinations, and keystrokes in inputs, textareas, selects, or
-  contenteditable targets.
+- ArrowRight/Down: one step forward, then the next slide at step 0.
+- ArrowLeft/Up: one step back; crossing a boundary opens the previous slide at
+  its final step.
+- Shift+Arrow: jump a whole slide. Never wraps at either end.
+- Ignores non-arrow keys, IME composition, Ctrl/Alt/Meta combos, and keystrokes
+  in inputs, textareas, selects and contenteditable targets.
 
 ## Runtime API
 
-`slides.js` is a classic script (no modules) that auto-initializes on load
-and also works via `file://`. It exposes `SlidesRuntime` on `globalThis`
-with pure helpers — `parseStep(attrValue)`, `stepPair(enterAttr, exitAttr)`,
-`nodeState(step, pair)`, `finalStep(pairs)`, `reduce(state, action,
-finalSteps)`, `actionForKey(event)`, `renderModel(state, deck)`; invalid
-attribute values yield `null` fields rather than throwing, so check inputs
-when verifying programmatically — plus `init(root)`, which returns a
-controller: `getState()`, `finalSteps`, `send(action)` with actions
-`next`/`prev`/`nextSlide`/`prevSlide`, and `destroy()`. A guarded CommonJS
-export lets Node `require()` the same file for tests. In the browser the
-auto-initialized controller is exposed as `SlidesRuntime.controller` — use
-it from the console or automation to drive the deck programmatically, and
-never call `init()` a second time on the same document (that would register
-a competing key listener with its own state).
+`core/slides.js` is a classic script (no modules) that auto-initializes on load
+and works over `file://`. It exposes `SlidesRuntime` on `globalThis`: the pure
+helpers `parseStep`, `stepPair`, `nodeState`, `finalStep`, `reduce`,
+`actionForKey`, `renderModel` (invalid input yields `null` fields rather than
+throwing), plus `init(root)` returning a controller with `getState()`,
+`finalSteps`, `send(action)` — `next`/`prev`/`nextSlide`/`prevSlide` — and
+`destroy()`.
 
-## CSS structure
+The auto-initialized controller is `SlidesRuntime.controller`; drive the deck
+from the console or from automation through it. Never call `init()` twice on one
+document — that registers a competing key listener with its own state. A guarded
+CommonJS export lets Node `require()` the same file for tests.
 
-- All theming flows through `:root` tokens declared by the **template**:
-  colors, `--font-*`, `--text-*` scale, `--space-*` scale, `--radius`,
-  `--motion-duration`, `--motion-ease`. Core declares only `--stage-em`.
-  Restyle a deck by changing tokens first — see `references/templates.md`.
-- Load order is `core/slides.css` → `templates/<name>/theme.css` → `deck.css`,
-  so a template overrides core and a deck overrides its template purely by
-  cascade order. Never reach for `!important` to win that fight.
-- The `.stage` is a responsive 16:9 surface; its `font-size` scales with
-  the viewport and everything inside is sized in `em`, so composition is
-  identical at any window size. Keep new sizes in `em`/tokens.
-- Layout primitives (`stack`, `cluster`, `split`, `grid`, `media`,
-  `statistic`, `quote`, `code`, `full-bleed`, `card`, `slide-header`,
-  `slide-footer`) are composable classes — combine them before writing new
-  layout CSS. A template may add its own components; core owns the primitives.
-- Chrome (`slide-header`, `slide-footer`) is absolutely positioned inside
-  the slide, so it renders at identical coordinates on every slide
-  regardless of content height. Use it for recurring titles, credits, or
-  page context if the deck wants them — optional, never required — and
-  restyle the minimal muted default freely. Chrome may carry
-  `data-enter`/`data-exit` and then participates in stepping automatically.
-  On `full-bleed` slides chrome overlaps the bleed — omit it there or
-  accept the overlay deliberately.
-- Visibility states are styled via `.slide[data-state="current"]` and
-  `[data-step-state="..."]` selectors; add per-deck overrides on those same
-  hooks.
+## CSS layers and tokens
 
-## Layout implementation notes
-
-The starter centers each `.slide` (`justify-content: center`). That is fine
-for simple sample slides and for **`cover-center`**. It is the wrong default
-for content slides that need a locked title position.
-
-### Title band + body (content slides)
-
-Typical structure:
-
-```html
-<section class="slide">
-  <header class="slide-heading">
-    <p class="eyebrow">…</p>
-    <h2>…</h2>
-  </header>
-  <div class="slide-body">…</div>
-  <footer class="slide-footer">…</footer>
-</section>
+```
+core/slides.css              structure · step states · reveal presets ·
+                             archetype layout · print · reduced motion
+templates/<name>/theme.css   tokens · chrome · the look of the archetypes
+deck.css                     this deck's overrides — starts near-empty
 ```
 
-Theme/override CSS pattern:
+Loaded in that order; later files win by cascade, never by `!important`. Core
+declares only `--stage-em`; every other token is the template's job, so a deck
+with no template loaded is unstyled by design. The full token contract is in
+[templates.md](templates.md).
 
-- `.slide { justify-content: flex-start; }` for content slides (not cover).
-- `.slide-heading` fixed height (room for eyebrow + two-line title).
-- `.slide-body { flex: 1; display: flex; flex-direction: column; }` with
-  either `justify-content: flex-start` + top padding (**body-upper**) or
-  `justify-content: center` (**body-center-remaining**).
-- Body children stay `flex: 0 0 auto` — content-sized. Do not set
-  `flex: 1` / `height: 100%` on cards merely to fill the stage.
-- Equal-height cards inside one grid/split row: stretch items to the row’s
-  content height only.
+The `.stage` is a responsive 16:9 surface whose `font-size` scales with the
+viewport, and everything inside is sized in `em` — composition is identical at
+any window size and at any export resolution. Keep new sizes in `em` or tokens.
 
-### Cover center
+## Composition contract
 
-Keep cover as its own shell (often `position: absolute; inset: 0` inside a
-padding-less `.slide--cover`) with `justify-content: center`. Do not reuse
-the content title-band on the cover unless the art direction says so.
+Two rules make a deck feel built rather than assembled, and `npm run qa`
+enforces both:
 
-## Motion and choreography
+1. **One title Y.** `.frame__tag` is positioned by core, centred on the frame's
+   top line. Templates restyle it; they never reposition it. Both the eyebrow
+   (`.frame__tag`) and the content title (`.frame__tag--title`) therefore land
+   at the same Y on every slide.
+2. **Body fits and is centred.** `.slide-body` inside `.frame__inner--center`
+   sits vertically centred in the frame and must not overflow it. Content-sized
+   modules with comfortable gaps — never `flex: 1` on a card to fill the stage.
 
-- Motion is purposeful pacing, not spectacle: reveal to direct attention,
-  exit to clear it. Animate `opacity` and transforms (`translate`) only —
-  they are compositable and cheap; never animate layout properties.
-- Tune globally via `--motion-duration`/`--motion-ease`, or per element
-  with more specific `[data-step-state]` rules (e.g. a larger translate for
-  a hero element).
-- For one-off emphasis beyond state transitions, the native Web Animations
-  API (`element.animate(...)`) is an acceptable extension: keep it
-  transform/opacity, cancellable, and gated behind a
-  `matchMedia('(prefers-reduced-motion: reduce)')` check.
-- Reduced motion: the starter's media query removes transitions and
-  translation so every state change is an instant opacity flip. Any motion
-  you add must collapse the same way — same content states, no movement.
+Archetypes shipped by every template — compose these before inventing CSS:
 
-## One-step staggered reveals
+| Class | Use |
+|---|---|
+| `.cover` (+ `.slide--cover`) | Opening/closing, vertically centred |
+| `.big-question` / `.big-statement` | Full-slide statement, usually `.reveal-words` |
+| `.frame__tag--title` + `.slide-body` | Standard content slide |
+| `.flow` + `.flow__node` + `.flow__arrow` | Left-to-right process (`--loop` variant for a repeating stage) |
+| `.blocks` + `.block` | Grid of icon cards |
+| `.levels` + `.level` (`--mid`, `--top`) | Escalating tiers |
+| `.ways` + `.way` (+ `.ways--three`) | Two or three side-by-side options |
+| `.trace` + `.trace__row` | Numbered walkthrough |
+| `.zones` + `.zone` (+ `.zone__wire`) | Two panels and what passes between them |
+| `.verdicts` + `.verdict` (`--yes`) | The wrong reading, then the right one |
+| `.vs-pair` + `.vs-badge` | Two named things |
+| `.scatter` + `.tool` | Hand-placed logos or tiles |
+| `.chips` / `.chip`, `.axis`, `.payoff`, `.lede` | Supporting rows and lines |
+| `stack` `cluster` `split` `grid` `media` `statistic` `quote` `code` `card` `full-bleed` `slide-header/footer` | Generic primitives |
 
-When the art direction is **one-step staggered** (common for video):
+## Reveals
 
-1. Leave titles/eyebrows unstepped (visible at step 0) unless the cover
-   deliberately reveals subtitle lines.
-2. Put `data-enter="1"` on every body node that should appear together.
-3. Stagger **only** with CSS delay, e.g. `--stagger: 0|1|2` on nodes and:
+`data-reveal` on `.stage` sets the deck's motion; the same attribute on any node
+overrides it for that node and its descendants:
 
-```css
-[data-enter][data-step-state="active"] {
-  transition-delay: calc(var(--stagger, 0) * 70ms);
-}
-@media (prefers-reduced-motion: reduce) {
-  [data-enter][data-step-state="active"] { transition-delay: 0ms !important; }
-}
-```
+| Preset | Motion | Good for |
+|---|---|---|
+| `rise` | fade + lift (default) | general use |
+| `fade` | opacity only | text-heavy, calm decks |
+| `zoom` | scale 0.96 → 1 | card and icon grids |
+| `slide` | enter from the left | sequences, timelines |
+| `blur` | 8px defocus + fade | statements, covers |
 
-4. Expect each content slide’s `finalStep` to be `1` (plus cover/close if
-   they also use a single enter step). Do not use `data-enter="2"`+ unless
-   the speaker truly wants another keypress.
+Presets set custom properties only (`--enter-x/y`, `--enter-scale`,
+`--word-*`), so they cost nothing and collapse together under reduced motion.
 
-Equal `data-enter` values already group in the runtime; stagger is visual
-only and must not require extra navigation steps.
-
-## Responsive and print
-
-- The stage letterboxes to 16:9 at any viewport; verify legibility at a
-  small window, not just full screen.
-- The starter is screen-first. If the user needs print/PDF, add an
-  `@media print` block that makes each `.slide` static, visible, and one
-  per page (`position: static; opacity: 1; visibility: visible;
-  break-after: page`) with all stepped nodes shown.
+**One-step staggered reveals** (the default for recorded video): give every body
+node `data-enter="1"` and stagger with `--stagger: 0|1|2…`, which core turns into
+a transition delay. The slide still has exactly one step — stagger is visual, and
+never adds a keypress. Reach for `data-enter="2"`+ only when the speaker wants
+another keypress.
 
 ## Accessibility
 
-- Keyboard operation is the primary interface — preserve it. The runtime
-  already leaves editable targets and modified keys alone.
-- The runtime manages `aria-hidden`/`inert`; keep interactive content out
-  of hidden slides' tab order by not fighting those attributes.
-- Keep semantic structure: one `h1` on the cover, `h2` per slide title,
-  real lists/figures/blockquotes; write meaningful `aria-label`s on slides
-  and alt text on images/SVG figures.
-- The starter's token pairs meet WCAG AA contrast; re-check contrast
-  whenever you change color tokens. Keep the `:focus-visible` outline.
+- Keyboard operation is the primary interface; the runtime already leaves
+  editable targets and modified keys alone.
+- The runtime manages `aria-hidden`/`inert` — don't fight it.
+- Keep the semantics: one `h1` on the cover, `h2` per slide title, real lists,
+  figures and blockquotes, meaningful `aria-label` per slide, alt text on
+  images and informative SVG.
+- Template token pairs meet WCAG AA; re-check contrast after changing any
+  colour token, and keep the `:focus-visible` outline.
 
 ## Extend vs rebuild
 
-- **Edit freely:** `index.html` content and structure; the template's
-  `theme.css` tokens and component rules; anything in `deck.css`.
-- **Do not rebuild:** `core/slides.js` navigation, key handling, or the
-  attribute contract above. Do not add libraries, modules, or a build step,
-  and never manage `data-state`/`data-step-state`/`aria-hidden`/`inert` by
-  hand.
-- Only when the user explicitly requests different navigation behavior may
-  `core/slides.js` change; prefer layering on the exposed controller
-  (`SlidesRuntime.controller.send(...)` from your own listener) over
-  editing the reducer, and mirror any real runtime change in the skill's
+- **Edit freely:** `index.html`, the template's tokens, anything in `deck.css`.
+- **Never rebuild** `core/slides.js` navigation, key handling or the attribute
+  contract; never add libraries, modules or a build step; never set
+  `data-state`/`data-step-state`/`aria-hidden`/`inert` by hand.
+- Layer new behaviour on `SlidesRuntime.controller` from your own listener, the
+  way `core/morph.js` does. If the runtime itself must change, mirror it in
   `scripts/slides-runtime.test.mjs`.
-
-## Browser QA checklist
-
-Before browser QA (or when no browser is at hand yet), you can verify the
-deck's step map headlessly: `require()` the copied `core/slides.js` in Node and
-feed each node's attribute strings through `stepPair`/`finalStep` to
-confirm every slide's expected final step and grouping.
-
-### Runtime
-
-`npm run qa` automates everything in this section; run it before reporting a
-deck finished. What it checks, in a real browser:
-
-- ArrowRight/ArrowDown through every step of every slide to the end; then
-  ArrowLeft/ArrowUp all the way back — each reveal, group, and exit fires
-  at the intended step; boundaries land on the previous slide's final step.
-- Shift+ArrowRight and Shift+ArrowLeft across slides — direct jumps; at the
-  first/last slide nothing changes (no wrap).
-- Console has no errors or warnings from the deck.
-- Recurring chrome (`slide-header`/`slide-footer`) renders at identical
-  coordinates on every slide that has it — no jumping between slides.
-- Emulate reduced motion — identical states, no movement (stagger delays 0).
-- Resize to a small window — layout letterboxes, text stays legible.
-- Close the browser and stop any helper processes when done.
-
-### Composition
-
-Still in the browser (measure with `getBoundingClientRect` if unsure):
-
-- Content title-band slides: eyebrow/title tops match across several slides.
-- Cover (if `cover-center`): content block midY ≈ stage midY.
-- Cards/panels are not stretch-filled: no tall empty interiors with a thin
-  text cap at the top or middle unless deliberately designed as a hero.
-- Major body rows have even, comfortable gaps; body is not glued under the
-  title while a large empty region sits unused below for no reason.
-- One-step decks: a single ArrowRight on a content slide reveals the full
-  body; `finalSteps[i]` is typically `1` for those slides.
-- Accent-only surfaces: computed background has no accent RGB washes when
-  that constraint was chosen.
-
-Optional debug sketch (adapt selectors to the deck):
-
-```js
-// title lock + body start across content slides
-const stage = document.querySelector('.stage').getBoundingClientRect();
-const h2 = document.querySelector('.slide[data-state=current] .slide-heading h2');
-const body = document.querySelector('.slide[data-state=current] .slide-body');
-// compare (h2.top - stage.top) across slides; inspect body first-child tops
-```
+- `npm run qa` is the gate: navigation, preset names, title lock, body fit and
+  centring, reduced motion, small viewport, console and network. Run it before
+  reporting any deck finished.
