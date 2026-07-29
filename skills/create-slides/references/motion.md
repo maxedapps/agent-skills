@@ -86,17 +86,32 @@ Needs `background-repeat: no-repeat` and `box-decoration-break: clone` so a
 highlight wrapping across lines sweeps per fragment. Templates own the fill:
 a pen stroke, a printed block, a selection rectangle, inverted ink.
 
-## Cross-slide title morph
+## Cross-slide morph
 
-A statement on one slide becomes the frame title on the next. There is no
-shared-element API; `morph.js` measures both elements and parks the target on
-top of the source while its slide is hidden. Showing the slide transitions it
-into place, which reads as one element moving.
+A statement on one slide becomes the frame title on the next; a logo in a
+scatter becomes the example pinned at the top of the slide after it. There is
+no shared-element API; `morph.js` measures both elements and parks the target
+on top of the source while its slide is hidden. Showing the slide transitions
+it into place, which reads as one element moving.
 
-- The two must be **geometrically similar**: same family, weight, tracking,
+- **Pairs match by attribute value.** `data-morph-from="logo"` pairs with
+  `data-morph-to="logo"`; valueless attributes pair as `""`. A deck can run
+  several morphs at once.
+- Text pairs must be **geometrically similar**: same family, weight, tracking,
   line-height and `em` padding, so one scale factor maps them.
+- Scale comes from `offsetWidth`, so non-text elements work too — put the pair
+  on the two elements that must align exactly (the logo tile, not the figure
+  that also contains a caption), or the ratio is computed from the wrong box.
+- A target's own resting transform goes in `--morph-base-x/y`, which the parked
+  offset is added to. The frame title sets `--morph-base-y: -50%`.
+- Rotation is accumulated up the ancestor chain, so a tile inside a rotated
+  figure parks at the same angle.
 - `morph.js` only writes custom properties. Navigation stays in `slides.js`.
 - It re-measures on resize and after `document.fonts.ready`.
+
+A caption that belongs to the target but not to the morph should wait for the
+tile to land — an opacity transition with a delay near the end of the move,
+rather than arriving with the slide.
 
 ## Traps
 
@@ -112,9 +127,19 @@ made it 13 px taller (inline-block changes the line box) and the title visibly
 hopped. Give both ends the same structure.
 
 **The measuring class needs `!important`.** The parked state is
-`.slide:not([data-state="current"]) .frame__tag--morph` — three selectors. A
-plain `.frame__tag--morph.is-measuring` loses on specificity and the script
-measures the parked position, computing an offset of zero.
+`.slide:not([data-state="current"]) [data-morph-to]` — three selectors. A plain
+`[data-morph-to].is-measuring` loses on specificity and the script measures the
+parked position, computing an offset of zero.
+
+**A rotated source measures too wide.** `getBoundingClientRect()` on a tilted
+element returns its axis-aligned box — 5% too wide at 3°, which shows up as a
+size pop on arrival. Take scale from `offsetWidth` (layout width, transform
+free); centres are safe either way, since rotation preserves them.
+
+**A multi-word highlight breaks across lines.** The pill renders in two pieces
+with a ragged join. Non-breaking spaces inside the `.marker` keep it whole so it
+wraps as a unit, and trailing punctuation belongs *inside* the last word span,
+or it orphans onto its own line.
 
 **Mask patches must not scale mid-flight.** A background patch that masks a
 border shows as a rectangle of mismatched texture while scaled. Move it to a

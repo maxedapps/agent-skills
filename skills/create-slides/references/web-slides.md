@@ -5,7 +5,8 @@ runtime below is covered by `scripts/slides-runtime.test.mjs` — docs and tests
 agree.
 
 Contents: [DOM and state](#dom-and-state-contract) · [Navigation](#navigation) ·
-[Runtime API](#runtime-api) · [CSS layers](#css-layers-and-tokens) ·
+[Runtime API](#runtime-api) · [URL routing](#url-routing-opt-in) ·
+[CSS layers](#css-layers-and-tokens) ·
 [Composition](#composition-contract) · [Reveals](#reveals) ·
 [Accessibility](#accessibility) · [Extend vs rebuild](#extend-vs-rebuild)
 
@@ -54,6 +55,41 @@ The auto-initialized controller is `SlidesRuntime.controller`; drive the deck
 from the console or from automation through it. Never call `init()` twice on one
 document — that registers a competing key listener with its own state. A guarded
 CommonJS export lets Node `require()` the same file for tests.
+
+## URL routing (opt-in)
+
+Off by default — see [Constraints](../SKILL.md#constraints). When the user does
+ask for deep links, copy `assets/optional/router.js` to `core/` and load it
+after `slides.js` and `morph.js`. Do not write a new one.
+
+`#4` is the fourth slide, 1-based. It exposes `SlidesRouter.goTo(n)`, which
+makes screenshotting a specific slide a one-liner in QA and export tooling.
+
+Five things this gets right, each of which is easy to get wrong:
+
+- **Jumps are instant, not animated.** Stepping the controller from slide 2 to
+  slide 30 sends ~28 actions, but they all land in one task, so intermediate
+  slides are never styled and only the destination is painted.
+- **A deep link must not replay a morph.** Landing directly on a morph target's
+  slide would otherwise transition it in from the parked position with no
+  source ever on screen. The router adds `.is-jumping` to `<html>`, which core
+  uses to suppress transitions, and removes it on the *second* rAF: frame one
+  is painted with the class on, frame two takes it off with values already
+  settled, so nothing starts. Removing it on the first rAF re-animates
+  everything — rAF runs *before* style recalc for that frame.
+- **Entrance animations are left alone.** Only transitions are suppressed. A
+  deep link to a scatter slide should still see the tiles drift in; that motion
+  belongs to the slide, not to the move.
+- **Steps stay out of the hash.** A history write per keypress hits browser
+  rate limits, and `#12.3` is rarely what someone wants to share anyway.
+- **Writes never re-enter.** `history.replaceState` fires no `hashchange`, so
+  the write path and the read path can't loop. Writes are coalesced into one
+  rAF, and `replaceState` (not `pushState`) keeps arrow keys out of the back
+  stack.
+
+If the deck must resolve slugs rather than indices, note that `data-slide` is
+the timed-export handle ([export.md](export.md)) and only exists on timed
+slides — either name every slide or keep the router numeric.
 
 ## CSS layers and tokens
 

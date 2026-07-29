@@ -243,28 +243,72 @@ body {
   padding: 0.1em 0.55em;
 }
 
-/* --- Cross-slide title morph ------------------------------------------- *
- * The statement on one slide and the border title on the next are two
- * elements; morph.js measures both and parks the target on top of the source
- * while its slide is hidden. Showing the slide moves it into the border.
+/* --- Cross-slide morph -------------------------------------------------- *
+ * A `data-morph-to` element and the `data-morph-from` element carrying the
+ * same value are two separate elements on two slides; morph.js measures both
+ * and parks the target on top of its source while its slide is hidden.
+ * Showing the slide moves it into place.
  */
 
 .big-question {
-  /* Fades faster than its slide, so the statement hands the question over to
-     the incoming title while the two still overlap exactly. */
-  transition: opacity 160ms linear;
   text-align: center;
   margin-inline: auto;
 }
 
-.slide:not([data-state="current"]) .big-question {
+/* A source hands its element over to the target parked on top of it: it fades
+   faster than its slide, so the two still overlap exactly at handover. */
+[data-morph-from] {
+  transition: opacity 160ms linear;
+}
+
+.slide:not([data-state="current"]) [data-morph-from] {
   opacity: 0;
 }
 
-.frame__tag--morph {
+/* Eased with a short hold at the start, so the move only gets going once the
+   crossfade has taken the handover. */
+[data-morph-to] {
   transition:
     translate 700ms cubic-bezier(0.65, 0, 0.3, 1) 60ms,
-    scale 700ms cubic-bezier(0.65, 0, 0.3, 1) 60ms;
+    scale 700ms cubic-bezier(0.65, 0, 0.3, 1) 60ms,
+    rotate 700ms cubic-bezier(0.65, 0, 0.3, 1) 60ms;
+}
+
+/* --morph-base-* is the target's own resting translate, which the parked
+   offset is added to. */
+.slide:not([data-state="current"]) [data-morph-to] {
+  translate:
+    calc(var(--morph-base-x, 0px) + var(--morph-x, 0px))
+    calc(var(--morph-base-y, 0px) + var(--morph-y, 0px));
+  scale: var(--morph-scale, 1);
+  rotate: var(--morph-rotate, 0deg);
+}
+
+/* morph.js measures the resting position through this class, so it has to beat
+   the parked state above regardless of specificity. */
+[data-morph-to].is-measuring {
+  translate: var(--morph-base-x, 0px) var(--morph-base-y, 0px) !important;
+  scale: 1 !important;
+  rotate: 0deg !important;
+  transition: none !important;
+}
+
+/* A deep link or hand-edited hash lands instantly: optional/router.js paints
+   the destination frame with every transition suppressed, so nothing eases in
+   from whatever position it held before the jump. Entrance animations are
+   deliberately left alone — they belong to the slide, not to the move. Inert
+   unless a router is loaded. */
+.is-jumping .slide,
+.is-jumping [data-enter],
+.is-jumping [data-exit],
+.is-jumping [data-morph-from],
+.is-jumping [data-morph-to],
+.is-jumping .frame__tag--morph::before {
+  transition: none !important;
+}
+
+.frame__tag--morph {
+  --morph-base-y: -50%;
   /* The mask moves to a pseudo-element: scaled mid-flight, a patch of
      background over the frame reads as a mismatched rectangle. */
   background-color: transparent;
@@ -284,19 +328,6 @@ body {
 .slide[data-state="current"] .frame__tag--morph::before {
   opacity: 1;
   transition: opacity 200ms linear 560ms;
-}
-
-.slide:not([data-state="current"]) .frame__tag--morph {
-  translate: var(--morph-x, 0px) calc(-50% + var(--morph-y, 0px));
-  scale: var(--morph-scale, 1);
-}
-
-/* morph.js measures the final border position through this class, so it has to
-   beat the parked state above regardless of specificity. */
-.frame__tag--morph.is-measuring {
-  translate: 0 -50% !important;
-  scale: 1 !important;
-  transition: none !important;
 }
 
 /* --- Word-by-word statement reveal -------------------------------------- */
@@ -1355,8 +1386,9 @@ kbd {
     filter: none !important;
   }
 
-  .slide:not([data-state="current"]) .big-question {
-    opacity: 1;
+  /* Every morph source is a real element on its own page. */
+  [data-morph-from] {
+    opacity: 1 !important;
   }
 
   /* Word reveals, fully drawn. */
@@ -1380,10 +1412,11 @@ kbd {
     translate: -50% -50% !important;
   }
 
-  /* The morph title belongs on the frame line, mask included. */
-  .frame__tag--morph {
-    translate: 0 -50% !important;
+  /* Morph targets belong at their resting position, the title mask included. */
+  [data-morph-to] {
+    translate: var(--morph-base-x, 0px) var(--morph-base-y, 0px) !important;
     scale: 1 !important;
+    rotate: 0deg !important;
   }
 
   .frame__tag--morph::before {
@@ -1441,15 +1474,16 @@ kbd {
     scale: 1;
   }
 
-  /* The title morph collapses to a plain cut: same states, no movement. */
-  .frame__tag--morph,
-  .big-question,
+  /* Morphs collapse to a plain cut: same states, no movement. */
+  [data-morph-to],
+  [data-morph-from],
   .slide[data-state="current"] .frame__tag--morph::before {
     transition: none;
   }
 
-  .slide:not([data-state="current"]) .frame__tag--morph {
-    translate: 0 -50%;
+  .slide:not([data-state="current"]) [data-morph-to] {
+    translate: var(--morph-base-x, 0px) var(--morph-base-y, 0px);
     scale: 1;
+    rotate: 0deg;
   }
 }

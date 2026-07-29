@@ -101,6 +101,7 @@ metadata:
 | [`references/motion.md`](references/motion.md) | Adding any reveal, preset, morph, or animation |
 | [`references/export.md`](references/export.md) | Producing a PDF or video, or timing reveals to narration |
 | `assets/core/` | `slides.css`, `slides.js`, `morph.js` — copied verbatim into every deck |
+| `assets/optional/` | `router.js` — hash deep links; copy in only when asked ([web-slides.md](references/web-slides.md#url-routing-opt-in)) |
 | `assets/skeleton.html` | One deck skeleton, shared by every template |
 | `assets/templates/<name>/` | `theme.css`, `fonts.json`, `template.md` |
 | `assets/tools/` | `fonts` · `qa` · `export-pdf` · `record` · `audit-video` |
@@ -120,7 +121,9 @@ metadata:
 ## Constraints
 
 - Do not add presenter consoles, autoplay, URL routing, or touch gestures
-  unless asked.
+  unless asked. When URL routing *is* asked for, copy `assets/optional/router.js`
+  rather than writing one — the jump-without-replaying-a-morph handling is the
+  hard part.
 - Do not fork the runtime contract in `references/web-slides.md` without an
   explicit request; mirror any real runtime change in
   `scripts/slides-runtime.test.mjs`.
