@@ -106,8 +106,14 @@ it into place, which reads as one element moving.
   offset is added to. The frame title sets `--morph-base-y: -50%`.
 - Rotation is accumulated up the ancestor chain, so a tile inside a rotated
   figure parks at the same angle.
+- **A target is parked only while its paired source slide is current.** Parking
+  every hidden target instead makes it reverse-morph on the way *out* — leaving
+  the target slide, the element visibly flies back to a source the viewer has
+  already left. `morph.js` owns the `is-morph-parked` class and toggles it from
+  a `data-state` MutationObserver.
 - `morph.js` only writes custom properties. Navigation stays in `slides.js`.
-- It re-measures on resize and after `document.fonts.ready`.
+- It re-measures on load, on resize and after `document.fonts.ready` — and
+  **never on navigation** (see the trap below).
 
 A caption that belongs to the target but not to the morph should wait for the
 tile to land — an opacity transition with a delay near the end of the move,
@@ -126,10 +132,19 @@ fades it out. Filter to `instanceof CSSAnimation`.
 made it 13 px taller (inline-block changes the line box) and the title visibly
 hopped. Give both ends the same structure.
 
-**The measuring class needs `!important`.** The parked state is
-`.slide:not([data-state="current"]) [data-morph-to]` — three selectors. A plain
-`[data-morph-to].is-measuring` loses on specificity and the script measures the
-parked position, computing an offset of zero.
+**The measuring class needs `!important`.** It has to beat the parked state
+(`[data-morph-to].is-morph-parked`) whatever the two selectors weigh — otherwise
+the script measures the *parked* position and computes an offset of zero, and
+the morph does nothing at all. Keep the `!important` even when source order
+happens to be in your favour; reordering the file must not silently break it.
+
+**Measuring during navigation kills the morph.** `is-measuring` sets
+`transition: none`, and reading the rect flushes style synchronously — so the
+browser records the *resting* position as the transition's start state and the
+handoff snaps into place instead of moving. The symptom is subtle: the element
+arrives instantly while its border mask still waits out its delay, so a title
+sits crossed out by the frame line for half a second. Re-measure on load and
+resize; toggle the parked class on navigation.
 
 **A rotated source measures too wide.** `getBoundingClientRect()` on a tilted
 element returns its axis-aligned box — 5% too wide at 3°, which shows up as a
