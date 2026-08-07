@@ -17,6 +17,7 @@ Complete before final delivery and after material revisions. Evidence requiredâ€
 - [ ] Template loaded and adapted; guidance/placeholders/empty optionals removed
 - [ ] `Ready` only if no unresolved material gate can change implementation; else `Blocked`
 - [ ] Every stable-ID task has **Change** as concrete bullets (not a prose blob), non-exhaustive starts-at, and exact verify + expected signals
+- [ ] Every changed observable behavior and applicable material risk has proportionate protection in an existing/planned test path or a justified alternate check; the selected layer observes behavior rather than implementation details
 - [ ] Flat tasks unless real phase boundaries; no repeated problem/approach/check across sections
 - [ ] Final acceptance covers repo gates, end-to-end checks, skips, operator steps, deferrals
 - [ ] Every task challenged for a smaller alternative; no speculative scope or machinery

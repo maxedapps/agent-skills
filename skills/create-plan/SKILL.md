@@ -42,7 +42,7 @@ metadata:
 - **Change** as bullets (one concrete edit/behavior each)
 - Starts-at paths/symbols (non-exhaustive)
 - Exact verify commands + expected signals
-- Tests with the behavior they protect
+- Each behavior-changing task names an existing/planned test path or suite, the observable behavior, boundary, or regression it protects, and the narrowest credible repository-conventional layer; or justifies omitting automation and gives alternate validation
 - Omit empty optionals
 - Key files table: path · why · plan impact
 
@@ -50,7 +50,7 @@ metadata:
 
 1. **Frame** — request, repo instructions, existing plans → outcome, scope, non-goals, risks, validation. Don’t deep-explore in parent when a research lane can.
 2. **Load template.**
-3. **Research** — enumerate questions; **delegate by default** (one question/scope/stop per lane). External only if decision-relevant. Verify critical claims.
+3. **Research** — enumerate questions; **delegate by default** (one question/scope/stop per lane). Inspect relevant existing tests, framework/configuration, and repository commands. External only if decision-relevant. Verify critical claims.
 4. **Resolve gates** — still ambiguous? **ask user** before drafting as fact.
 5. **Synthesize** — smallest approach; map findings → decisions/tasks/checks/non-goals/gates; drop fluff.
 6. **Draft** — adapt template; flat tasks default; phases only for real boundaries; no review ledgers in the handoff.

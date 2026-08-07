@@ -26,6 +26,7 @@
   - 
 - **Starts at:**
 - **Depends on:**
+- **Tests:** `[existing/planned path or suite]` (`[layer]`) protects `[observable behavior/boundary/regression]`; or `[justified automation omission + alternate validation]` (omit if inapplicable)
 - **Verify:**
   - Run `…`; expect …
 - **Risk/recovery:**

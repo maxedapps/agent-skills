@@ -2,6 +2,7 @@
 
 ## Available skills
 
+- `awesome-tests` — plan, write, improve, and review behavior-focused automated tests and test strategies.
 - `code-review` — perform adaptable generic, scoped, and plan-backed implementation reviews.
 - `decomplex` — prevent, audit, and triage unnecessary complexity without editing reviewed targets.
 - `explain` — manually produce context-grounded Markdown explanations and standalone HTML that opens in the default browser unless suppressed.
@@ -26,6 +27,7 @@ npx skills add maxedapps/agent-skills --list
 Install one skill:
 
 ```sh
+npx skills add maxedapps/agent-skills@awesome-tests
 npx skills add maxedapps/agent-skills@code-review
 npx skills add maxedapps/agent-skills@explain
 npx skills add maxedapps/agent-skills@vps-setup-hardening
@@ -34,15 +36,17 @@ npx skills add maxedapps/agent-skills@vps-setup-hardening
 Or use the explicit option:
 
 ```sh
+npx skills add maxedapps/agent-skills --skill awesome-tests
 npx skills add maxedapps/agent-skills --skill code-review
 npx skills add maxedapps/agent-skills --skill explain
 npx skills add maxedapps/agent-skills --skill vps-setup-hardening
 ```
 
-Install all twelve skills explicitly:
+Install all thirteen skills explicitly:
 
 ```sh
 npx skills add maxedapps/agent-skills \
+  --skill awesome-tests \
   --skill code-review \
   --skill decomplex \
   --skill explain \
@@ -76,6 +80,7 @@ Pi and Claude Code honor `disable-model-invocation: true`; Codex honors the bund
 
 ## Runtime and related skills
 
+- **`awesome-tests` works standalone and supports soft co-activation.** Use it directly for scoped test planning, authoring, repair, or review. It can co-activate with `create-plan` when a behavior-changing plan must specify tests or validation, and with `code-review` when changes materially affect tests or validation. The owning workflow retains artifact, finding, severity, matrix, report, and verdict authority. This is routing behavior, not a hard runtime dependency; all three skills remain independently useful.
 - **`decomplex` is a soft integration.** It can provide focused advisory reports to `code-review`, `create-plan`, and `implement-plan` when installed and proportionate. It requires write access for one distinct `.reviews/<descriptive-slug>-decomplex.md` report but never edits reviewed targets. Each owning workflow retains its concise built-in gate and records an honest fallback when the skill or report write is unavailable.
 - **`use-subagents` is portable policy** (delegate-by-default, roles/assignment contract, worktrees/Git/cleanup) for any harness’s built-in tools, plugins, or CLIs. It does **not** depend on Pi.
 - **`use-pi-subagents` is a Pi launcher only** — use it with `use-subagents` when native `subagent_*` tools are inactive. Never drive competing launchers for the same lane. Parent owns worktrees, Git, and workspace cleanup; Pi `clean` retires run state only. No unaccounted workflow-owned resources.
@@ -86,6 +91,10 @@ Pi and Claude Code honor `disable-model-invocation: true`; Codex honors the bund
   ```
 
 ## What each skill does
+
+### `awesome-tests`
+
+Plans, writes, improves, and reviews behavior-focused automated tests and test strategies. It maps tests to observable behavior and material risk, selects the narrowest credible repository-conventional layer, checks failure sensitivity, determinism, and isolation, and assesses flaky, brittle, misleading, redundant, skipped, or false-green tests contextually rather than treating counts or coverage as quality gates.
 
 ### `code-review`
 

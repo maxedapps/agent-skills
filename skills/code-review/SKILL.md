@@ -41,7 +41,7 @@ Omit nits, hypotheticals, and low-impact noise. Don’t hide them in caveats.
 
 | When | Read |
 |---|---|
-| Broad or deep dimension review | [`references/review-dimensions.md`](references/review-dimensions.md) first |
+| Broad or deep dimension review, or explicit test/validation review | [`references/review-dimensions.md`](references/review-dimensions.md) first |
 | Vs plan/tracker/design/acceptance | [`references/plan-backed-review.md`](references/plan-backed-review.md) first |
 | Standalone report | [`assets/review-report-template.md`](assets/review-report-template.md) before write |
 
