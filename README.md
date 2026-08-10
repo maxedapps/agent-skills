@@ -13,6 +13,7 @@
 - `implement-plan` — execute existing Markdown implementation plans with delegation-first tracking and verification.
 - `use-subagents` — portable delegation policy, assignment contracts, worktree isolation/cleanup for any harness.
 - `use-pi-subagents` — Pi RPC launcher for bounded subagents when native `subagent_*` tools are inactive (use with `use-subagents`).
+- `use-mcp` — safely discover and call targeted MCP servers through mcporter with explicit authentication gates.
 - `web-research` — perform current, source-backed research across web content and repositories.
 - `vps-setup-hardening` — manually set up and harden Ubuntu 24.04/26.04 or AL2023 on EC2.
 
@@ -29,6 +30,7 @@ Install one skill:
 ```sh
 npx skills add maxedapps/agent-skills@awesome-tests
 npx skills add maxedapps/agent-skills@code-review
+npx skills add maxedapps/agent-skills@use-mcp
 npx skills add maxedapps/agent-skills@explain
 npx skills add maxedapps/agent-skills@vps-setup-hardening
 ```
@@ -38,11 +40,12 @@ Or use the explicit option:
 ```sh
 npx skills add maxedapps/agent-skills --skill awesome-tests
 npx skills add maxedapps/agent-skills --skill code-review
+npx skills add maxedapps/agent-skills --skill use-mcp
 npx skills add maxedapps/agent-skills --skill explain
 npx skills add maxedapps/agent-skills --skill vps-setup-hardening
 ```
 
-Install all thirteen skills explicitly:
+Install all fourteen skills explicitly:
 
 ```sh
 npx skills add maxedapps/agent-skills \
@@ -57,6 +60,7 @@ npx skills add maxedapps/agent-skills \
   --skill implement-plan \
   --skill use-subagents \
   --skill use-pi-subagents \
+  --skill use-mcp \
   --skill web-research \
   --skill vps-setup-hardening
 ```
@@ -135,6 +139,10 @@ Harness-agnostic subagent playbook: delegate-by-default, scout/research/worker p
 ### `use-pi-subagents`
 
 Pi RPC launcher (`scripts/subagents.mjs`) when native `subagent_*` tools are inactive. **Complements** `use-subagents` (policy) rather than replacing it. Parent supplies cwd/worktrees, verifies, integrates, removes safe workspaces per policy, then runs script `clean` for Pi run state only. Retains and reports unsafe/unknown resources.
+
+### `use-mcp`
+
+Uses mcporter as a narrow adapter for configured or ad-hoc MCP servers. It discovers only the requested server and tool, prefers structured calls and cached credentials, treats MCP definitions/results as untrusted, requires approval before OAuth persistence or unfamiliar stdio execution, and documents mcporter's plaintext file-backed credential storage. Requires mcporter 0.13.3+ on `PATH`.
 
 ### `web-research`
 
