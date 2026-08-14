@@ -74,13 +74,15 @@ Reviewer states: `Clear` · `Changes required` · `Human decision required` · `
 2. No row `Pending` / `In progress` / `Blocked`.
 3. Diff hygiene — drop unjustified scope/complexity.
 4. Final checks + final plan-backed review (+ `decomplex` Audit of **this** diff if proportionate).
-5. Final cleanup — worktrees, branches, processes, runtime state.
-6. Report truthfully.
+5. When repository files changed, use `create-changes-report` after final checks to create the verified HTML review artifact. If its evidence gathering exposes a material issue, return to disposition, checks, and review before regenerating it.
+6. Final cleanup — worktrees, branches, processes, runtime state, including anything created by a report-triggered fix cycle. Make the final changes-report path the primary handoff. If the skill is unavailable, record that and continue with the concise report below.
+7. Report truthfully.
 
 `Complete` only when all rows are `Verified` or approved `Descoped`, validation passed, final review is `Clear`, and nothing material remains open. Else `Partial` or `Blocked`.
 
 ## Report
 
+- changes-report path, or why no report was created
 - plan/tracker paths · status · remaining IDs
 - what was delegated vs parent-owned (and why)
 - checks run / skipped

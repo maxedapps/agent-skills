@@ -1,0 +1,827 @@
+<!doctype html>
+<!--
+  Interactive changes-report template. Self-contained: no external deps, works from disk.
+  Generated from the reusable report template; content is scoped to this catalog change.
+  Section order and component semantics: see ../SKILL.md.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Skill catalog sync changes — maxed-skills</title>
+    <style>
+      /* ===== design tokens — the only place colors live. Dark mode overrides below. ===== */
+      :root {
+        color-scheme: light;
+        --page: #f9f9f7; /* page background        */
+        --surface: #fcfcfb; /* cards, tables, dialogs */
+        --ink: #0b0b0b; /* primary text           */
+        --ink-2: #52514e; /* secondary text         */
+        --muted: #898781; /* labels, hints          */
+        --grid: #e1e0d9; /* hairlines              */
+        --border: rgba(11, 11, 11, 0.1);
+        --accent: #2a78d6; /* interactive elements ONLY */
+        --accent-soft: #cde2fb;
+        --seq-400: #3987e5; /* single-hue bar fill    */
+        --good: #0ca30c; /* status colors: severity only, never decoration */
+        --good-text: #006300;
+        --warning: #fab219;
+        --serious: #ec835a;
+        --code-bg: #f4f3f0;
+        --tk-kw: #9d4a9d; /* syntax tokens */
+        --tk-str: #1b7a4e;
+        --tk-type: #1c5cab;
+        --tk-num: #b05a00;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:where(:not([data-theme="light"])) {
+          color-scheme: dark;
+          --page: #0d0d0d;
+          --surface: #1a1a19;
+          --ink: #ffffff;
+          --ink-2: #c3c2b7;
+          --muted: #898781;
+          --grid: #2c2c2a;
+          --border: rgba(255, 255, 255, 0.1);
+          --accent: #3987e5;
+          --accent-soft: #10314f;
+          --good-text: #0ca30c;
+          --code-bg: #232322;
+          --tk-kw: #d38fd3;
+          --tk-str: #58c48d;
+          --tk-type: #86b6ef;
+          --tk-num: #e0a15c;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--page);
+        color: var(--ink);
+        font:
+          15px/1.6 system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 40px 24px 80px;
+      }
+      .eyebrow {
+        color: var(--muted);
+        font-size: 13px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      h1 {
+        font-size: 30px;
+        line-height: 1.2;
+        margin: 6px 0 10px;
+      }
+      h2 {
+        font-size: 21px;
+        margin: 48px 0 4px;
+      }
+      h2 + p.lede {
+        margin-top: 4px;
+      }
+      h3 {
+        font-size: 16px;
+        margin: 26px 0 8px;
+      }
+      h4 {
+        font-size: 13.5px;
+        margin: 14px 0 4px;
+      }
+      p {
+        color: var(--ink-2);
+        max-width: 76ch;
+      }
+      p.lede {
+        font-size: 16px;
+      }
+      strong {
+        color: var(--ink);
+      }
+      a {
+        color: var(--accent);
+      }
+      [id] {
+        scroll-margin-top: 24px;
+      }
+      .hr {
+        border: 0;
+        border-top: 1px solid var(--grid);
+        margin: 40px 0 0;
+      }
+      .hint {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 10px;
+      }
+      .hint .dive {
+        font-size: inherit;
+      }
+
+      /* ===== clickable deep-dives: data-pop opens a dialog, data-goto scrolls + flashes ===== */
+      .dive {
+        background: none;
+        border: 0;
+        padding: 0 1px;
+        margin: 0;
+        font: inherit;
+        color: var(--accent);
+        cursor: pointer;
+        border-bottom: 1px dashed var(--accent);
+        border-radius: 2px 2px 0 0;
+      }
+      .dive:hover,
+      .dive:focus-visible {
+        background: var(--accent-soft);
+        outline: none;
+      }
+      @keyframes flashfade {
+        from {
+          box-shadow: 0 0 0 3px var(--accent);
+        }
+        to {
+          box-shadow: 0 0 0 3px transparent;
+        }
+      }
+      .flash {
+        animation: flashfade 1.6s ease-out;
+        border-radius: 10px;
+      }
+
+      /* ===== stat tiles (clickable buttons) ===== */
+      .tiles {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        margin: 24px 0 8px;
+      }
+      .tile {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        font: inherit;
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+      .tile:hover,
+      .tile:focus-visible {
+        border-color: var(--accent);
+        outline: none;
+      }
+      .tile .v {
+        font-size: 26px;
+        font-weight: 650;
+        line-height: 1.15;
+        color: var(--ink);
+      }
+      .tile .l {
+        color: var(--muted);
+        font-size: 12.5px;
+        margin-top: 3px;
+      }
+      .tile .s {
+        display: block;
+        font-size: 12.5px;
+        margin-top: 3px;
+        color: var(--good-text);
+      }
+      .tile .go {
+        display: block;
+        font-size: 11.5px;
+        color: var(--accent);
+        margin-top: 6px;
+      }
+
+      /* ===== tables ===== */
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 14px 0;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        font-size: 14px;
+      }
+      th {
+        text-align: left;
+        font-weight: 600;
+        color: var(--ink-2);
+        font-size: 12.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      th,
+      td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--grid);
+        vertical-align: top;
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      td {
+        color: var(--ink-2);
+      }
+      td:first-child {
+        color: var(--ink);
+        white-space: nowrap;
+      }
+      td code,
+      p code,
+      li code,
+      dd code {
+        background: var(--code-bg);
+        border-radius: 4px;
+        padding: 1px 5px;
+        font-size: 0.92em;
+      }
+
+      /* ===== code blocks: class="hl" gets syntax highlighting; plain <pre> stays as-is ===== */
+      pre {
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-size: 12.8px;
+        line-height: 1.55;
+      }
+      pre code {
+        background: none;
+        padding: 0;
+      }
+      .filetag {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        font-family: ui-monospace, monospace;
+        font-size: 12px;
+        color: var(--muted);
+        margin: 14px 0 -8px;
+      }
+      code,
+      pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .tk-cmt {
+        color: var(--muted);
+        font-style: italic;
+      }
+      .tk-kw {
+        color: var(--tk-kw);
+      }
+      .tk-str {
+        color: var(--tk-str);
+      }
+      .tk-type {
+        color: var(--tk-type);
+      }
+      .tk-num {
+        color: var(--tk-num);
+      }
+
+      /* ===== flow diagram: boxes + arrows; .hi = emphasized; .dot = load-bearing ◆ marker ===== */
+      .flow {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+        gap: 8px;
+        margin: 18px 0;
+      }
+      .fbox {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 14px;
+        flex: 1 1 150px;
+        min-width: 150px;
+        position: relative;
+      }
+      .fbox .t {
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .fbox .d {
+        color: var(--muted);
+        font-size: 12.5px;
+        margin-top: 2px;
+      }
+      .fbox.hi {
+        border-color: var(--accent);
+        box-shadow: inset 3px 0 0 var(--accent);
+      }
+      .farrow {
+        align-self: center;
+        color: var(--muted);
+        font-size: 18px;
+        flex: 0 0 auto;
+      }
+      .dot {
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        background: none;
+        border: 0;
+        padding: 2px;
+        color: var(--serious);
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .dot:hover {
+        transform: scale(1.3);
+      }
+
+      /* ===== numbered sequence (protocol / lifecycle steps) ===== */
+      ol.seq {
+        counter-reset: s;
+        list-style: none;
+        padding: 0;
+        margin: 16px 0;
+      }
+      ol.seq li {
+        counter-increment: s;
+        position: relative;
+        padding: 10px 14px 10px 46px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        margin-bottom: 8px;
+        color: var(--ink-2);
+      }
+      ol.seq li::before {
+        content: counter(s);
+        position: absolute;
+        left: 12px;
+        top: 10px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 650;
+        font-size: 12.5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      ol.seq li b {
+        color: var(--ink);
+      }
+
+      /* ===== schema / entity cards ===== */
+      .schema {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+        margin: 18px 0;
+      }
+      .scard {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 13px;
+      }
+      .scard .tn {
+        font-family: ui-monospace, monospace;
+        font-weight: 650;
+        color: var(--ink);
+      }
+      .scard .cols {
+        color: var(--ink-2);
+        margin: 6px 0 4px;
+        line-height: 1.7;
+      }
+      .scard .k {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .cascade {
+        color: var(--muted);
+        font-size: 12.5px;
+        margin: -6px 0 0;
+      }
+
+      /* ===== findings (badged) and load-bearing hotspot cards ===== */
+      .finding,
+      .hot {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin: 10px 0;
+      }
+      .hot {
+        border-left: 3px solid var(--serious);
+      }
+      .finding .head,
+      .hot .head {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 4px;
+        flex-wrap: wrap;
+      }
+      .finding .head b,
+      .hot .head b {
+        font-size: 15px;
+      }
+      .badge {
+        font-size: 11.5px;
+        font-weight: 650;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 2px 8px;
+        border-radius: 20px;
+        white-space: nowrap;
+      }
+      .b-serious {
+        color: #fff;
+        background: var(--serious);
+      } /* ⚠ gap — real problem       */
+      .b-warning {
+        color: #4a3400;
+        background: var(--warning);
+      } /* ⚠ deviation — from plan    */
+      .b-note {
+        color: var(--ink-2);
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+      }
+      .b-good {
+        color: #fff;
+        background: var(--good);
+      } /* ✓ clean — verified absence */
+      .b-hot {
+        color: #fff;
+        background: var(--serious);
+      } /* ◆ load-bearing marker      */
+      .finding p,
+      .hot p {
+        margin: 4px 0 0;
+        font-size: 14px;
+      }
+      .hot .why {
+        color: var(--muted);
+        font-size: 12.5px;
+        margin-top: 6px;
+      }
+
+      /* ===== single-hue horizontal bars (e.g. test distribution); rows are clickable ===== */
+      .bars {
+        margin: 16px 0;
+        max-width: 560px;
+      }
+      .brow {
+        display: grid;
+        grid-template-columns: 110px 1fr 46px;
+        gap: 10px;
+        align-items: center;
+        margin: 7px 0;
+        font-size: 13.5px;
+        width: 100%;
+        background: none;
+        border: 0;
+        padding: 0;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      .brow:hover .n {
+        color: var(--accent);
+      }
+      .brow .n {
+        color: var(--ink-2);
+        text-align: left;
+      }
+      .btrack {
+        height: 14px;
+        border-radius: 4px;
+        position: relative;
+      }
+      .bfill {
+        height: 100%;
+        border-radius: 4px;
+        background: var(--seq-400);
+      }
+      .brow .val {
+        color: var(--ink-2);
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+      }
+
+      /* ===== verification checklist: ✓ ran green, ○ (li.skip) explicitly not verified ===== */
+      .checklist {
+        list-style: none;
+        padding: 0;
+        margin: 12px 0;
+      }
+      .checklist li {
+        padding: 4px 0 4px 28px;
+        position: relative;
+        color: var(--ink-2);
+      }
+      .checklist li::before {
+        content: "✓";
+        position: absolute;
+        left: 4px;
+        color: var(--good-text);
+        font-weight: 700;
+      }
+      .checklist li.skip::before {
+        content: "○";
+        color: var(--muted);
+      }
+
+      .cols2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 32px;
+      }
+      @media (max-width: 760px) {
+        .cols2 {
+          grid-template-columns: 1fr;
+        }
+      }
+      .tree {
+        font-size: 12.5px;
+      }
+      footer {
+        margin-top: 60px;
+        color: var(--muted);
+        font-size: 12.5px;
+      }
+
+      /* ===== popovers (native <dialog>) ===== */
+      dialog {
+        background: var(--surface);
+        color: var(--ink-2);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 0;
+        width: min(92vw, 640px);
+        max-height: 82vh;
+        font-size: 14px;
+      }
+      dialog::backdrop {
+        background: rgba(0, 0, 0, 0.45);
+      }
+      .pop-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--grid);
+        position: sticky;
+        top: 0;
+        background: var(--surface);
+      }
+      .pop-head b {
+        color: var(--ink);
+        font-size: 15.5px;
+      }
+      .pop-x {
+        background: none;
+        border: 0;
+        color: var(--muted);
+        font-size: 18px;
+        cursor: pointer;
+        line-height: 1;
+        padding: 4px 6px;
+        border-radius: 6px;
+      }
+      .pop-x:hover {
+        background: var(--code-bg);
+        color: var(--ink);
+      }
+      .pop-body {
+        padding: 6px 18px 18px;
+        overflow: auto;
+      }
+      .pop-body ul {
+        padding-left: 20px;
+        margin: 6px 0;
+      }
+      .pop-body li {
+        margin: 3px 0;
+      }
+      .pop-body table {
+        font-size: 13px;
+      }
+      .tcount {
+        color: var(--muted);
+        font-weight: 400;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="hero">
+        <div class="eyebrow">maxed-skills · catalog sync · 2026-08-14</div>
+        <h1>Change reports and safer worktrees join the catalog</h1>
+        <p class="lede"><b>The catalog now publishes two previously global-only skills and makes HTML change reporting an explicit end gate for implemented plans.</b> The imported worktree guidance was generalized for arbitrary repositories, the report template was completed, and every review finding was closed before distribution.</p>
+        <p class="hint">Tip: dashed-underlined terms and every tile are clickable. A <span style="color: var(--serious)">◆</span> marks load-bearing guidance.</p>
+      </header>
+
+      <div class="tiles">
+        <button class="tile" data-pop="pop-files"><span class="v">5</span><span class="l"><br />catalog source files<br />changed</span><span class="go">full inventory</span></button>
+        <button class="tile" data-pop="pop-delta"><span class="v">+1,107</span><span class="l"><br />lines added</span><span class="s">5 removed</span><span class="go">line evidence</span></button>
+        <button class="tile" data-pop="pop-skills"><span class="v">16</span><span class="l"><br />published skills</span><span class="s">CLI-discovered ✓</span><span class="go">catalog detail</span></button>
+        <button class="tile" data-goto="#verification"><span class="v">16/16</span><span class="l"><br />validator tests</span><span class="s">passing ✓</span><span class="go">verification</span></button>
+        <button class="tile" data-pop="pop-review"><span class="v">5</span><span class="l"><br />review findings</span><span class="s">all closed ✓</span><span class="go">dispositions</span></button>
+      </div>
+
+      <h2 id="what-changed">What changed and why</h2>
+      <p><b>Before:</b> <code>create-changes-report</code> and <code>use-worktrees</code> existed only in user-level installations, while <code>implement-plan</code> ended with a concise chat report.</p>
+      <p><b>After:</b> both skills are cataloged and installable, and repository-changing plan implementations invoke <code>create-changes-report</code> after final checks, re-entering disposition and review if report evidence reveals a defect.</p>
+      <p class="lede">No existing skill was removed, no hard runtime dependency was introduced, and ordinary single-checkout work remains outside <code>use-worktrees</code>.</p>
+
+      <h2 id="big-picture">The big picture</h2>
+      <p class="lede">One source-of-truth path now carries skill behavior from the catalog to each user-level installation.</p>
+      <div class="flow">
+        <div class="fbox"><div class="t">Global-only skills</div><div class="d">reporting + worktrees</div></div>
+        <div class="farrow">→</div>
+        <div class="fbox hi"><button class="dot" data-goto="#hotspots" title="load-bearing catalog contract">◆</button><div class="t">maxed-skills catalog</div><div class="d">normalized, documented, validated</div></div>
+        <div class="farrow">→</div>
+        <div class="fbox hi"><button class="dot" data-goto="#hotspots" title="load-bearing completion gate">◆</button><div class="t">implement-plan</div><div class="d">automatic HTML handoff</div></div>
+        <div class="farrow">→</div>
+        <div class="fbox"><div class="t">User skill roots</div><div class="d">local + two SSH hosts</div></div>
+      </div>
+
+      <h2 id="areas">Changed surface</h2>
+      <table>
+        <tr><th>Area</th><th>Change</th><th>Reason</th><th>Key files</th></tr>
+        <tr><td>Report skill</td><td>Cataloged the automatic HTML completion artifact and completed its reusable template.</td><td>Make repository changes reviewable in one self-contained handoff.</td><td><code>skills/create-changes-report/</code></td></tr>
+        <tr><td>Plan implementation</td><td>Added report generation, defect re-disposition, final cleanup, and fallback reporting.</td><td>Automatically produce the artifact after implemented plans.</td><td><code>skills/implement-plan/SKILL.md</code></td></tr>
+        <tr><td>Worktrees</td><td>Cataloged and generalized setup, target-branch sync, conflict, and cleanup rules.</td><td>Remove course-platform-specific assumptions while preserving safe integration.</td><td><code>skills/use-worktrees/SKILL.md</code></td></tr>
+        <tr><td>Catalog docs</td><td>Raised discovery/install docs from 14 to 16 skills and documented integrations.</td><td>Keep public installation and behavior contracts accurate.</td><td><code>README.md</code></td></tr>
+      </table>
+
+      <h2 id="protocol">Plan completion lifecycle</h2>
+      <ol class="seq">
+        <li><b>Close implementation</b> — finish tracked tasks, checks, and plan-backed review.</li>
+        <li><b>Generate the report</b> — invoke <code>create-changes-report</code> for repository changes.</li>
+        <li><b>Re-enter closure if needed</b> — disposition, fix, check, and review any material issue found while gathering report evidence.</li>
+        <li><b>Clean up last</b> — retire worktrees, processes, and runtime state, including report-triggered work.</li>
+        <li><b>Hand off</b> — make the final HTML path primary; state the fallback when the skill is unavailable.</li>
+      </ol>
+      <span class="filetag">catalog validation output</span>
+      <pre><code>Checked metadata for 16 skills; all metadata is valid.
+Checked 62 local Markdown links in 56 Markdown files; all targets exist.
+◇  Found 16 skills</code></pre>
+
+      <h2 id="code">Key code, briefly</h2>
+      <h3>1 · Automatic report gate <span style="color: var(--serious)">◆</span></h3>
+      <p>This ordering keeps final cleanup after any fix cycle triggered by report evidence.</p>
+      <span class="filetag">skills/implement-plan/SKILL.md</span>
+      <pre class="hl"><code>5. When repository files changed, use `create-changes-report`
+   after final checks to create the verified HTML review artifact.
+   If its evidence gathering exposes a material issue, return to
+   disposition, checks, and review before regenerating it.
+6. Final cleanup — worktrees, branches, processes, runtime state,
+   including anything created by a report-triggered fix cycle.</code></pre>
+
+      <h3>2 · Target-aware worktree synchronization <span style="color: var(--serious)">◆</span></h3>
+      <p>The branch named by the task—not a hardcoded default—is always the source of synchronization.</p>
+      <span class="filetag">skills/use-worktrees/SKILL.md</span>
+      <pre class="hl"><code>- Sync direction during work is always target branch → worktree branch
+  (`git merge &lt;target-branch&gt;` inside the worktree).
+- Never rebase or rewrite shared branches.
+- After every sync, run the repository's full check suite.</code></pre>
+
+      <h3>3 · Finding authority stays with the owning workflow</h3>
+      <p>The report presents evidence; it cannot silently override review or plan closure.</p>
+      <span class="filetag">skills/create-changes-report/SKILL.md</span>
+      <pre class="hl"><code>This artifact does not replace `code-review` or an owning workflow's
+finding authority. If report preparation uncovers a new material defect,
+stop, return it to the owning workflow for disposition and verification,
+then regenerate the report from the resolved state.</code></pre>
+
+      <h2 id="verification">Verification status</h2>
+      <ul class="checklist">
+        <li><code>node --test scripts/validate-skill-metadata.test.mjs scripts/validate-skill-links.test.mjs</code> — 16 passed, 0 failed.</li>
+        <li><code>node scripts/validate-skill-metadata.mjs skills</code> — all 16 skill metadata records valid.</li>
+        <li><code>node scripts/validate-skill-links.mjs README.md skills</code> — 62 links valid across 56 Markdown files.</li>
+        <li><code>npx -y skills-ref validate</code> for the three affected skills — all valid.</li>
+        <li><code>DISABLE_TELEMETRY=1 npx -y skills@latest add . --list</code> — discovered all 16 skills, including both additions.</li>
+        <li>Template contract assertions — all required sections present; its one inline script passes <code>node --check</code>.</li>
+        <li>Independent three-round review — five findings resolved; final verdict <b>Clear</b>.</li>
+        <li class="skip"><strong>Remote distribution</strong> — intentionally occurs after catalog acceptance and is reported in the final task handoff, not claimed by this repository artifact.</li>
+      </ul>
+
+      <h2 id="hotspots">Critical points — load-bearing guidance <span style="color: var(--serious)">◆</span></h2>
+      <p class="lede">Not bugs—the policy points where incorrect ordering or ambiguity would undermine the workflow.</p>
+      <div class="hot"><div class="head"><span class="badge b-hot">◆ closure</span><b>Report-triggered defects must reopen verification</b><span class="tcount">implement-plan</span></div><p>A report assembled after review can still reveal a real issue; silently publishing it would falsely preserve “Complete.”</p><p class="why">Protected by: explicit disposition/check/review re-entry and cleanup after the cycle.</p></div>
+      <div class="hot"><div class="head"><span class="badge b-hot">◆ data loss</span><b>Unmerged worktree cleanup distinguishes disposable from unique work</b><span class="tcount">use-worktrees</span></div><p>Forced removal can destroy uncommitted changes or commits absent from the target.</p><p class="why">Protected by: mandatory inspection, automatic cleanup only for fully handled workflow-owned state, and explicit approval for identified loss.</p></div>
+      <div class="hot"><div class="head"><span class="badge b-hot">◆ artifact</span><b>The template carries the report contract</b><span class="tcount">report-template.html</span></div><p>Missing sections cause every generated report to omit the same review evidence.</p><p class="why">Protected by: section assertions, JavaScript parse validation, and browser QA.</p></div>
+
+      <h2 id="findings">Critical findings</h2>
+      <div class="finding" id="f-closed"><div class="head"><span class="badge b-note">note</span><b>Independent review found five material ambiguities; all were corrected</b></div><p>Routing overlap, post-review authority, template omissions, unmerged cleanup, and hardcoded target-branch assumptions were closed in three focused rounds. <button class="dive" data-pop="pop-review">Open dispositions</button>.</p></div>
+      <div class="finding" id="f-clean"><div class="head"><span class="badge b-good">✓ clean</span><b>What was hunted and came back clean</b></div><p>Catalog count, install-all membership, metadata policy, Markdown links, template script syntax, post-report cleanup ordering, and worktree data-loss boundaries all passed focused checks.</p></div>
+
+      <h2 id="decisions">Notable decisions along the way</h2>
+      <table>
+        <tr><th>Decision</th><th>Why</th></tr>
+        <tr><td>Keep <code>create-changes-report</code> a soft integration.</td><td><code>implement-plan</code> remains usable when the report skill is unavailable, but must disclose the fallback.</td></tr>
+        <tr><td>Generalize imported worktree guidance.</td><td>Catalog skills must work beyond the original pnpm/Alchemy project while still honoring repository instructions.</td></tr>
+        <tr><td>Keep finding authority outside the report artifact.</td><td>The artifact summarizes evidence; owning workflows and <code>code-review</code> remain responsible for dispositions and closure.</td></tr>
+        <tr><td>Synchronize catalog skills without deleting unrelated globals.</td><td>The repository is authoritative for the skills it contains, while machine-specific or externally installed skills can coexist.</td></tr>
+      </table>
+
+      <h2 id="review-guide">Review guide</h2>
+      <p><b>Focus first:</b> the Done ordering in <code>implement-plan</code>, the finding-authority paragraph in <code>create-changes-report</code>, and unmerged cleanup in <code>use-worktrees</code>.</p>
+      <p><b>Remaining risks:</b> none known in the catalog changes. Distribution consistency is verified separately after synchronization.</p>
+      <p><b>Follow-up:</b> none for this change.</p>
+
+      <hr class="hr" />
+      <footer>Generated 2026-08-14 · scope: working-tree changes against <code>origin/main@21ce727</code>, excluding this generated artifact from line metrics · sources: current diff, imported global skills, catalog README, validator output, and independent review.</footer>
+    </main>
+
+    <dialog id="pop-files"><div class="pop-head"><b>Changed source files</b><button class="pop-x" data-close>✕</button></div><div class="pop-body"><table><tr><th>File</th><th>Role</th></tr><tr><td><code>README.md</code></td><td>16-skill discovery, installation, and integration docs</td></tr><tr><td><code>skills/implement-plan/SKILL.md</code></td><td>automatic report completion gate</td></tr><tr><td><code>skills/create-changes-report/SKILL.md</code></td><td>new catalog skill</td></tr><tr><td><code>skills/create-changes-report/assets/report-template.html</code></td><td>reusable report visual and interaction system</td></tr><tr><td><code>skills/use-worktrees/SKILL.md</code></td><td>new generalized worktree skill</td></tr></table><p>This generated report is intentionally excluded from the source-file and line-delta metrics.</p></div></dialog>
+    <dialog id="pop-delta"><div class="pop-head"><b>Line-delta evidence</b><button class="pop-x" data-close>✕</button></div><div class="pop-body"><ul><li><code>README.md</code>: +21 / −3</li><li><code>skills/implement-plan/SKILL.md</code>: +4 / −2</li><li><code>skills/create-changes-report/SKILL.md</code>: +102</li><li><code>skills/create-changes-report/assets/report-template.html</code>: +917</li><li><code>skills/use-worktrees/SKILL.md</code>: +63</li></ul><p>Total source scope: +1,107 / −5.</p></div></dialog>
+    <dialog id="pop-skills"><div class="pop-head"><b>Catalog discovery</b><button class="pop-x" data-close>✕</button></div><div class="pop-body"><p>The repository now contains 16 skill directories, and the install-all command names each exactly once. The CLI independently reported <code>Found 16 skills</code>.</p><h4>Newly published</h4><ul><li><code>create-changes-report</code></li><li><code>use-worktrees</code></li></ul></div></dialog>
+    <dialog id="pop-review"><div class="pop-head"><b>Independent review dispositions</b><button class="pop-x" data-close>✕</button></div><div class="pop-body"><ol><li><b>Routing overlap:</b> narrowed reports to completed repository changes and excluded read-only reviews.</li><li><b>Finding authority:</b> new defects return to the owning workflow; <code>implement-plan</code> re-enters closure.</li><li><b>Template omissions:</b> added before/after scope, four-column changed surface, fixture example, and review guide.</li><li><b>Cleanup contradiction:</b> safe handled work cleans automatically; unique work requires explicit loss acceptance.</li><li><b>Hardcoded branch:</b> replaced <code>master</code> with <code>&lt;target-branch&gt;</code>.</li></ol><p>Focused generation-three verdict: <b>Clear</b>.</p></div></dialog>
+
+    <script>
+      (() => {
+        "use strict";
+
+        // --- syntax highlighting (pre.hl only). Order: comment | string | keyword | number | Type ---
+        const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const TOKEN = new RegExp(
+          [
+            String.raw`(\/\/[^\n]*)`, // 1 comment
+            String.raw`("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|` +
+              "`" +
+              String.raw`(?:[^\`\\]|\\.)*` +
+              "`" +
+              `)`, // 2 string (backticks span lines)
+            String.raw`\b(const|let|var|function|return|if|else|for|of|in|new|class|extends|export|default|import|from|yield|await|async|typeof|undefined|null|true|false|this|INSERT|INTO|VALUES|UPDATE|SET|WHERE|DELETE|FROM|SELECT)\b`, // 3 keyword (incl. SQL verbs)
+            String.raw`\b(\d+(?:\.\d+)?)\b`, // 4 number
+            String.raw`\b([A-Z][A-Za-z0-9_]*)\b`, // 5 type-ish
+          ].join("|"),
+          "g",
+        );
+        const CLASSES = [null, "tk-cmt", "tk-str", "tk-kw", "tk-num", "tk-type"];
+        for (const code of document.querySelectorAll("pre.hl code")) {
+          const text = code.textContent;
+          let out = "";
+          let last = 0;
+          for (const m of text.matchAll(TOKEN)) {
+            out += esc(text.slice(last, m.index));
+            const group = CLASSES.findIndex((_, i) => i > 0 && m[i] !== undefined);
+            out += '<span class="' + CLASSES[group] + '">' + esc(m[0]) + "</span>";
+            last = m.index + m[0].length;
+          }
+          out += esc(text.slice(last));
+          code.innerHTML = out;
+        }
+
+        // --- popovers and jump links (event delegation; works for any data-pop / data-goto) ---
+        document.addEventListener("click", (event) => {
+          const closer = event.target.closest("[data-close]");
+          if (closer) {
+            closer.closest("dialog")?.close();
+            return;
+          }
+          const trigger = event.target.closest("[data-pop],[data-goto]");
+          if (!trigger) return;
+          if (trigger.dataset.pop) {
+            document.getElementById(trigger.dataset.pop)?.showModal();
+            return;
+          }
+          const target = document.querySelector(trigger.dataset.goto);
+          if (!target) return;
+          trigger.closest("dialog")?.close();
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+          target.classList.remove("flash");
+          void target.offsetWidth;
+          target.classList.add("flash");
+        });
+
+        // click on the backdrop closes (Esc works natively)
+        for (const dialog of document.querySelectorAll("dialog")) {
+          dialog.addEventListener("click", (event) => {
+            if (event.target === dialog) dialog.close();
+          });
+        }
+
+        // deep link: ?pop=example opens #pop-example (also proves JS ran when screenshotting)
+        const requested = new URLSearchParams(location.search).get("pop");
+        if (requested) document.getElementById("pop-" + requested)?.showModal();
+      })();
+    </script>
+  </body>
+</html>

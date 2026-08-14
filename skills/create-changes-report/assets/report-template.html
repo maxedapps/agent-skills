@@ -1,0 +1,917 @@
+<!doctype html>
+<!--
+  Interactive changes-report template. Self-contained: no external deps, works from disk.
+  Replace {{PLACEHOLDER}} content and duplicate the exemplar components as needed.
+  Section order and component semantics: see ../SKILL.md.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{TITLE}} — {{PROJECT}}</title>
+    <style>
+      /* ===== design tokens — the only place colors live. Dark mode overrides below. ===== */
+      :root {
+        color-scheme: light;
+        --page: #f9f9f7; /* page background        */
+        --surface: #fcfcfb; /* cards, tables, dialogs */
+        --ink: #0b0b0b; /* primary text           */
+        --ink-2: #52514e; /* secondary text         */
+        --muted: #898781; /* labels, hints          */
+        --grid: #e1e0d9; /* hairlines              */
+        --border: rgba(11, 11, 11, 0.1);
+        --accent: #2a78d6; /* interactive elements ONLY */
+        --accent-soft: #cde2fb;
+        --seq-400: #3987e5; /* single-hue bar fill    */
+        --good: #0ca30c; /* status colors: severity only, never decoration */
+        --good-text: #006300;
+        --warning: #fab219;
+        --serious: #ec835a;
+        --code-bg: #f4f3f0;
+        --tk-kw: #9d4a9d; /* syntax tokens */
+        --tk-str: #1b7a4e;
+        --tk-type: #1c5cab;
+        --tk-num: #b05a00;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:where(:not([data-theme="light"])) {
+          color-scheme: dark;
+          --page: #0d0d0d;
+          --surface: #1a1a19;
+          --ink: #ffffff;
+          --ink-2: #c3c2b7;
+          --muted: #898781;
+          --grid: #2c2c2a;
+          --border: rgba(255, 255, 255, 0.1);
+          --accent: #3987e5;
+          --accent-soft: #10314f;
+          --good-text: #0ca30c;
+          --code-bg: #232322;
+          --tk-kw: #d38fd3;
+          --tk-str: #58c48d;
+          --tk-type: #86b6ef;
+          --tk-num: #e0a15c;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--page);
+        color: var(--ink);
+        font:
+          15px/1.6 system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 40px 24px 80px;
+      }
+      .eyebrow {
+        color: var(--muted);
+        font-size: 13px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      h1 {
+        font-size: 30px;
+        line-height: 1.2;
+        margin: 6px 0 10px;
+      }
+      h2 {
+        font-size: 21px;
+        margin: 48px 0 4px;
+      }
+      h2 + p.lede {
+        margin-top: 4px;
+      }
+      h3 {
+        font-size: 16px;
+        margin: 26px 0 8px;
+      }
+      h4 {
+        font-size: 13.5px;
+        margin: 14px 0 4px;
+      }
+      p {
+        color: var(--ink-2);
+        max-width: 76ch;
+      }
+      p.lede {
+        font-size: 16px;
+      }
+      strong {
+        color: var(--ink);
+      }
+      a {
+        color: var(--accent);
+      }
+      [id] {
+        scroll-margin-top: 24px;
+      }
+      .hr {
+        border: 0;
+        border-top: 1px solid var(--grid);
+        margin: 40px 0 0;
+      }
+      .hint {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 10px;
+      }
+      .hint .dive {
+        font-size: inherit;
+      }
+
+      /* ===== clickable deep-dives: data-pop opens a dialog, data-goto scrolls + flashes ===== */
+      .dive {
+        background: none;
+        border: 0;
+        padding: 0 1px;
+        margin: 0;
+        font: inherit;
+        color: var(--accent);
+        cursor: pointer;
+        border-bottom: 1px dashed var(--accent);
+        border-radius: 2px 2px 0 0;
+      }
+      .dive:hover,
+      .dive:focus-visible {
+        background: var(--accent-soft);
+        outline: none;
+      }
+      @keyframes flashfade {
+        from {
+          box-shadow: 0 0 0 3px var(--accent);
+        }
+        to {
+          box-shadow: 0 0 0 3px transparent;
+        }
+      }
+      .flash {
+        animation: flashfade 1.6s ease-out;
+        border-radius: 10px;
+      }
+
+      /* ===== stat tiles (clickable buttons) ===== */
+      .tiles {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        margin: 24px 0 8px;
+      }
+      .tile {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        font: inherit;
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+      .tile:hover,
+      .tile:focus-visible {
+        border-color: var(--accent);
+        outline: none;
+      }
+      .tile .v {
+        font-size: 26px;
+        font-weight: 650;
+        line-height: 1.15;
+        color: var(--ink);
+      }
+      .tile .l {
+        color: var(--muted);
+        font-size: 12.5px;
+        margin-top: 3px;
+      }
+      .tile .s {
+        display: block;
+        font-size: 12.5px;
+        margin-top: 3px;
+        color: var(--good-text);
+      }
+      .tile .go {
+        display: block;
+        font-size: 11.5px;
+        color: var(--accent);
+        margin-top: 6px;
+      }
+
+      /* ===== tables ===== */
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 14px 0;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        font-size: 14px;
+      }
+      th {
+        text-align: left;
+        font-weight: 600;
+        color: var(--ink-2);
+        font-size: 12.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      th,
+      td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--grid);
+        vertical-align: top;
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      td {
+        color: var(--ink-2);
+      }
+      td:first-child {
+        color: var(--ink);
+        white-space: nowrap;
+      }
+      td code,
+      p code,
+      li code,
+      dd code {
+        background: var(--code-bg);
+        border-radius: 4px;
+        padding: 1px 5px;
+        font-size: 0.92em;
+      }
+
+      /* ===== code blocks: class="hl" gets syntax highlighting; plain <pre> stays as-is ===== */
+      pre {
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-size: 12.8px;
+        line-height: 1.55;
+      }
+      pre code {
+        background: none;
+        padding: 0;
+      }
+      .filetag {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        font-family: ui-monospace, monospace;
+        font-size: 12px;
+        color: var(--muted);
+        margin: 14px 0 -8px;
+      }
+      code,
+      pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .tk-cmt {
+        color: var(--muted);
+        font-style: italic;
+      }
+      .tk-kw {
+        color: var(--tk-kw);
+      }
+      .tk-str {
+        color: var(--tk-str);
+      }
+      .tk-type {
+        color: var(--tk-type);
+      }
+      .tk-num {
+        color: var(--tk-num);
+      }
+
+      /* ===== flow diagram: boxes + arrows; .hi = emphasized; .dot = load-bearing ◆ marker ===== */
+      .flow {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+        gap: 8px;
+        margin: 18px 0;
+      }
+      .fbox {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 14px;
+        flex: 1 1 150px;
+        min-width: 150px;
+        position: relative;
+      }
+      .fbox .t {
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .fbox .d {
+        color: var(--muted);
+        font-size: 12.5px;
+        margin-top: 2px;
+      }
+      .fbox.hi {
+        border-color: var(--accent);
+        box-shadow: inset 3px 0 0 var(--accent);
+      }
+      .farrow {
+        align-self: center;
+        color: var(--muted);
+        font-size: 18px;
+        flex: 0 0 auto;
+      }
+      .dot {
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        background: none;
+        border: 0;
+        padding: 2px;
+        color: var(--serious);
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .dot:hover {
+        transform: scale(1.3);
+      }
+
+      /* ===== numbered sequence (protocol / lifecycle steps) ===== */
+      ol.seq {
+        counter-reset: s;
+        list-style: none;
+        padding: 0;
+        margin: 16px 0;
+      }
+      ol.seq li {
+        counter-increment: s;
+        position: relative;
+        padding: 10px 14px 10px 46px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        margin-bottom: 8px;
+        color: var(--ink-2);
+      }
+      ol.seq li::before {
+        content: counter(s);
+        position: absolute;
+        left: 12px;
+        top: 10px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 650;
+        font-size: 12.5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      ol.seq li b {
+        color: var(--ink);
+      }
+
+      /* ===== schema / entity cards ===== */
+      .schema {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+        margin: 18px 0;
+      }
+      .scard {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 13px;
+      }
+      .scard .tn {
+        font-family: ui-monospace, monospace;
+        font-weight: 650;
+        color: var(--ink);
+      }
+      .scard .cols {
+        color: var(--ink-2);
+        margin: 6px 0 4px;
+        line-height: 1.7;
+      }
+      .scard .k {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .cascade {
+        color: var(--muted);
+        font-size: 12.5px;
+        margin: -6px 0 0;
+      }
+
+      /* ===== findings (badged) and load-bearing hotspot cards ===== */
+      .finding,
+      .hot {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin: 10px 0;
+      }
+      .hot {
+        border-left: 3px solid var(--serious);
+      }
+      .finding .head,
+      .hot .head {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 4px;
+        flex-wrap: wrap;
+      }
+      .finding .head b,
+      .hot .head b {
+        font-size: 15px;
+      }
+      .badge {
+        font-size: 11.5px;
+        font-weight: 650;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 2px 8px;
+        border-radius: 20px;
+        white-space: nowrap;
+      }
+      .b-serious {
+        color: #fff;
+        background: var(--serious);
+      } /* ⚠ gap — real problem       */
+      .b-warning {
+        color: #4a3400;
+        background: var(--warning);
+      } /* ⚠ deviation — from plan    */
+      .b-note {
+        color: var(--ink-2);
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+      }
+      .b-good {
+        color: #fff;
+        background: var(--good);
+      } /* ✓ clean — verified absence */
+      .b-hot {
+        color: #fff;
+        background: var(--serious);
+      } /* ◆ load-bearing marker      */
+      .finding p,
+      .hot p {
+        margin: 4px 0 0;
+        font-size: 14px;
+      }
+      .hot .why {
+        color: var(--muted);
+        font-size: 12.5px;
+        margin-top: 6px;
+      }
+
+      /* ===== single-hue horizontal bars (e.g. test distribution); rows are clickable ===== */
+      .bars {
+        margin: 16px 0;
+        max-width: 560px;
+      }
+      .brow {
+        display: grid;
+        grid-template-columns: 110px 1fr 46px;
+        gap: 10px;
+        align-items: center;
+        margin: 7px 0;
+        font-size: 13.5px;
+        width: 100%;
+        background: none;
+        border: 0;
+        padding: 0;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      .brow:hover .n {
+        color: var(--accent);
+      }
+      .brow .n {
+        color: var(--ink-2);
+        text-align: left;
+      }
+      .btrack {
+        height: 14px;
+        border-radius: 4px;
+        position: relative;
+      }
+      .bfill {
+        height: 100%;
+        border-radius: 4px;
+        background: var(--seq-400);
+      }
+      .brow .val {
+        color: var(--ink-2);
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+      }
+
+      /* ===== verification checklist: ✓ ran green, ○ (li.skip) explicitly not verified ===== */
+      .checklist {
+        list-style: none;
+        padding: 0;
+        margin: 12px 0;
+      }
+      .checklist li {
+        padding: 4px 0 4px 28px;
+        position: relative;
+        color: var(--ink-2);
+      }
+      .checklist li::before {
+        content: "✓";
+        position: absolute;
+        left: 4px;
+        color: var(--good-text);
+        font-weight: 700;
+      }
+      .checklist li.skip::before {
+        content: "○";
+        color: var(--muted);
+      }
+
+      .cols2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 32px;
+      }
+      @media (max-width: 760px) {
+        .cols2 {
+          grid-template-columns: 1fr;
+        }
+      }
+      .tree {
+        font-size: 12.5px;
+      }
+      footer {
+        margin-top: 60px;
+        color: var(--muted);
+        font-size: 12.5px;
+      }
+
+      /* ===== popovers (native <dialog>) ===== */
+      dialog {
+        background: var(--surface);
+        color: var(--ink-2);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 0;
+        width: min(92vw, 640px);
+        max-height: 82vh;
+        font-size: 14px;
+      }
+      dialog::backdrop {
+        background: rgba(0, 0, 0, 0.45);
+      }
+      .pop-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--grid);
+        position: sticky;
+        top: 0;
+        background: var(--surface);
+      }
+      .pop-head b {
+        color: var(--ink);
+        font-size: 15.5px;
+      }
+      .pop-x {
+        background: none;
+        border: 0;
+        color: var(--muted);
+        font-size: 18px;
+        cursor: pointer;
+        line-height: 1;
+        padding: 4px 6px;
+        border-radius: 6px;
+      }
+      .pop-x:hover {
+        background: var(--code-bg);
+        color: var(--ink);
+      }
+      .pop-body {
+        padding: 6px 18px 18px;
+        overflow: auto;
+      }
+      .pop-body ul {
+        padding-left: 20px;
+        margin: 6px 0;
+      }
+      .pop-body li {
+        margin: 3px 0;
+      }
+      .pop-body table {
+        font-size: 13px;
+      }
+      .tcount {
+        color: var(--muted);
+        font-weight: 400;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <!-- ===== 1 · hero: eyebrow / title / one lede / clickability tip ===== -->
+      <header class="hero">
+        <div class="eyebrow">{{PROJECT}} · {{MILESTONE}} · {{DATE}}</div>
+        <h1>{{TITLE}}</h1>
+        <p class="lede">
+          {{ONE-PARAGRAPH SUMMARY — what changed, in one story. Bold the headline clause. Inline a
+          <button class="dive" data-pop="pop-example">deep-dive link</button> where a term deserves
+          detail.}}
+        </p>
+        <p class="hint">
+          Tip: everything dashed-underlined and every tile is clickable — it opens a deeper dive or
+          jumps to the related section. A <span style="color: var(--serious)">◆</span> marks
+          load-bearing code (see
+          <button class="dive" data-goto="#hotspots">critical points</button>).
+        </p>
+      </header>
+
+      <!-- ===== 2 · stat tiles: 4–6 headline numbers, EVERY tile clickable ===== -->
+      <div class="tiles">
+        <button class="tile" data-pop="pop-example">
+          <span class="v">{{N}}</span><span class="l"><br />{{unit}}<br />{{detail}}</span
+          ><span class="go">what's behind this</span>
+        </button>
+        <button class="tile" data-goto="#datamodel">
+          <span class="v">{{N}}</span><span class="l"><br />{{unit}}</span
+          ><span class="s">all passing ✓</span><span class="go">jump to section ↓</span>
+        </button>
+      </div>
+
+      <!-- ===== 3 · what changed and why: concise before → after + scope boundary ===== -->
+      <h2 id="what-changed">What changed and why</h2>
+      <p><b>Before:</b> {{previous behavior or limitation}}.</p>
+      <p><b>After:</b> {{new behavior and why it solves the task}}.</p>
+      <p class="lede">{{What deliberately stayed unchanged or remained out of scope.}}</p>
+
+      <!-- ===== 4 · big picture: one flow diagram; ◆ dots on load-bearing boxes ===== -->
+      <h2 id="big-picture">The big picture</h2>
+      <p class="lede">{{The single story that explains most files.}}</p>
+      <div class="flow">
+        <div class="fbox">
+          <div class="t">{{Source}}</div>
+          <div class="d">{{one-line role}}</div>
+        </div>
+        <div class="farrow">→</div>
+        <div class="fbox hi">
+          <button class="dot" data-goto="#hotspots" title="load-bearing code — see critical points">
+            ◆
+          </button>
+          <div class="t">{{Core piece}}</div>
+          <div class="d">{{one-line role}}</div>
+        </div>
+        <div class="farrow">→</div>
+        <div class="fbox">
+          <div class="t">{{Sink}}</div>
+          <div class="d">{{one-line role}}</div>
+        </div>
+      </div>
+
+      <!-- ===== 5 · changed surface: area → change → reason → key files ===== -->
+      <h2 id="areas">What was built, area by area</h2>
+      <table>
+        <tr>
+          <th>Area</th>
+          <th>Change</th>
+          <th>Reason</th>
+          <th>Key files</th>
+        </tr>
+        <tr>
+          <td>{{Area}}</td>
+          <td>
+            {{Description with inline
+            <button class="dive" data-pop="pop-example">dive links</button>.}}
+          </td>
+          <td>{{Why this change was necessary}}</td>
+          <td><code>{{path/}}</code></td>
+        </tr>
+      </table>
+
+      <!-- ===== 6 · protocol / lifecycle: numbered steps + a verbatim output sample (plain pre) ===== -->
+      <h2 id="protocol">{{The core flow}}</h2>
+      <ol class="seq">
+        <li><b>{{Step}}</b> — {{what happens; link terms to popovers or snippets}}.</li>
+        <li><b>{{Step}}</b> — {{…}}</li>
+      </ol>
+      <span class="filetag">what the output looks like</span>
+      <pre><code>{{verbatim real output — no hl class, stays unhighlighted}}</code></pre>
+
+      <!-- ===== 7 · data model: one card per table/entity + a relationship line ===== -->
+      <h2 id="datamodel">Data model</h2>
+      <div class="schema">
+        <div class="scard">
+          <div class="tn">{{table}}</div>
+          <div class="cols">{{col · col · col}}</div>
+          <div class="k">{{constraints}}</div>
+        </div>
+      </div>
+      <p class="cascade">{{a ⟶ b ⟶ c relationship / cascade summary}}</p>
+
+      <!-- ===== 8 · key code: 3–5 snippets max, 10–20 lines each, pre class="hl" for highlighting.
+     Escape < > & in the markup. Mark load-bearing snippets with ◆ in the heading. ===== -->
+      <h2 id="code">Key code, briefly</h2>
+      <h3 id="snippet-example">
+        1 · {{Why this snippet matters}} <span style="color: var(--serious)">◆</span>
+      </h3>
+      <p>{{One or two sentences of context — the why, not a walkthrough.}}</p>
+      <span class="filetag">{{path/to/file.ts}}</span>
+      <pre class="hl"><code>export class Example extends Base.make("name")
+  .add(thing)          // comments get highlighted
+  .prefix("/v1") {}</code></pre>
+
+      <!-- ===== 9 · optional fixture/demo: remove when no fixture exists ===== -->
+      <h2 id="fixture">Fixture or demo</h2>
+      <pre class="tree">{{fixture/
+├── input
+└── expected-output}}</pre>
+
+      <!-- ===== 10 · verification: what ran green AND what explicitly did not run (li.skip) ===== -->
+      <h2 id="verification">Verification status</h2>
+      <ul class="checklist">
+        <li><code>{{command}}</code> — {{result}}</li>
+        <li class="skip"><strong>{{Skipped thing}}</strong> — {{why, and what that means}}</li>
+      </ul>
+      <div class="bars" role="img" aria-label="{{describe the bars}}">
+        <button class="brow" data-pop="pop-example">
+          <span class="n">{{label}}</span
+          ><span class="btrack"
+            ><span class="bfill" style="width: 100%; display: block"></span></span
+          ><span class="val">{{N}}</span>
+        </button>
+        <button class="brow" data-pop="pop-example">
+          <span class="n">{{label}}</span
+          ><span class="btrack"><span class="bfill" style="width: 14%; display: block"></span></span
+          ><span class="val">{{N}}</span>
+        </button>
+      </div>
+
+      <!-- ===== 11 · load-bearing hotspots: NOT bugs — where a defect would hurt most ===== -->
+      <h2 id="hotspots">
+        Critical points — load-bearing code <span style="color: var(--serious)">◆</span>
+      </h2>
+      <p class="lede">
+        Not bugs — but the places where a defect would hurt most, and what currently protects each
+        one.
+      </p>
+      <div class="hot">
+        <div class="head">
+          <span class="badge b-hot">◆ {{category e.g. data loss}}</span><b>{{What it is}}</b>
+          <span class="tcount">{{file path}}</span>
+        </div>
+        <p>{{Why a bug here hurts — the failure shape.}}</p>
+        <p class="why">
+          Protected by: {{tests/gates/design}}. Weakened by:
+          <button class="dive" data-goto="#f-example">{{related finding}}</button>.
+        </p>
+      </div>
+
+      <!-- ===== 12 · findings: ranked, badged (b-serious / b-warning / b-note / b-good), ids for cross-links.
+     ALWAYS include one b-good "hunted and came back clean" card. ===== -->
+      <h2 id="findings">Critical findings</h2>
+      <div class="finding" id="f-example">
+        <div class="head">
+          <span class="badge b-serious">⚠ gap</span><b>{{One-line defect statement}}</b>
+        </div>
+        <p>{{Evidence, consequence, and the single highest-value fix.}}</p>
+      </div>
+      <div class="finding" id="f-clean">
+        <div class="head">
+          <span class="badge b-good">✓ clean</span
+          ><b>What was specifically hunted and came back clean</b>
+        </div>
+        <p>{{List what was checked and found sound — absence of findings shown as work done.}}</p>
+      </div>
+
+      <!-- ===== 13 · decisions table ===== -->
+      <h2 id="decisions">Notable decisions along the way</h2>
+      <table>
+        <tr>
+          <th>Decision</th>
+          <th>Why</th>
+        </tr>
+        <tr>
+          <td>{{Decision}}</td>
+          <td>{{Rationale, one sentence}}</td>
+        </tr>
+      </table>
+
+      <!-- ===== 14 · review guide: focus, risks, and follow-up ===== -->
+      <h2 id="review-guide">Review guide</h2>
+      <p><b>Focus first:</b> {{the highest-value paths, flows, or decisions to inspect}}.</p>
+      <p><b>Remaining risks:</b> {{known risks, or explicitly “none known”}}.</p>
+      <p><b>Follow-up:</b> {{remaining work, or explicitly “none”}}.</p>
+
+      <hr class="hr" />
+      <footer>
+        Generated {{DATE}} · exact scope: {{baseline/diff or commits}} · sources: {{plan file}},
+        {{tracker}}, {{reviews}}, and a fresh run of the required check suite.
+      </footer>
+    </main>
+
+    <!-- ===== popovers: id must be "pop-<slug>"; openable via data-pop and ?pop=<slug> ===== -->
+    <dialog id="pop-example">
+      <div class="pop-head">
+        <b>{{Popover title}}</b><button class="pop-x" data-close>✕</button>
+      </div>
+      <div class="pop-body">
+        <p>
+          {{The exhaustive detail that would bloat the main page: full test inventories (h4 per file
+          + ul of verbatim test names), version tables, grammar cheat sheets, endpoint tables.}}
+        </p>
+        <h4>{{group heading}} <span class="tcount">— {{count / note}}</span></h4>
+        <ul>
+          <li>{{item}}</li>
+        </ul>
+      </div>
+    </dialog>
+
+    <script>
+      (() => {
+        "use strict";
+
+        // --- syntax highlighting (pre.hl only). Order: comment | string | keyword | number | Type ---
+        const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const TOKEN = new RegExp(
+          [
+            String.raw`(\/\/[^\n]*)`, // 1 comment
+            String.raw`("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|` +
+              "`" +
+              String.raw`(?:[^\`\\]|\\.)*` +
+              "`" +
+              `)`, // 2 string (backticks span lines)
+            String.raw`\b(const|let|var|function|return|if|else|for|of|in|new|class|extends|export|default|import|from|yield|await|async|typeof|undefined|null|true|false|this|INSERT|INTO|VALUES|UPDATE|SET|WHERE|DELETE|FROM|SELECT)\b`, // 3 keyword (incl. SQL verbs)
+            String.raw`\b(\d+(?:\.\d+)?)\b`, // 4 number
+            String.raw`\b([A-Z][A-Za-z0-9_]*)\b`, // 5 type-ish
+          ].join("|"),
+          "g",
+        );
+        const CLASSES = [null, "tk-cmt", "tk-str", "tk-kw", "tk-num", "tk-type"];
+        for (const code of document.querySelectorAll("pre.hl code")) {
+          const text = code.textContent;
+          let out = "";
+          let last = 0;
+          for (const m of text.matchAll(TOKEN)) {
+            out += esc(text.slice(last, m.index));
+            const group = CLASSES.findIndex((_, i) => i > 0 && m[i] !== undefined);
+            out += '<span class="' + CLASSES[group] + '">' + esc(m[0]) + "</span>";
+            last = m.index + m[0].length;
+          }
+          out += esc(text.slice(last));
+          code.innerHTML = out;
+        }
+
+        // --- popovers and jump links (event delegation; works for any data-pop / data-goto) ---
+        document.addEventListener("click", (event) => {
+          const closer = event.target.closest("[data-close]");
+          if (closer) {
+            closer.closest("dialog")?.close();
+            return;
+          }
+          const trigger = event.target.closest("[data-pop],[data-goto]");
+          if (!trigger) return;
+          if (trigger.dataset.pop) {
+            document.getElementById(trigger.dataset.pop)?.showModal();
+            return;
+          }
+          const target = document.querySelector(trigger.dataset.goto);
+          if (!target) return;
+          trigger.closest("dialog")?.close();
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+          target.classList.remove("flash");
+          void target.offsetWidth;
+          target.classList.add("flash");
+        });
+
+        // click on the backdrop closes (Esc works natively)
+        for (const dialog of document.querySelectorAll("dialog")) {
+          dialog.addEventListener("click", (event) => {
+            if (event.target === dialog) dialog.close();
+          });
+        }
+
+        // deep link: ?pop=example opens #pop-example (also proves JS ran when screenshotting)
+        const requested = new URLSearchParams(location.search).get("pop");
+        if (requested) document.getElementById("pop-" + requested)?.showModal();
+      })();
+    </script>
+  </body>
+</html>
