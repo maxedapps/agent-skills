@@ -8,6 +8,7 @@
 - `decomplex` — prevent, audit, and triage unnecessary complexity without editing reviewed targets.
 - `explain` — manually produce context-grounded Markdown explanations and standalone HTML that opens in the default browser unless suppressed.
 - `create-plan` — create, review, and improve researched, implementation-ready plans before coding.
+- `create-report` — create standalone HTML decision, assessment, research, and status reports.
 - `create-skill` — create, rewrite, and review concise, actionable Agent Skills.
 - `create-slides` — build, verify and export templated HTML slide decks from five looks (PDF + MP4 at 1080p/2K/4K).
 - `generate-image` — generate AI images through fal.ai HTTP queue workflows (Bun CLI; default `openai/gpt-image-2`).
@@ -33,6 +34,7 @@ Install one skill:
 npx skills add maxedapps/agent-skills@awesome-tests
 npx skills add maxedapps/agent-skills@code-review
 npx skills add maxedapps/agent-skills@create-changes-report
+npx skills add maxedapps/agent-skills@create-report
 npx skills add maxedapps/agent-skills@use-mcp
 npx skills add maxedapps/agent-skills@use-worktrees
 npx skills add maxedapps/agent-skills@explain
@@ -45,19 +47,21 @@ Or use the explicit option:
 npx skills add maxedapps/agent-skills --skill awesome-tests
 npx skills add maxedapps/agent-skills --skill code-review
 npx skills add maxedapps/agent-skills --skill create-changes-report
+npx skills add maxedapps/agent-skills --skill create-report
 npx skills add maxedapps/agent-skills --skill use-mcp
 npx skills add maxedapps/agent-skills --skill use-worktrees
 npx skills add maxedapps/agent-skills --skill explain
 npx skills add maxedapps/agent-skills --skill vps-setup-hardening
 ```
 
-Install all sixteen skills explicitly:
+Install all seventeen skills explicitly:
 
 ```sh
 npx skills add maxedapps/agent-skills \
   --skill awesome-tests \
   --skill code-review \
   --skill create-changes-report \
+  --skill create-report \
   --skill decomplex \
   --skill explain \
   --skill create-plan \
@@ -94,7 +98,8 @@ Pi and Claude Code honor `disable-model-invocation: true`; Codex honors the bund
 
 - **`awesome-tests` works standalone and supports soft co-activation.** Use it directly for scoped test planning, authoring, repair, or review. It can co-activate with `create-plan` when a behavior-changing plan must specify tests or validation, and with `code-review` when changes materially affect tests or validation. The owning workflow retains artifact, finding, severity, matrix, report, and verdict authority. This is routing behavior, not a hard runtime dependency; all three skills remain independently useful.
 - **`decomplex` is a soft integration.** It can provide focused advisory reports to `code-review`, `create-plan`, and `implement-plan` when installed and proportionate. It requires write access for one distinct `.reviews/<descriptive-slug>-decomplex.md` report but never edits reviewed targets. Each owning workflow retains its concise built-in gate and records an honest fallback when the skill or report write is unavailable.
-- **`create-changes-report` is the repository-change completion artifact.** It runs after code, tests, configuration, schemas, or infrastructure changed and produces a verified standalone HTML review handoff. `implement-plan` explicitly invokes it after final checks when available and records the fallback when it is not installed.
+- **`create-report` is for explicit standalone HTML reports** when no domain-specific workflow owns the task. It is not an automatic completion gate.
+- **`create-changes-report` is the repository-change completion artifact.** It runs after code, tests, configuration, schemas, or infrastructure changed and produces a verified standalone HTML review handoff with expandable critical-code evidence and complete paths. `implement-plan` explicitly invokes it after final checks when available, then independently reviews the candidate report before completion, and records the fallback when it is not installed.
 - **`use-worktrees` owns direct worktree operations.** For delegated work, apply it together with `use-subagents`; the parent agent remains responsible for worktree creation, integration, and cleanup.
 - **`use-subagents` is portable policy** (delegate-by-default, roles/assignment contract, worktrees/Git/cleanup) for any harness’s built-in tools, plugins, or CLIs. It does **not** depend on Pi.
 - **`use-pi-subagents` is a Pi launcher only** — use it with `use-subagents` when native `subagent_*` tools are inactive. Never drive competing launchers for the same lane. Parent owns worktrees, Git, and workspace cleanup; Pi `clean` retires run state only. No unaccounted workflow-owned resources.
@@ -116,7 +121,7 @@ Evidence-bound generic and plan-backed reviews. Delegates read-only lanes by def
 
 ### `create-changes-report`
 
-Creates a self-contained interactive HTML report after repository changes. The report provides a five-minute overview with drill-down evidence, architecture flow, verification commands and results, load-bearing code, calibrated findings, decisions, risks, and review guidance; mandatory light, dark, and popover browser checks verify the artifact before handoff.
+Creates a self-contained interactive HTML report after repository changes. The report provides a five-minute overview with drill-down evidence, architecture flow, verification commands and results, expandable critical-code evidence with complete paths, calibrated findings, decisions, risks, and review guidance; mandatory light, dark, and popover browser checks verify the artifact before handoff.
 
 ### `decomplex`
 
@@ -129,6 +134,10 @@ Manual-only. Produces concise, context-grounded Markdown plus polished standalon
 ### `create-plan`
 
 Research → smallest plan → review → deliver. Delegates research/review by default; asks the user instead of shaky assumptions; writes a lean `.plans/` handoff with bullet task changes and exact verify steps.
+
+### `create-report`
+
+Creates concise, evidence-backed, actionable standalone HTML reports for decisions, assessments, research, and status outcomes when the user asks for a polished HTML report and no domain-specific workflow owns the task. It is not an automatic completion gate. The executive layer stays about five minutes; headline numbers and key conclusions drill down to labelled evidence; findings and recommendations stay honest about unknowns.
 
 ### `create-skill`
 
@@ -144,7 +153,7 @@ Generates AI images through fal.ai via a small Bun HTTP/queue CLI. Defaults to `
 
 ### `implement-plan`
 
-Maps a plan to tracker tasks/subtasks, then runs a delegated loop per item: analyze → implement → check → review → fix until clear → cleanup → next. Subagents by default (built-in, plugins, or skills) under `use-subagents` policy. Parent owns tracker, integration, dispositions, acceptance, and mandatory worktree/runtime cleanup. After final checks, changed repositories receive a `create-changes-report` HTML review handoff when that skill is available.
+Maps a plan to tracker tasks/subtasks, then runs a delegated loop per item: analyze → implement → check → review → fix until clear → cleanup → next. Subagents by default (built-in, plugins, or skills) under `use-subagents` policy. Parent owns tracker, integration, dispositions, acceptance, and mandatory worktree/runtime cleanup. After final checks, changed repositories receive a `create-changes-report` HTML review handoff when that skill is available, then an independent candidate-report review before completion.
 
 ### `use-worktrees`
 

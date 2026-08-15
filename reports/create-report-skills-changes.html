@@ -1,0 +1,1273 @@
+<!doctype html>
+<!--
+  Interactive changes-report for create-report skill work.
+  Generated from skills/create-changes-report/assets/report-template.html.
+  Handoff file excluded from frozen counts/deltas/inventory.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Create-report skills changes — maxed-skills</title>
+    <style>
+      /* ===== design tokens — the only place colors live. Dark mode overrides below. ===== */
+      :root {
+        color-scheme: light;
+        --page: #f9f9f7; /* page background        */
+        --surface: #fcfcfb; /* cards, tables, dialogs */
+        --ink: #0b0b0b; /* primary text           */
+        --ink-2: #52514e; /* secondary text         */
+        --muted: #898781; /* labels, hints          */
+        --grid: #e1e0d9; /* hairlines              */
+        --border: rgba(11, 11, 11, 0.1);
+        --accent: #2a78d6; /* interactive elements ONLY */
+        --accent-soft: #cde2fb;
+        --seq-400: #3987e5; /* single-hue bar fill    */
+        --good: #0ca30c; /* status colors: severity only, never decoration */
+        --good-text: #006300;
+        --warning: #fab219;
+        --serious: #ec835a;
+        --code-bg: #f4f3f0;
+        --tk-kw: #9d4a9d; /* syntax tokens */
+        --tk-str: #1b7a4e;
+        --tk-type: #1c5cab;
+        --tk-num: #b05a00;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:where(:not([data-theme="light"])) {
+          color-scheme: dark;
+          --page: #0d0d0d;
+          --surface: #1a1a19;
+          --ink: #ffffff;
+          --ink-2: #c3c2b7;
+          --muted: #898781;
+          --grid: #2c2c2a;
+          --border: rgba(255, 255, 255, 0.1);
+          --accent: #3987e5;
+          --accent-soft: #10314f;
+          --good-text: #0ca30c;
+          --code-bg: #232322;
+          --tk-kw: #d38fd3;
+          --tk-str: #58c48d;
+          --tk-type: #86b6ef;
+          --tk-num: #e0a15c;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--page);
+        color: var(--ink);
+        font:
+          15px/1.6 system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 40px 24px 80px;
+      }
+      .eyebrow {
+        color: var(--muted);
+        font-size: 13px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      h1 {
+        font-size: 30px;
+        line-height: 1.2;
+        margin: 6px 0 10px;
+      }
+      h2 {
+        font-size: 21px;
+        margin: 48px 0 4px;
+      }
+      h2 + p.lede {
+        margin-top: 4px;
+      }
+      h3 {
+        font-size: 16px;
+        margin: 26px 0 8px;
+      }
+      h4 {
+        font-size: 13.5px;
+        margin: 14px 0 4px;
+      }
+      p {
+        color: var(--ink-2);
+        max-width: 76ch;
+      }
+      p.lede {
+        font-size: 16px;
+      }
+      strong {
+        color: var(--ink);
+      }
+      a {
+        color: var(--accent);
+      }
+      [id] {
+        scroll-margin-top: 24px;
+      }
+      .hr {
+        border: 0;
+        border-top: 1px solid var(--grid);
+        margin: 40px 0 0;
+      }
+      .hint {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 10px;
+      }
+      .hint .dive {
+        font-size: inherit;
+      }
+
+      /* ===== clickable deep-dives: data-pop opens a dialog, data-goto scrolls + flashes ===== */
+      .dive {
+        background: none;
+        border: 0;
+        padding: 0 1px;
+        margin: 0;
+        font: inherit;
+        color: var(--accent);
+        cursor: pointer;
+        border-bottom: 1px dashed var(--accent);
+        border-radius: 2px 2px 0 0;
+      }
+      .dive:hover,
+      .dive:focus-visible {
+        background: var(--accent-soft);
+        outline: none;
+      }
+      @keyframes flashfade {
+        from {
+          box-shadow: 0 0 0 3px var(--accent);
+        }
+        to {
+          box-shadow: 0 0 0 3px transparent;
+        }
+      }
+      .flash {
+        animation: flashfade 1.6s ease-out;
+        border-radius: 10px;
+      }
+
+      /* ===== stat tiles (clickable buttons) ===== */
+      .tiles {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        margin: 24px 0 8px;
+      }
+      .tile {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        font: inherit;
+        color: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+      .tile:hover,
+      .tile:focus-visible {
+        border-color: var(--accent);
+        outline: none;
+      }
+      .tile .v {
+        font-size: 26px;
+        font-weight: 650;
+        line-height: 1.15;
+        color: var(--ink);
+      }
+      .tile .l {
+        color: var(--muted);
+        font-size: 12.5px;
+        margin-top: 3px;
+      }
+      .tile .s {
+        display: block;
+        font-size: 12.5px;
+        margin-top: 3px;
+        color: var(--good-text);
+      }
+      .tile .go {
+        display: block;
+        font-size: 11.5px;
+        color: var(--accent);
+        margin-top: 6px;
+      }
+
+      /* ===== tables ===== */
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 14px 0;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        font-size: 14px;
+      }
+      th {
+        text-align: left;
+        font-weight: 600;
+        color: var(--ink-2);
+        font-size: 12.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      th,
+      td {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--grid);
+        vertical-align: top;
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      td {
+        color: var(--ink-2);
+      }
+      td:first-child {
+        color: var(--ink);
+        white-space: nowrap;
+      }
+      td code,
+      p code,
+      li code,
+      dd code {
+        background: var(--code-bg);
+        border-radius: 4px;
+        padding: 1px 5px;
+        font-size: 0.92em;
+      }
+
+      /* ===== code blocks: class="hl" gets syntax highlighting; plain <pre> stays as-is ===== */
+      pre {
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-size: 12.8px;
+        line-height: 1.55;
+      }
+      pre code {
+        background: none;
+        padding: 0;
+      }
+      .filetag {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 10px;
+        font-family: ui-monospace, monospace;
+        font-size: 12px;
+        color: var(--muted);
+        margin: 14px 0 -8px;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+      code,
+      pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .tk-cmt {
+        color: var(--muted);
+        font-style: italic;
+      }
+      .tk-kw {
+        color: var(--tk-kw);
+      }
+      .tk-str {
+        color: var(--tk-str);
+      }
+      .tk-type {
+        color: var(--tk-type);
+      }
+      .tk-num {
+        color: var(--tk-num);
+      }
+
+      /* ===== flow diagram: boxes + arrows; .hi = emphasized; .dot = load-bearing ◆ marker ===== */
+      .flow {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+        gap: 8px;
+        margin: 18px 0;
+      }
+      .fbox {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 14px;
+        flex: 1 1 150px;
+        min-width: 150px;
+        position: relative;
+      }
+      .fbox .t {
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .fbox .d {
+        color: var(--muted);
+        font-size: 12.5px;
+        margin-top: 2px;
+      }
+      .fbox.hi {
+        border-color: var(--accent);
+        box-shadow: inset 3px 0 0 var(--accent);
+      }
+      .farrow {
+        align-self: center;
+        color: var(--muted);
+        font-size: 18px;
+        flex: 0 0 auto;
+      }
+      .dot {
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        background: none;
+        border: 0;
+        padding: 2px;
+        color: var(--serious);
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .dot:hover {
+        transform: scale(1.3);
+      }
+
+      /* ===== numbered sequence (protocol / lifecycle steps) ===== */
+      ol.seq {
+        counter-reset: s;
+        list-style: none;
+        padding: 0;
+        margin: 16px 0;
+      }
+      ol.seq li {
+        counter-increment: s;
+        position: relative;
+        padding: 10px 14px 10px 46px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        margin-bottom: 8px;
+        color: var(--ink-2);
+      }
+      ol.seq li::before {
+        content: counter(s);
+        position: absolute;
+        left: 12px;
+        top: 10px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-weight: 650;
+        font-size: 12.5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      ol.seq li b {
+        color: var(--ink);
+      }
+
+      /* ===== schema / entity cards ===== */
+      .schema {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+        margin: 18px 0;
+      }
+      .scard {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 13px;
+      }
+      .scard .tn {
+        font-family: ui-monospace, monospace;
+        font-weight: 650;
+        color: var(--ink);
+      }
+      .scard .cols {
+        color: var(--ink-2);
+        margin: 6px 0 4px;
+        line-height: 1.7;
+      }
+      .scard .k {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .cascade {
+        color: var(--muted);
+        font-size: 12.5px;
+        margin: -6px 0 0;
+      }
+
+      /* ===== findings (badged) and expandable load-bearing hotspot cards ===== */
+      .finding,
+      .hot {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin: 10px 0;
+      }
+      .hot {
+        border-left: 3px solid var(--serious);
+      }
+      details.hot > summary {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        flex-wrap: wrap;
+        cursor: pointer;
+        list-style: none;
+        margin: -14px -16px 0;
+        padding: 14px 16px;
+        border-radius: 10px;
+      }
+      details.hot > summary::-webkit-details-marker {
+        display: none;
+      }
+      details.hot > summary::before {
+        content: "▸";
+        color: var(--muted);
+        font-size: 12px;
+        flex: 0 0 auto;
+      }
+      details.hot[open] > summary::before {
+        content: "▾";
+      }
+      details.hot > summary:hover,
+      details.hot > summary:focus-visible {
+        background: var(--accent-soft);
+        outline: none;
+      }
+      details.hot[open] > summary {
+        border-bottom: 1px solid var(--grid);
+        border-radius: 10px 10px 0 0;
+        margin-bottom: 12px;
+      }
+      details.hot .why {
+        flex-basis: 100%;
+        color: var(--muted);
+        font-size: 12.5px;
+        font-weight: 400;
+      }
+      .hot-body {
+        display: grid;
+        gap: 2px;
+      }
+      .hot-body h4 {
+        margin: 12px 0 2px;
+      }
+      .hot-body h4:first-child {
+        margin-top: 0;
+      }
+      .hot-files {
+        list-style: none;
+        padding: 0;
+        margin: 6px 0;
+      }
+      .hot-files li {
+        margin: 4px 0;
+        color: var(--ink-2);
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+      [data-path] {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+      .finding .head {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 4px;
+        flex-wrap: wrap;
+      }
+      .finding .head b,
+      details.hot summary b {
+        font-size: 15px;
+      }
+      .badge {
+        font-size: 11.5px;
+        font-weight: 650;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 2px 8px;
+        border-radius: 20px;
+        white-space: nowrap;
+      }
+      .b-serious {
+        color: #fff;
+        background: var(--serious);
+      } /* ⚠ gap — real problem       */
+      .b-warning {
+        color: #4a3400;
+        background: var(--warning);
+      } /* ⚠ deviation — from plan    */
+      .b-note {
+        color: var(--ink-2);
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+      }
+      .b-good {
+        color: #fff;
+        background: var(--good);
+      } /* ✓ clean — verified absence */
+      .b-hot {
+        color: #fff;
+        background: var(--serious);
+      } /* ◆ load-bearing marker      */
+      .finding p,
+      .hot-body p {
+        margin: 4px 0 0;
+        font-size: 14px;
+      }
+
+      /* ===== single-hue horizontal bars (e.g. test distribution); rows are clickable ===== */
+      .bars {
+        margin: 16px 0;
+        max-width: 560px;
+      }
+      .brow {
+        display: grid;
+        grid-template-columns: 110px 1fr 46px;
+        gap: 10px;
+        align-items: center;
+        margin: 7px 0;
+        font-size: 13.5px;
+        width: 100%;
+        background: none;
+        border: 0;
+        padding: 0;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      .brow:hover .n {
+        color: var(--accent);
+      }
+      .brow .n {
+        color: var(--ink-2);
+        text-align: left;
+      }
+      .btrack {
+        height: 14px;
+        border-radius: 4px;
+        position: relative;
+      }
+      .bfill {
+        height: 100%;
+        border-radius: 4px;
+        background: var(--seq-400);
+      }
+      .brow .val {
+        color: var(--ink-2);
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+      }
+
+      /* ===== verification checklist: ✓ ran green, ○ (li.skip) explicitly not verified ===== */
+      .checklist {
+        list-style: none;
+        padding: 0;
+        margin: 12px 0;
+      }
+      .checklist li {
+        padding: 4px 0 4px 28px;
+        position: relative;
+        color: var(--ink-2);
+      }
+      .checklist li::before {
+        content: "✓";
+        position: absolute;
+        left: 4px;
+        color: var(--good-text);
+        font-weight: 700;
+      }
+      .checklist li.skip::before {
+        content: "○";
+        color: var(--muted);
+      }
+
+      .cols2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 32px;
+      }
+      @media (max-width: 760px) {
+        .cols2 {
+          grid-template-columns: 1fr;
+        }
+        details.hot > summary {
+          align-items: flex-start;
+        }
+        .filetag {
+          flex-direction: column;
+          gap: 2px;
+        }
+      }
+      @media print {
+        details.hot {
+          break-inside: avoid;
+        }
+        details.hot > .hot-body {
+          display: grid !important;
+        }
+      }
+      .tree {
+        font-size: 12.5px;
+      }
+      footer {
+        margin-top: 60px;
+        color: var(--muted);
+        font-size: 12.5px;
+      }
+
+      /* ===== popovers (native <dialog>) ===== */
+      dialog {
+        background: var(--surface);
+        color: var(--ink-2);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 0;
+        width: min(92vw, 640px);
+        max-height: 82vh;
+        font-size: 14px;
+      }
+      dialog::backdrop {
+        background: rgba(0, 0, 0, 0.45);
+      }
+      .pop-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--grid);
+        position: sticky;
+        top: 0;
+        background: var(--surface);
+      }
+      .pop-head b {
+        color: var(--ink);
+        font-size: 15.5px;
+      }
+      .pop-x {
+        background: none;
+        border: 0;
+        color: var(--muted);
+        font-size: 18px;
+        cursor: pointer;
+        line-height: 1;
+        padding: 4px 6px;
+        border-radius: 6px;
+      }
+      .pop-x:hover {
+        background: var(--code-bg);
+        color: var(--ink);
+      }
+      .pop-body {
+        padding: 6px 18px 18px;
+        overflow: auto;
+      }
+      .pop-body ul {
+        padding-left: 20px;
+        margin: 6px 0;
+      }
+      .pop-body li {
+        margin: 3px 0;
+      }
+      .pop-body table {
+        font-size: 13px;
+      }
+      .pop-body td:first-child {
+        white-space: normal;
+      }
+      .tcount {
+        color: var(--muted);
+        font-weight: 400;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="hero">
+        <div class="eyebrow">maxed-skills · create-report skill · 15 Aug 2026</div>
+        <h1>Generic reports, expandable critical code, and an independent candidate gate</h1>
+        <p class="lede">
+          <b>Three catalog contracts landed.</b>
+          Agents can now produce a standalone HTML report when no domain skill owns the task,
+          inspect change-report risk through expandable complete-path cards, and must get a fresh
+          reviewer to
+          <button class="dive" data-goto="#hot-candidate">Clear the exact candidate bytes</button>
+          before <code>implement-plan</code> may claim Complete.
+        </p>
+        <p class="hint">
+          Tip: dashed terms and tiles are clickable. A <span style="color: var(--serious)">◆</span>
+          marks load-bearing code (see
+          <button class="dive" data-goto="#hotspots">critical points</button>).
+        </p>
+      </header>
+
+      <div class="tiles">
+        <button class="tile" data-pop="pop-files">
+          <span class="v">11</span><span class="l"><br />changed files<br />frozen scope</span>
+          <span class="go">open inventory</span>
+        </button>
+        <button class="tile" data-pop="pop-files">
+          <span class="v">+1,812 / −117</span><span class="l"><br />line delta<br />handoff excluded</span>
+          <span class="go">open inventory</span>
+        </button>
+        <button class="tile" data-pop="pop-checks">
+          <span class="v">30 / 30</span><span class="l"><br />automated tests<br />plus 17-skill catalog</span>
+          <span class="s">all passing ✓</span>
+          <span class="go">what's behind this</span>
+        </button>
+        <button class="tile" data-goto="#hotspots">
+          <span class="v">4</span><span class="l"><br />critical points</span>
+          <span class="go">jump to ◆ cards</span>
+        </button>
+        <button class="tile" data-pop="pop-reviews">
+          <span class="v">3 Clear</span><span class="l"><br />independent task reviews</span>
+          <span class="go">review log</span>
+        </button>
+      </div>
+
+      <h2 id="what-changed">What changed and why</h2>
+      <p><b>Before:</b> the catalog had a change-report completion artifact with static hotspot cards and abbreviated paths, no generic HTML-report skill, and <code>implement-plan</code> finished after creating the report without independently reviewing the candidate.</p>
+      <p><b>After:</b> <code>create-report</code> is skill 17 for explicit standalone HTML reports; change-report critical points expand to failure, protection, complete paths, and one canonical excerpt; <code>implement-plan</code> requires a fresh read-only candidate review before Complete.</p>
+      <p class="lede">Unchanged on purpose: <code>code-review</code> and <code>use-subagents</code> policy; no shared template infrastructure; no historical-report retrofit; no PDF/chart-library/theme-pack work.</p>
+
+      <h2 id="big-picture">The big picture</h2>
+      <p class="lede">User-facing reports split by owner. Change reports stay the completion gate; generic reports are opt-in; implement-plan now challenges the exact HTML it is about to hand off.</p>
+      <div class="flow">
+        <div class="fbox">
+          <div class="t">create-report</div>
+          <div class="d">Explicit standalone HTML</div>
+        </div>
+        <div class="farrow">→</div>
+        <div class="fbox hi">
+          <button class="dot" data-goto="#hot-generic-routing" title="routing authority">◆</button>
+          <div class="t">Authority check</div>
+          <div class="d">Stop if another skill owns it</div>
+        </div>
+        <div class="farrow">→</div>
+        <div class="fbox hi">
+          <button class="dot" data-goto="#hot-generic-safety" title="offline generic template">◆</button>
+          <div class="t">Generic template</div>
+          <div class="d">Offline, cited, actionable</div>
+        </div>
+      </div>
+      <div class="flow">
+        <div class="fbox hi">
+          <button class="dot" data-goto="#hot-expandable" title="expandable critical points">◆</button>
+          <div class="t">create-changes-report</div>
+          <div class="d">Expandable ◆ cards + pop-files</div>
+        </div>
+        <div class="farrow">→</div>
+        <div class="fbox hi">
+          <button class="dot" data-goto="#hot-candidate" title="candidate review gate">◆</button>
+          <div class="t">implement-plan gate</div>
+          <div class="d">Fresh reviewer of exact bytes</div>
+        </div>
+        <div class="farrow">→</div>
+        <div class="fbox">
+          <div class="t">Handoff</div>
+          <div class="d">Tracker/chat closure, not HTML</div>
+        </div>
+      </div>
+
+      <h2 id="hotspots">
+        Critical points — load-bearing code <span style="color: var(--serious)">◆</span>
+      </h2>
+      <p class="lede">
+        Not bugs — ranked places where a defect would hurt most. Collapse stays readable; expand for
+        failure, protection, complete paths, and the canonical excerpt.
+      </p>
+
+      <details class="hot" id="hot-expandable">
+        <summary>
+          <span class="badge b-hot">◆ review UX</span>
+          <b>Expandable critical points must carry complete evidence</b>
+          <span class="why">If the card is wrong, a reviewer cannot judge the riskiest code in five minutes.</span>
+        </summary>
+        <div class="hot-body">
+          <h4>Failure if wrong</h4>
+          <p>A collapsed card that hides the why, a basename-only path, a duplicated snippet, or a ◆ that only jumps to the section heading would recreate the old “looks reviewed” gap.</p>
+          <h4>Protected by</h4>
+          <p>
+            Native <code>details.hot</code>, complete-path <code>data-path</code> rules, a five-snippet budget, jump/hash opening of the target or ancestor details, and
+            <code>skills/create-changes-report/scripts/report-template.test.mjs</code>.
+          </p>
+          <h4>Files involved</h4>
+          <ul class="hot-files">
+            <li><code data-path="skills/create-changes-report/SKILL.md">skills/create-changes-report/SKILL.md</code> — changed source; section order and path/snippet contract</li>
+            <li><code data-path="skills/create-changes-report/assets/report-template.html">skills/create-changes-report/assets/report-template.html</code> — changed source; details cards, CSS, jump/hash, pop-files</li>
+            <li><code data-path="skills/create-changes-report/scripts/report-template.test.mjs">skills/create-changes-report/scripts/report-template.test.mjs</code> — added test; structure, paths, budget, targets</li>
+            <li><code data-path="reports/skill-catalog-sync-changes.html">reports/skill-catalog-sync-changes.html</code> — unchanged historical report; explicitly not retrofitted</li>
+          </ul>
+          <h4>Key code</h4>
+          <span class="filetag"><code data-path="skills/create-changes-report/assets/report-template.html">skills/create-changes-report/assets/report-template.html</code> · L1064–L1071 · jump opens details</span>
+          <pre class="hl" data-code-key="hot-expandable-jump"><code>          const target = document.querySelector(trigger.dataset.goto);
+          if (!target) return;
+          trigger.closest("dialog")?.close();
+          target.closest("details")?.setAttribute("open", "");
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+          target.classList.remove("flash");
+          void target.offsetWidth;
+          target.classList.add("flash");</code></pre>
+        </div>
+      </details>
+
+      <details class="hot" id="hot-candidate">
+        <summary>
+          <span class="badge b-hot">◆ independence</span>
+          <b>Candidate review must not self-certify</b>
+          <span class="why">If the author reviews their own HTML, Complete becomes ceremonial.</span>
+        </summary>
+        <div class="hot-body">
+          <h4>Failure if wrong</h4>
+          <p>A parent that implemented or authored the report could mark Clear, write the outcome into the HTML, or treat a report-only defect as an implementation pass.</p>
+          <h4>Protected by</h4>
+          <p>
+            Fresh-reader rule, two finding routes, disclosed fallback, and a reviewer-only rubric that forbids edits. Closure stays in the tracker/handoff.
+            A seeded disposable copy already returned Changes required and all four planted defects; that copy was deleted. This HTML is the regenerated candidate.
+          </p>
+          <h4>Files involved</h4>
+          <ul class="hot-files">
+            <li><code data-path="skills/implement-plan/SKILL.md">skills/implement-plan/SKILL.md</code> — changed source; Done/Complete/Report</li>
+            <li><code data-path="skills/implement-plan/assets/progress-tracker-template.md">skills/implement-plan/assets/progress-tracker-template.md</code> — changed source; distinct checkpoints</li>
+            <li><code data-path="skills/create-changes-report/references/artifact-review.md">skills/create-changes-report/references/artifact-review.md</code> — added rubric</li>
+            <li><code data-path="skills/create-changes-report/SKILL.md">skills/create-changes-report/SKILL.md</code> — changed source; candidate pointer</li>
+            <li><code data-path="skills/code-review/SKILL.md">skills/code-review/SKILL.md</code> — unchanged supporting policy; reused, not edited</li>
+            <li><code data-path="skills/use-subagents/SKILL.md">skills/use-subagents/SKILL.md</code> — unchanged supporting policy; reused, not edited</li>
+          </ul>
+          <h4>Key code</h4>
+          <span class="filetag"><code data-path="skills/implement-plan/SKILL.md">skills/implement-plan/SKILL.md</code> · L78–L86 · candidate gate</span>
+          <pre class="hl" data-code-key="hot-candidate-gate"><code>6. After candidate QA, launch one fresh read-only subagent that did not implement, perform final implementation review, or author the report. Give frozen scope/evidence, the candidate, and `create-changes-report` `references/artifact-review.md`. No edits or recursive delegation. Require candidate `Clear` before completion. Keep report-review closure in the tracker/final handoff, never in the reviewed HTML.
+   - Report-only → regenerate, re-QA, re-review with a fresh reviewer.
+   - Underlying implementation → reopen affected rows, checks, final implementation review, scope freeze, report generation, and candidate review.
+   - Two failed rounds / recurrence / no progress → existing user-escalation rule.
+   - No safe subagent → ask if the user accepts a disclosed parent fallback; without approval remain `Partial`/`Blocked`. Never claim independence for fallback review.</code></pre>
+        </div>
+      </details>
+
+      <details class="hot" id="hot-generic-routing">
+        <summary>
+          <span class="badge b-hot">◆ routing</span>
+          <b>create-report must not steal adjacent authority</b>
+          <span class="why">A broad “report” word would swallow change handoffs, reviews, and dashboards.</span>
+        </summary>
+        <div class="hot-body">
+          <h4>Failure if wrong</h4>
+          <p>Automatic completion use, or routing a PR review / repo-change handoff / live dashboard into a generic HTML file, would invent a second owner for those jobs.</p>
+          <h4>Protected by</h4>
+          <p>
+            Frontmatter use/non-use boundaries, user-brief-first workflow, and a scout routing PASS on the five should-trigger and four near-miss prompts from the plan.
+          </p>
+          <h4>Files involved</h4>
+          <ul class="hot-files">
+            <li><code data-path="skills/create-report/SKILL.md">skills/create-report/SKILL.md</code> — added source; routing and workflow</li>
+            <li><code data-path="skills/create-report/references/report-design.md">skills/create-report/references/report-design.md</code> — added design guide</li>
+            <li><code data-path="README.md">README.md</code> — changed catalog; skill 17 + precedence</li>
+          </ul>
+          <h4>Key code</h4>
+          <span class="filetag"><code data-path="skills/create-report/SKILL.md">skills/create-report/SKILL.md</code> · L3–L13 · description</span>
+          <pre class="hl" data-code-key="hot-generic-routing-desc"><code>description: >-
+  Creates concise, evidence-backed, actionable standalone HTML reports for
+  decisions, assessments, research, and status outcomes. Use this skill when
+  asked to create, build, or package a polished standalone HTML report,
+  decision brief, cited research report, risk-assessment report,
+  project-status report, or executive HTML report and no domain-specific
+  workflow owns the task. Do not use as an automatic completion gate; for
+  completed repository-change handoffs use `create-changes-report`; for
+  defect reviews use `code-review`; when `explain` is explicitly invoked use
+  `explain`; for slide decks use `create-slides`; `create-plan`, `decomplex`,
+  and `implement-plan` keep their domains; live KPI dashboards or apps are
+  implementation, not this skill.</code></pre>
+        </div>
+      </details>
+
+      <details class="hot" id="hot-generic-safety">
+        <summary>
+          <span class="badge b-hot">◆ source safety</span>
+          <b>Generic reports must stay offline and inert</b>
+          <span class="why">Hostile source text or a remote subresource would turn a report into an attack surface.</span>
+        </summary>
+        <div class="hot-body">
+          <h4>Failure if wrong</h4>
+          <p>A live <code>onerror</code> handler, a <code>javascript:</code> citation, an unredacted secret, or a network fetch from the artifact would fail the skill’s own safety contract.</p>
+          <h4>Protected by</h4>
+          <p>
+            Strict CSP, escaped inserts, rejected unsafe schemes, and
+            <code>skills/create-report/scripts/report-template.test.mjs</code>.
+            The T5 fixture report rendered the hostile sample as text, kept one HTTPS citation, and redacted <code>REPORT_TEST_SECRET_7f3a</code>.
+          </p>
+          <h4>Files involved</h4>
+          <ul class="hot-files">
+            <li><code data-path="skills/create-report/assets/report-template.html">skills/create-report/assets/report-template.html</code> — added template; CSP, landmarks, dialogs</li>
+            <li><code data-path="skills/create-report/scripts/report-template.test.mjs">skills/create-report/scripts/report-template.test.mjs</code> — added test; offline/link/script/a11y contract</li>
+            <li><code data-path="skills/explain/assets/explainer.html">skills/explain/assets/explainer.html</code> — unchanged supporting precedent; CSP</li>
+            <li><code data-path="skills/explain/assets/explainer.css">skills/explain/assets/explainer.css</code> — unchanged supporting precedent; focus/print/reduced-motion</li>
+          </ul>
+          <h4>Key code</h4>
+          <span class="filetag"><code data-path="skills/create-report/assets/report-template.html">skills/create-report/assets/report-template.html</code> · L13–L16 · offline CSP</span>
+          <pre class="hl" data-code-key="hot-generic-csp"><code>    &lt;meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; font-src 'none'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    /&gt;</code></pre>
+        </div>
+      </details>
+
+      <h2 id="areas">What was built, area by area</h2>
+      <table>
+        <tr>
+          <th>Area</th>
+          <th>Change</th>
+          <th>Reason</th>
+          <th>Key files</th>
+        </tr>
+        <tr>
+          <td>Change-report UX</td>
+          <td>Critical points moved after Big picture; native details; complete paths; pop-files.</td>
+          <td>Reviewers needed one-click failure/protection/path/code evidence.</td>
+          <td><code data-path="skills/create-changes-report/assets/report-template.html">skills/create-changes-report/assets/report-template.html</code></td>
+        </tr>
+        <tr>
+          <td>Candidate gate</td>
+          <td>Compact rubric + implement-plan Done rewrite; compression targets met.</td>
+          <td>Stop self-certification of the handoff HTML.</td>
+          <td><code data-path="skills/implement-plan/SKILL.md">skills/implement-plan/SKILL.md</code></td>
+        </tr>
+        <tr>
+          <td>Generic reports</td>
+          <td>New skill, design guide, independent template, contract tests.</td>
+          <td>Users asked for standalone HTML reports that are not change handoffs.</td>
+          <td><code data-path="skills/create-report/SKILL.md">skills/create-report/SKILL.md</code></td>
+        </tr>
+        <tr>
+          <td>Catalog</td>
+          <td>16 → 17 skills; install forms and runtime notes.</td>
+          <td>Discovery has to match the new package.</td>
+          <td><code data-path="README.md">README.md</code></td>
+        </tr>
+      </table>
+
+      <h2 id="protocol">How a report now leaves the building</h2>
+      <ol class="seq">
+        <li><b>Freeze.</b> Scope comes from <code>git status</code> plus staged/unstaged diffs, including untracked files. This handoff file is excluded from counts.</li>
+        <li><b>Author.</b> Copy the matching template. Critical points or generic modules are filled from verified evidence only.</li>
+        <li><b>Creator QA.</b> Light, dark, popover or dialog, expanded disclosure, and console/network checks.</li>
+        <li><b>Candidate review.</b> A fresh reader uses <code>references/artifact-review.md</code> on the exact bytes. Outcome stays out of the HTML.</li>
+      </ol>
+      <span class="filetag">what catalog discovery printed</span>
+      <pre><code>◇  Found 17 skills
+    create-changes-report
+    create-report
+    implement-plan</code></pre>
+
+      <h2 id="verification">Verification status</h2>
+      <ul class="checklist">
+        <li><code>node --test scripts/validate-skill-metadata.test.mjs scripts/validate-skill-links.test.mjs skills/create-changes-report/scripts/report-template.test.mjs skills/create-report/scripts/report-template.test.mjs</code> — 30/30 pass</li>
+        <li><code>node scripts/validate-skill-metadata.mjs skills</code> — 17 skills valid</li>
+        <li><code>node scripts/validate-skill-links.mjs README.md skills</code> — 68 links in 59 files, all exist</li>
+        <li><code>npx -y skills-ref validate</code> on create-report, create-changes-report, implement-plan — all valid</li>
+        <li><code>DISABLE_TELEMETRY=1 npx -y skills@latest add . --list</code> — Found 17 skills; both report skills once</li>
+        <li><code>git diff --check</code> — clean</li>
+        <li>create-report routing scout — PASS (5 trigger / 4 near-miss)</li>
+        <li>Generic fixture overwrite refusal — existing <code>generic-report.html</code> left as <code>SENTINEL_DO_NOT_OVERWRITE</code>; no sidecars; then explicit replacement approved</li>
+        <li>Generic fixture browser QA — 2 tiles; actions before method; no live onerror; no javascript: href; secret redacted; one HTTPS citation; dialog open/Esc returns focus; light/dark/320/reduced-motion screenshots + PDF; network only the file:// document; empty console/errors; noscript hash <code>#actions</code> landed at top 23.8px</li>
+        <li>Creator QA of the previous candidate — 4 <code>details.hot</code>; 0–1 snippet each; unique <code>data-code-key</code>; ◆ <code>#hot-generic-routing</code> opened that card; hash <code>#hot-expandable</code> opened and scrolled to 24px; <code>?pop=files</code> showed 11 inventory rows with complete paths; light/dark/360 screenshots; no console/page errors; network only this file:// document; CSP excerpt escaped (no live <code>meta</code> in the card)</li>
+        <li>Honesty regen after first candidate review — tile now <code>3 Clear</code>; footer names T1/T3/T4 only; review guide no longer claims creator QA is still open</li>
+        <li class="skip"><strong>Seeded sensitivity review</strong> — already ran on a disposable earlier copy (Changes required; four seeded defects found); not re-run on this regen</li>
+        <li class="skip"><strong>Stable candidate review of these regenerated bytes</strong> — not yet run; outcome stays out of this HTML</li>
+        <li class="skip"><strong>Final implementation review / decomplex of the full diff</strong> — T6, after candidate Clear</li>
+      </ul>
+
+      <h2 id="findings">Critical findings</h2>
+      <div class="finding" id="f-clean-contract">
+        <div class="head">
+          <span class="badge b-good">✓ clean</span>
+          <b>Hunted: snippet budget, complete paths, and compression targets</b>
+        </div>
+        <p>
+          Change-report template has two <code>pre.hl</code> slots. implement-plan grew 91→96, CCR review pointer 106→108, tracker 37→38. Path attributes are repository-root-relative POSIX.
+        </p>
+      </div>
+      <div class="finding" id="f-note-pending">
+        <div class="head">
+          <span class="badge b-note">note</span>
+          <b>Candidate-gate proof is still in this same T5 pass</b>
+        </div>
+        <p>
+          The skill text exists. A seeded disposable copy already proved the reviewer is not ceremonial (Changes required; four defects). The remaining process risk is the stable review of these regenerated bytes, whose outcome stays out of this HTML.
+        </p>
+      </div>
+
+      <h2 id="decisions">Notable decisions along the way</h2>
+      <table>
+        <tr>
+          <th>Decision</th>
+          <th>Why</th>
+        </tr>
+        <tr>
+          <td>Sequential writers in the main checkout</td>
+          <td>T1/T3 did not overlap enough to justify worktree merge risk.</td>
+        </tr>
+        <tr>
+          <td>Independent generic template, not a shared package</td>
+          <td>Plan deferred sync infrastructure until drift is evidenced.</td>
+        </tr>
+        <tr>
+          <td>Review outcome stays outside the HTML</td>
+          <td>A report must not certify itself.</td>
+        </tr>
+        <tr>
+          <td>Exclude this handoff from frozen counts</td>
+          <td>Avoid recursive file/line metrics.</td>
+        </tr>
+      </table>
+
+      <h2 id="review-guide">Review guide</h2>
+      <p><b>Focus first:</b> the four ◆ cards — expandable evidence, independence of candidate review, routing boundaries, and generic-template safety.</p>
+      <p><b>Remaining risks:</b> the stable candidate-review outcome for these bytes is still open and stays out of this HTML. Residual lower-priority risk: visual drift between the two templates is accepted.</p>
+      <p><b>Follow-up:</b> stable candidate review, then T6 full-plan review. Creator QA of an earlier candidate plus the seeded sensitivity copy already ran; this regenerated file needs only a smoke check of the honesty edits.</p>
+
+      <hr class="hr" />
+      <footer>
+        Generated 15 Aug 2026 · repo root: maxed-skills · frozen uncommitted scope from git status + diffs; this file excluded from counts · sources: .plans/create-report-skill.md, .progress/create-report-skill-implementation.md, T1/T3/T4 independent Clear reviews, T5 routing PASS, fresh check-suite run above.
+      </footer>
+    </main>
+
+    <dialog id="pop-files">
+      <div class="pop-head">
+        <b>Frozen file inventory</b><button class="pop-x" data-close>✕</button>
+      </div>
+      <div class="pop-body">
+        <p>11 files. Counts exclude <code>reports/create-report-skills-changes.html</code> (this handoff) to avoid recursive metrics. Tracker under <code>.progress/</code> is gitignored.</p>
+        <table>
+          <tr><th>Path</th><th>Status</th><th>Delta</th><th>Role</th></tr>
+          <tr>
+            <td><code data-path="README.md">README.md</code></td>
+            <td>modified</td>
+            <td>+13 / −4</td>
+            <td>catalog discovery and install-all 17</td>
+          </tr>
+          <tr>
+            <td><code data-path="skills/create-changes-report/SKILL.md">skills/create-changes-report/SKILL.md</code></td>
+            <td>modified</td>
+            <td>+56 / −50</td>
+            <td>critical-point contract + candidate pointer</td>
+          </tr>
+          <tr>
+            <td><code data-path="skills/create-changes-report/assets/report-template.html">skills/create-changes-report/assets/report-template.html</code></td>
+            <td>modified</td>
+            <td>+244 / −54</td>
+            <td>details.hot, jump/hash, pop-files</td>
+          </tr>
+          <tr>
+            <td><code data-path="skills/create-changes-report/references/artifact-review.md">skills/create-changes-report/references/artifact-review.md</code></td>
+            <td>added</td>
+            <td>+56 / −0</td>
+            <td>reviewer-only rubric</td>
+          </tr>
+          <tr>
+            <td><code data-path="skills/create-changes-report/scripts/report-template.test.mjs">skills/create-changes-report/scripts/report-template.test.mjs</code></td>
+            <td>added</td>
+            <td>+126 / −0</td>
+            <td>change-template contract tests</td>
+          </tr>
+          <tr>
+            <td><code data-path="skills/implement-plan/SKILL.md">skills/implement-plan/SKILL.md</code></td>
+            <td>modified</td>
+            <td>+12 / −7</td>
+            <td>candidate-review gate</td>
+          </tr>
+          <tr>
+            <td><code data-path="skills/implement-plan/assets/progress-tracker-template.md">skills/implement-plan/assets/progress-tracker-template.md</code></td>
+            <td>modified</td>
+            <td>+3 / −2</td>
+            <td>distinct review checkpoints</td>
+          </tr>
+          <tr>
+            <td><code data-path="skills/create-report/SKILL.md">skills/create-report/SKILL.md</code></td>
+            <td>added</td>
+            <td>+63 / −0</td>
+            <td>generic report workflow</td>
+          </tr>
+          <tr>
+            <td><code data-path="skills/create-report/assets/report-template.html">skills/create-report/assets/report-template.html</code></td>
+            <td>added</td>
+            <td>+957 / −0</td>
+            <td>generic exemplar + CSP</td>
+          </tr>
+          <tr>
+            <td><code data-path="skills/create-report/references/report-design.md">skills/create-report/references/report-design.md</code></td>
+            <td>added</td>
+            <td>+142 / −0</td>
+            <td>design guide</td>
+          </tr>
+          <tr>
+            <td><code data-path="skills/create-report/scripts/report-template.test.mjs">skills/create-report/scripts/report-template.test.mjs</code></td>
+            <td>added</td>
+            <td>+140 / −0</td>
+            <td>generic-template contract tests</td>
+          </tr>
+        </table>
+      </div>
+    </dialog>
+
+    <dialog id="pop-checks">
+      <div class="pop-head">
+        <b>Automated checks</b><button class="pop-x" data-close>✕</button>
+      </div>
+      <div class="pop-body">
+        <h4>create-changes-report template <span class="tcount">— 7</span></h4>
+        <ul>
+          <li>critical points use native details/summary cards</li>
+          <li>Critical points heading follows Big picture immediately</li>
+          <li>path elements expose complete repository-root-relative POSIX paths</li>
+          <li>canonical snippet slots are nested, uniquely keyed, and within the five-snippet budget</li>
+          <li>every data-pop and data-goto target resolves</li>
+          <li>pop-files inventory lists complete path, status, delta, and role</li>
+          <li>inline JavaScript is present and parseable</li>
+        </ul>
+        <h4>create-report template <span class="tcount">— 7</span></h4>
+        <ul>
+          <li>offline CSP and subresource safety reject remote loads</li>
+          <li>links reject javascript: and other unsafe schemes</li>
+          <li>inline JavaScript is parseable and event handlers stay in script</li>
+          <li>IDs are unique and every dialog, jump, and fragment target resolves</li>
+          <li>dialogs expose an accessible name and a labelled close control</li>
+          <li>template keeps light/dark, reduced-motion, wrap, print, and no-JS nav safeguards</li>
+          <li>template stays a generic report, not a changes-report fork</li>
+        </ul>
+        <h4>Catalog validators <span class="tcount">— 16</span></h4>
+        <p>Existing metadata and link validator tests (16) plus the 14 template tests = 30.</p>
+      </div>
+    </dialog>
+
+    <dialog id="pop-reviews">
+      <div class="pop-head">
+        <b>Independent task reviews</b><button class="pop-x" data-close>✕</button>
+      </div>
+      <div class="pop-body">
+        <ul>
+          <li>T1 public contract — scout Clear — no material findings</li>
+          <li>T3 skill + design guide — scout Clear — no material findings</li>
+          <li>T4 generic template — scout Clear — no material findings</li>
+          <li>T2 — parent inspected compression/links; no independent scout Clear recorded</li>
+          <li>T5 routing — scout PASS (not a Clear review)</li>
+        </ul>
+        <p>These are implementation-task reviews, not the candidate review of this HTML.</p>
+      </div>
+    </dialog>
+
+    <script>
+      (() => {
+        "use strict";
+
+        // --- syntax highlighting (pre.hl only). Order: comment | string | keyword | number | Type ---
+        const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const TOKEN = new RegExp(
+          [
+            String.raw`(\/\/[^\n]*)`, // 1 comment
+            String.raw`("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|` +
+              "`" +
+              String.raw`(?:[^\`\\]|\\.)*` +
+              "`" +
+              `)`, // 2 string (backticks span lines)
+            String.raw`\b(const|let|var|function|return|if|else|for|of|in|new|class|extends|export|default|import|from|yield|await|async|typeof|undefined|null|true|false|this|INSERT|INTO|VALUES|UPDATE|SET|WHERE|DELETE|FROM|SELECT)\b`, // 3 keyword (incl. SQL verbs)
+            String.raw`\b(\d+(?:\.\d+)?)\b`, // 4 number
+            String.raw`\b([A-Z][A-Za-z0-9_]*)\b`, // 5 type-ish
+          ].join("|"),
+          "g",
+        );
+        const CLASSES = [null, "tk-cmt", "tk-str", "tk-kw", "tk-num", "tk-type"];
+        for (const code of document.querySelectorAll("pre.hl code")) {
+          const text = code.textContent;
+          let out = "";
+          let last = 0;
+          for (const m of text.matchAll(TOKEN)) {
+            out += esc(text.slice(last, m.index));
+            const group = CLASSES.findIndex((_, i) => i > 0 && m[i] !== undefined);
+            out += '<span class="' + CLASSES[group] + '">' + esc(m[0]) + "</span>";
+            last = m.index + m[0].length;
+          }
+          out += esc(text.slice(last));
+          code.innerHTML = out;
+        }
+
+        // --- popovers and jump links (event delegation; works for any data-pop / data-goto) ---
+        document.addEventListener("click", (event) => {
+          const closer = event.target.closest("[data-close]");
+          if (closer) {
+            closer.closest("dialog")?.close();
+            return;
+          }
+          const trigger = event.target.closest("[data-pop],[data-goto]");
+          if (!trigger) return;
+          if (trigger.dataset.pop) {
+            document.getElementById(trigger.dataset.pop)?.showModal();
+            return;
+          }
+          const target = document.querySelector(trigger.dataset.goto);
+          if (!target) return;
+          trigger.closest("dialog")?.close();
+          target.closest("details")?.setAttribute("open", "");
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+          target.classList.remove("flash");
+          void target.offsetWidth;
+          target.classList.add("flash");
+        });
+
+        // click on the backdrop closes (Esc works natively)
+        for (const dialog of document.querySelectorAll("dialog")) {
+          dialog.addEventListener("click", (event) => {
+            if (event.target === dialog) dialog.close();
+          });
+        }
+
+        // deep link: ?pop=example opens #pop-example (also proves JS ran when screenshotting)
+        const requested = new URLSearchParams(location.search).get("pop");
+        if (requested) document.getElementById("pop-" + requested)?.showModal();
+
+        // hash / refresh: open the target <details> or its closest ancestor, then scroll
+        const openHash = () => {
+          if (!location.hash) return;
+          let target;
+          try {
+            target = document.querySelector(location.hash);
+          } catch {
+            return;
+          }
+          if (!target) return;
+          target.closest("details")?.setAttribute("open", "");
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        };
+        openHash();
+        window.addEventListener("hashchange", openHash);
+
+        window.addEventListener("beforeprint", () => {
+          for (const node of document.querySelectorAll("details.hot")) node.setAttribute("open", "");
+        });
+      })();
+    </script>
+  </body>
+</html>

@@ -5,7 +5,7 @@
 - **Status:** `In progress` | `Partial` | `Blocked` | `Complete`
 - **Updated:**
 
-`Complete` = all rows `Verified` or user-approved `Descoped` + validation passed + final review `Clear` + nothing material open.
+`Complete` = all rows `Verified` or user-approved `Descoped` + validation passed + final implementation review `Clear` + changes-report candidate `Clear` when a report is produced + nothing material open. Keep report-review closure here / in the final handoff, never in the reviewed HTML.
 
 Parent = sole tracker writer under concurrency.
 
@@ -28,7 +28,8 @@ Status: `Pending` | `In progress` | `Blocked` | `Verified` | `Descoped`
 
 | Checkpoint | Reviewer | Findings | Disposition | Closure |
 |---|---|---|---|---|
-| | | | Fix now / Validate / Reject / Ask user / Block | Clear / … |
+| final implementation review | | | Fix now / Validate / Reject / Ask user / Block | Clear / … |
+| changes-report candidate | | | Fix now / Validate / Reject / Ask user / Block | Clear / … |
 
 ## Decisions / deviations
 

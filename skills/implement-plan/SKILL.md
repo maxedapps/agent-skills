@@ -73,12 +73,17 @@ Reviewer states: `Clear` · `Changes required` · `Human decision required` · `
 1. Reread full plan — no missed requirements.
 2. No row `Pending` / `In progress` / `Blocked`.
 3. Diff hygiene — drop unjustified scope/complexity.
-4. Final checks + final plan-backed review (+ `decomplex` Audit of **this** diff if proportionate).
-5. When repository files changed, use `create-changes-report` after final checks to create the verified HTML review artifact. If its evidence gathering exposes a material issue, return to disposition, checks, and review before regenerating it.
-6. Final cleanup — worktrees, branches, processes, runtime state, including anything created by a report-triggered fix cycle. Make the final changes-report path the primary handoff. If the skill is unavailable, record that and continue with the concise report below.
-7. Report truthfully.
+4. Final checks + final plan-backed implementation review (+ `decomplex` Audit of **this** diff if proportionate).
+5. When repository files changed, use `create-changes-report` after those checks to generate/QA a candidate (creator-QA-complete exact bytes). Material issue in evidence gathering → disposition, checks, and implementation review before regenerating.
+6. After candidate QA, launch one fresh read-only subagent that did not implement, perform final implementation review, or author the report. Give frozen scope/evidence, the candidate, and `create-changes-report` `references/artifact-review.md`. No edits or recursive delegation. Require candidate `Clear` before completion. Keep report-review closure in the tracker/final handoff, never in the reviewed HTML.
+   - Report-only → regenerate, re-QA, re-review with a fresh reviewer.
+   - Underlying implementation → reopen affected rows, checks, final implementation review, scope freeze, report generation, and candidate review.
+   - Two failed rounds / recurrence / no progress → existing user-escalation rule.
+   - No safe subagent → ask if the user accepts a disclosed parent fallback; without approval remain `Partial`/`Blocked`. Never claim independence for fallback review.
+7. Final cleanup — worktrees, branches, processes, runtime state, including anything created by a report-triggered fix cycle. Make the final changes-report path the primary handoff. If the skill is unavailable, record that and continue with the concise report below.
+8. Report truthfully.
 
-`Complete` only when all rows are `Verified` or approved `Descoped`, validation passed, final review is `Clear`, and nothing material remains open. Else `Partial` or `Blocked`.
+`Complete` only when all rows are `Verified` or approved `Descoped`, validation passed, final implementation review is `Clear`, the changes-report candidate is `Clear` when a report is produced, and nothing material remains open. Else `Partial` or `Blocked`.
 
 ## Report
 
@@ -86,6 +91,6 @@ Reviewer states: `Clear` · `Changes required` · `Human decision required` · `
 - plan/tracker paths · status · remaining IDs
 - what was delegated vs parent-owned (and why)
 - checks run / skipped
-- review outcomes + dispositions
+- implementation-review and candidate-review outcomes + dispositions
 - decisions, deviations
 - worktrees created/integrated/removed · retained resources + why

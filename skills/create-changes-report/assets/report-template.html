@@ -265,11 +265,14 @@
       .filetag {
         display: flex;
         align-items: baseline;
+        flex-wrap: wrap;
         gap: 10px;
         font-family: ui-monospace, monospace;
         font-size: 12px;
         color: var(--muted);
         margin: 14px 0 -8px;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
       code,
       pre {
@@ -414,7 +417,7 @@
         margin: -6px 0 0;
       }
 
-      /* ===== findings (badged) and load-bearing hotspot cards ===== */
+      /* ===== findings (badged) and expandable load-bearing hotspot cards ===== */
       .finding,
       .hot {
         background: var(--surface);
@@ -426,8 +429,71 @@
       .hot {
         border-left: 3px solid var(--serious);
       }
-      .finding .head,
-      .hot .head {
+      details.hot > summary {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        flex-wrap: wrap;
+        cursor: pointer;
+        list-style: none;
+        margin: -14px -16px 0;
+        padding: 14px 16px;
+        border-radius: 10px;
+      }
+      details.hot > summary::-webkit-details-marker {
+        display: none;
+      }
+      details.hot > summary::before {
+        content: "▸";
+        color: var(--muted);
+        font-size: 12px;
+        flex: 0 0 auto;
+      }
+      details.hot[open] > summary::before {
+        content: "▾";
+      }
+      details.hot > summary:hover,
+      details.hot > summary:focus-visible {
+        background: var(--accent-soft);
+        outline: none;
+      }
+      details.hot[open] > summary {
+        border-bottom: 1px solid var(--grid);
+        border-radius: 10px 10px 0 0;
+        margin-bottom: 12px;
+      }
+      details.hot .why {
+        flex-basis: 100%;
+        color: var(--muted);
+        font-size: 12.5px;
+        font-weight: 400;
+      }
+      .hot-body {
+        display: grid;
+        gap: 2px;
+      }
+      .hot-body h4 {
+        margin: 12px 0 2px;
+      }
+      .hot-body h4:first-child {
+        margin-top: 0;
+      }
+      .hot-files {
+        list-style: none;
+        padding: 0;
+        margin: 6px 0;
+      }
+      .hot-files li {
+        margin: 4px 0;
+        color: var(--ink-2);
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+      [data-path] {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+      .finding .head {
         display: flex;
         align-items: baseline;
         gap: 10px;
@@ -435,7 +501,7 @@
         flex-wrap: wrap;
       }
       .finding .head b,
-      .hot .head b {
+      details.hot summary b {
         font-size: 15px;
       }
       .badge {
@@ -469,14 +535,9 @@
         background: var(--serious);
       } /* ◆ load-bearing marker      */
       .finding p,
-      .hot p {
+      .hot-body p {
         margin: 4px 0 0;
         font-size: 14px;
-      }
-      .hot .why {
-        color: var(--muted);
-        font-size: 12.5px;
-        margin-top: 6px;
       }
 
       /* ===== single-hue horizontal bars (e.g. test distribution); rows are clickable ===== */
@@ -553,6 +614,21 @@
         .cols2 {
           grid-template-columns: 1fr;
         }
+        details.hot > summary {
+          align-items: flex-start;
+        }
+        .filetag {
+          flex-direction: column;
+          gap: 2px;
+        }
+      }
+      @media print {
+        details.hot {
+          break-inside: avoid;
+        }
+        details.hot > .hot-body {
+          display: grid !important;
+        }
       }
       .tree {
         font-size: 12.5px;
@@ -620,6 +696,9 @@
       .pop-body table {
         font-size: 13px;
       }
+      .pop-body td:first-child {
+        white-space: normal;
+      }
       .tcount {
         color: var(--muted);
         font-weight: 400;
@@ -641,19 +720,27 @@
           Tip: everything dashed-underlined and every tile is clickable — it opens a deeper dive or
           jumps to the related section. A <span style="color: var(--serious)">◆</span> marks
           load-bearing code (see
-          <button class="dive" data-goto="#hotspots">critical points</button>).
+          <button class="dive" data-goto="#hot-example">critical points</button>).
         </p>
       </header>
 
       <!-- ===== 2 · stat tiles: 4–6 headline numbers, EVERY tile clickable ===== -->
       <div class="tiles">
+        <button class="tile" data-pop="pop-files">
+          <span class="v">{{N}}</span><span class="l"><br />changed files</span
+          ><span class="go">full inventory</span>
+        </button>
+        <button class="tile" data-pop="pop-files">
+          <span class="v">{{+N / −N}}</span><span class="l"><br />line delta</span
+          ><span class="go">path · status · delta · role</span>
+        </button>
+        <button class="tile" data-goto="#verification">
+          <span class="v">{{N}}</span><span class="l"><br />checks</span
+          ><span class="s">all passing ✓</span><span class="go">jump to section ↓</span>
+        </button>
         <button class="tile" data-pop="pop-example">
           <span class="v">{{N}}</span><span class="l"><br />{{unit}}<br />{{detail}}</span
           ><span class="go">what's behind this</span>
-        </button>
-        <button class="tile" data-goto="#datamodel">
-          <span class="v">{{N}}</span><span class="l"><br />{{unit}}</span
-          ><span class="s">all passing ✓</span><span class="go">jump to section ↓</span>
         </button>
       </div>
 
@@ -673,7 +760,7 @@
         </div>
         <div class="farrow">→</div>
         <div class="fbox hi">
-          <button class="dot" data-goto="#hotspots" title="load-bearing code — see critical points">
+          <button class="dot" data-goto="#hot-example" title="load-bearing code — see this critical point">
             ◆
           </button>
           <div class="t">{{Core piece}}</div>
@@ -686,7 +773,67 @@
         </div>
       </div>
 
-      <!-- ===== 5 · changed surface: area → change → reason → key files ===== -->
+      <!-- ===== 5 · critical points: expandable risk concentration, not bugs; at most five ===== -->
+      <h2 id="hotspots">
+        Critical points — load-bearing code <span style="color: var(--serious)">◆</span>
+      </h2>
+      <p class="lede">
+        Not bugs — ranked places where a defect would hurt most. Collapse stays readable; expand for
+        failure, protection, complete paths, and the canonical excerpt.
+      </p>
+      <details class="hot" id="hot-example">
+        <summary>
+          <span class="badge b-hot">◆ {{category e.g. data loss}}</span>
+          <b>{{Critical point}}</b>
+          <span class="why">{{Short why a defect here hurts}}</span>
+        </summary>
+        <div class="hot-body">
+          <h4>Failure if wrong</h4>
+          <p>{{Concrete failure shape — data loss, auth bypass, silent skip, irrecoverable state.}}</p>
+          <h4>Protected by</h4>
+          <p>
+            {{Tests, gates, or design that currently hold this. Weakened by:
+            <button class="dive" data-goto="#f-example">{{related finding}}</button>.}}
+          </p>
+          <h4>Files involved</h4>
+          <ul class="hot-files">
+            <li>
+              <code data-path="skills/example/src/gate.ts">skills/example/src/gate.ts</code> —
+              changed source; the gate itself
+            </li>
+            <li>
+              <code data-path="skills/example/src/gate.test.ts">skills/example/src/gate.test.ts</code>
+              — changed test
+            </li>
+            <li>
+              <code data-path="skills/example/old-name.ts">skills/example/old-name.ts</code> →
+              <code data-path="skills/example/src/gate.ts">skills/example/src/gate.ts</code> — rename
+            </li>
+            <li>
+              <code data-path="skills/example/legacy-check.ts">skills/example/legacy-check.ts</code> —
+              deleted
+            </li>
+            <li>
+              <code data-path="skills/example/src/policy.ts">skills/example/src/policy.ts</code> —
+              unchanged supporting protection
+            </li>
+          </ul>
+          <h4>Key code</h4>
+          <span class="filetag"
+            ><code data-path="skills/example/src/gate.ts">skills/example/src/gate.ts</code> · L40–L52
+            · assertSafe</span
+          >
+          <pre class="hl" data-code-key="hot-example-gate"><code>export function assertSafe(input) {
+  if (!input?.id) {
+    throw new Error("missing id");
+  }
+  // comments get highlighted
+  return policy.check(input);
+}</code></pre>
+        </div>
+      </details>
+
+      <!-- ===== 6 · changed surface: area → change → reason → key files ===== -->
       <h2 id="areas">What was built, area by area</h2>
       <table>
         <tr>
@@ -702,11 +849,11 @@
             <button class="dive" data-pop="pop-example">dive links</button>.}}
           </td>
           <td>{{Why this change was necessary}}</td>
-          <td><code>{{path/}}</code></td>
+          <td><code data-path="skills/example/src/gate.ts">skills/example/src/gate.ts</code></td>
         </tr>
       </table>
 
-      <!-- ===== 6 · protocol / lifecycle: numbered steps + a verbatim output sample (plain pre) ===== -->
+      <!-- ===== 7 · protocol / lifecycle: numbered steps + a verbatim output sample (plain pre) ===== -->
       <h2 id="protocol">{{The core flow}}</h2>
       <ol class="seq">
         <li><b>{{Step}}</b> — {{what happens; link terms to popovers or snippets}}.</li>
@@ -715,7 +862,7 @@
       <span class="filetag">what the output looks like</span>
       <pre><code>{{verbatim real output — no hl class, stays unhighlighted}}</code></pre>
 
-      <!-- ===== 7 · data model: one card per table/entity + a relationship line ===== -->
+      <!-- ===== 8 · data model: one card per table/entity + a relationship line ===== -->
       <h2 id="datamodel">Data model</h2>
       <div class="schema">
         <div class="scard">
@@ -726,25 +873,29 @@
       </div>
       <p class="cascade">{{a ⟶ b ⟶ c relationship / cascade summary}}</p>
 
-      <!-- ===== 8 · key code: 3–5 snippets max, 10–20 lines each, pre class="hl" for highlighting.
-     Escape < > & in the markup. Mark load-bearing snippets with ◆ in the heading. ===== -->
-      <h2 id="code">Key code, briefly</h2>
-      <h3 id="snippet-example">
-        1 · {{Why this snippet matters}} <span style="color: var(--serious)">◆</span>
-      </h3>
+      <!-- ===== 9 · optional additional key code: only unconsumed snippet slots ===== -->
+      <h2 id="code">Additional key code</h2>
+      <p class="lede">
+        Architecture evidence not already shown in a critical point. Omit this section when no snippet
+        slots remain.
+      </p>
+      <h3 id="snippet-example">{{Why this leftover snippet still matters}}</h3>
       <p>{{One or two sentences of context — the why, not a walkthrough.}}</p>
-      <span class="filetag">{{path/to/file.ts}}</span>
-      <pre class="hl"><code>export class Example extends Base.make("name")
-  .add(thing)          // comments get highlighted
-  .prefix("/v1") {}</code></pre>
+      <span class="filetag"
+        ><code data-path="skills/example/src/compose.ts">skills/example/src/compose.ts</code> ·
+        compose</span
+      >
+      <pre class="hl" data-code-key="code-compose"><code>export function compose(parts) {
+  return parts.filter(Boolean).join("/");
+}</code></pre>
 
-      <!-- ===== 9 · optional fixture/demo: remove when no fixture exists ===== -->
+      <!-- ===== 10 · optional fixture/demo: remove when no fixture exists ===== -->
       <h2 id="fixture">Fixture or demo</h2>
       <pre class="tree">{{fixture/
 ├── input
 └── expected-output}}</pre>
 
-      <!-- ===== 10 · verification: what ran green AND what explicitly did not run (li.skip) ===== -->
+      <!-- ===== 11 · verification: what ran green AND what explicitly did not run (li.skip) ===== -->
       <h2 id="verification">Verification status</h2>
       <ul class="checklist">
         <li><code>{{command}}</code> — {{result}}</li>
@@ -762,26 +913,6 @@
           ><span class="btrack"><span class="bfill" style="width: 14%; display: block"></span></span
           ><span class="val">{{N}}</span>
         </button>
-      </div>
-
-      <!-- ===== 11 · load-bearing hotspots: NOT bugs — where a defect would hurt most ===== -->
-      <h2 id="hotspots">
-        Critical points — load-bearing code <span style="color: var(--serious)">◆</span>
-      </h2>
-      <p class="lede">
-        Not bugs — but the places where a defect would hurt most, and what currently protects each
-        one.
-      </p>
-      <div class="hot">
-        <div class="head">
-          <span class="badge b-hot">◆ {{category e.g. data loss}}</span><b>{{What it is}}</b>
-          <span class="tcount">{{file path}}</span>
-        </div>
-        <p>{{Why a bug here hurts — the failure shape.}}</p>
-        <p class="why">
-          Protected by: {{tests/gates/design}}. Weakened by:
-          <button class="dive" data-goto="#f-example">{{related finding}}</button>.
-        </p>
       </div>
 
       <!-- ===== 12 · findings: ranked, badged (b-serious / b-warning / b-note / b-good), ids for cross-links.
@@ -822,12 +953,50 @@
 
       <hr class="hr" />
       <footer>
-        Generated {{DATE}} · exact scope: {{baseline/diff or commits}} · sources: {{plan file}},
-        {{tracker}}, {{reviews}}, and a fresh run of the required check suite.
+        Generated {{DATE}} · inspected repo: {{repo-root-name}} · exact scope:
+        {{baseline/diff or commits}} · sources: {{plan file}}, {{tracker}}, {{reviews}}, and a fresh
+        run of the required check suite.
       </footer>
     </main>
 
     <!-- ===== popovers: id must be "pop-<slug>"; openable via data-pop and ?pop=<slug> ===== -->
+    <dialog id="pop-files">
+      <div class="pop-head">
+        <b>File inventory</b><button class="pop-x" data-close>✕</button>
+      </div>
+      <div class="pop-body">
+        <table>
+          <tr>
+            <th>Path</th>
+            <th>Status</th>
+            <th>Delta</th>
+            <th>Role</th>
+          </tr>
+          <tr>
+            <td><code data-path="README.md">README.md</code></td>
+            <td>changed</td>
+            <td>+12 / −3</td>
+            <td>catalog discovery</td>
+          </tr>
+          <tr>
+            <td>
+              <code data-path="skills/example/src/gate.ts">skills/example/src/gate.ts</code>
+            </td>
+            <td>renamed from skills/example/old-name.ts</td>
+            <td>+40 / −8</td>
+            <td>safety gate</td>
+          </tr>
+          <tr>
+            <td>
+              <code data-path="skills/example/legacy-check.ts">skills/example/legacy-check.ts</code>
+            </td>
+            <td>deleted</td>
+            <td>−22</td>
+            <td>replaced check</td>
+          </tr>
+        </table>
+      </div>
+    </dialog>
     <dialog id="pop-example">
       <div class="pop-head">
         <b>{{Popover title}}</b><button class="pop-x" data-close>✕</button>
@@ -895,6 +1064,7 @@
           const target = document.querySelector(trigger.dataset.goto);
           if (!target) return;
           trigger.closest("dialog")?.close();
+          target.closest("details")?.setAttribute("open", "");
           target.scrollIntoView({ behavior: "smooth", block: "start" });
           target.classList.remove("flash");
           void target.offsetWidth;
@@ -911,6 +1081,26 @@
         // deep link: ?pop=example opens #pop-example (also proves JS ran when screenshotting)
         const requested = new URLSearchParams(location.search).get("pop");
         if (requested) document.getElementById("pop-" + requested)?.showModal();
+
+        // hash / refresh: open the target <details> or its closest ancestor, then scroll
+        const openHash = () => {
+          if (!location.hash) return;
+          let target;
+          try {
+            target = document.querySelector(location.hash);
+          } catch {
+            return;
+          }
+          if (!target) return;
+          target.closest("details")?.setAttribute("open", "");
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        };
+        openHash();
+        window.addEventListener("hashchange", openHash);
+
+        window.addEventListener("beforeprint", () => {
+          for (const node of document.querySelectorAll("details.hot")) node.setAttribute("open", "");
+        });
       })();
     </script>
   </body>
