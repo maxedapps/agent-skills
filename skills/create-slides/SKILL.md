@@ -26,18 +26,19 @@ metadata:
 
 ## Critical rules
 
-- No libraries, CDNs, frameworks, or build steps in the deck itself. It must
-  open directly from a local `index.html`.
+- No libraries, CDNs, frameworks, build steps, remote fonts, or network
+  requests in the deck itself. It must open directly from a local `index.html`.
 - **Never rebuild `core/slides.js`.** Navigation, key handling and the
   `data-enter`/`data-exit` contract are fixed. Extend by layering on
-  `SlidesRuntime.controller`, the way `core/morph.js` does.
+  `SlidesRuntime.controller`, the way `core/morph.js` does. If the runtime
+  itself must change, mirror it in `scripts/slides-runtime.test.mjs`.
 - **Never edit `core/slides.css` per deck.** It owns structure, archetype
   layout and the reveal presets. Override in `theme.css`, or in `deck.css`.
 - Fonts must be inlined as data URIs (`tools/fonts.mjs`). `@font-face` files are
   blocked over `file://`, so a deck opened by double-click loses them.
-- Never invent facts, statistics, quotes, images, or licenses. Research current
-  claims with the `web-research` skill, cite sources, and record where every
-  asset came from.
+- Never invent facts, statistics, quotes, images, or licenses. Verify current
+  claims against primary sources, cite them, and record where every asset came
+  from.
 - Derive tokens and content from the subject; derive the *look* from a template.
   Do not invent a new layout system mid-pass.
 - Write semantic HTML: real headings, lists, figures, one
@@ -49,7 +50,6 @@ metadata:
   of having looked at it.
 - **User-owned copy is sacred.** After the user edits text, change layout and
   CSS only — never rewrite their wording unless asked.
-- State every assumption explicitly in the final report.
 
 ## Workflow
 
@@ -62,12 +62,11 @@ metadata:
      reports) | `midnight-tech` (developer content) | `bold-keynote` (pitches) |
      `minimal-mono` (research talks) — one line each, and say which you'd pick
    - **Delivery:** live talk | **recorded video/tutorial** | self-paced send
-   - **Reveal model:** multi-step | **one-step staggered** | none
    - **Density:** sparse keynote | **tutorial-comfortable**
 3. Research unknown or current facts before writing any slide body.
-4. Read [`references/design.md`](references/design.md). Outline the deck as
-   **titles only** and check that sequence carries the message before writing
-   any body copy.
+4. Outline the deck as **titles only**, each title the slide's takeaway rather
+   than a topic label, and check that the sequence alone carries the message
+   before writing any body copy.
 5. Scaffold the deck:
    - `assets/core/` → `core/`, `assets/skeleton.html` → `index.html`
    - the chosen `assets/templates/<name>/` → `theme.css`, `fonts.json`
@@ -85,9 +84,7 @@ metadata:
 8. Export if asked — [`references/export.md`](references/export.md):
    `npm run pdf`, `npm run record` / `record:2k` / `record:4k`, then
    `npm run audit`. When the deck backs a recorded voiceover, time the reveals
-   from the caption file: a sidecar `timings/<video>.json` per video, validated
-   with `node tools/record.mjs --timing <file> --plan`. Timings never go in the
-   markup — the deck only gains a `data-slide` handle per timed slide.
+   from the caption file in a sidecar, never in the markup.
 9. Report the files, how to open them, the controls, the template used, every
    assumption, and sources for any researched claim or asset.
 
@@ -95,26 +92,18 @@ metadata:
 
 | Path | Read when |
 |---|---|
-| [`references/design.md`](references/design.md) | Before outlining — audience, story shape, density, anti-patterns |
 | [`references/web-slides.md`](references/web-slides.md) | Before editing markup — DOM/state contract, composition, archetypes, presets |
 | [`references/templates.md`](references/templates.md) | Choosing, adapting, or authoring a template; the token contract |
 | [`references/motion.md`](references/motion.md) | Adding any reveal, preset, morph, or animation |
 | [`references/export.md`](references/export.md) | Producing a PDF or video, or timing reveals to narration |
-| `assets/core/` | `slides.css`, `slides.js`, `morph.js` — copied verbatim into every deck |
 | `assets/optional/` | `router.js` — hash deep links; copy in only when asked ([web-slides.md](references/web-slides.md#url-routing-opt-in)) |
-| `assets/skeleton.html` | One deck skeleton, shared by every template |
-| `assets/templates/<name>/` | `theme.css`, `fonts.json`, `template.md` |
-| `assets/tools/` | `fonts` · `qa` · `export-pdf` · `record` · `audit-video` |
-| `assets/starter/` | `package.json`, `vite.config.js`, `gitignore` |
 | `scripts/slides-runtime.test.mjs` | Guards the runtime contract; run after any change to it |
 
 ## Assets and provenance
 
-- Logos: take the vendor's own site icon first. Aggregators go stale — building
-  one deck, a major product had no entry at all, another name resolved to an
-  unrelated company, and a third offered only a retired one-colour mark.
-- Verify the mark is current, record every source in a `CREDITS.md` beside the
-  files, and never draw an approximation of a real logo.
+- Logos: take the vendor's own site icon first; aggregators go stale. Verify
+  the mark is current, record every source in a `CREDITS.md` beside the files,
+  and never draw an approximation of a real logo.
 - Light-on-dark app icons need a full-bleed tile (`.tool__tile--dark`), not a
   white one.
 
@@ -124,8 +113,3 @@ metadata:
   unless asked. When URL routing *is* asked for, copy `assets/optional/router.js`
   rather than writing one — the jump-without-replaying-a-morph handling is the
   hard part.
-- Do not fork the runtime contract in `references/web-slides.md` without an
-  explicit request; mirror any real runtime change in
-  `scripts/slides-runtime.test.mjs`.
-- Decks stay self-contained: no network requests at presentation time, no
-  telemetry, no remote fonts.

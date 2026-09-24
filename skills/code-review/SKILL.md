@@ -1,86 +1,46 @@
 ---
 name: code-review
 description: >-
-  Reviews repository diffs, PRs, codebases, and completed implementations for
-  material, evidence-backed defects and plan compliance. Use this skill when
-  asked to review, audit, critique, find code issues, or evaluate implemented
-  plan work. Do not use for draft-plan review or implementation unless fixes are
-  explicitly requested.
+  Reviews code changes and codebases for real defects and unnecessary
+  complexity. Use this skill when asked to review a diff, branch, codebase, or
+  completed implementation, or to check work against its plan. Do not use for
+  an HTML walkthrough of a pull request (use pr-review) or for planning.
 license: MIT
-compatibility: >-
-  Requires read access to reviewed targets. Standalone report writes need
-  project write access under adrs/work/. Delegation requires a safely available
-  subagent capability.
-metadata:
-  short-description: Adaptable generic and plan-backed implementation review
 ---
 
 # Code Review
 
-## Hard rules
+## Stance
 
-- Scope from user/task only. Unclear → **ask**. Don’t widen.
-- **Adversarial by default:** seek realistic counterexamples to material in-scope correctness, safety, and validation claims. Challenge the work, not its author.
-- Inspect thoroughly; report selectively. Candidate ≠ finding.
-- **“No material findings” is valid.**
-- No source edits unless asked. Don’t clobber owner git/worktree state.
-- Main agent assigns final findings/scores/verdicts. Child handoffs = evidence.
-- **Delegate by default** into bounded read-only lanes under `use-subagents` when safe. “Small/easy” alone does not justify skipping.
+- Review only what was asked. If the scope is unclear, ask.
+- Look hard, report little. Try to break the code with realistic inputs, states, and sequences. Challenge the work, not its author.
+- "Nothing worth changing" is a valid result. A short review is a good review.
+- Don't edit code unless asked.
 
-### Admit a finding only if
+## What counts as a finding
 
-- concrete failure
-- realistic reachability
-- practical impact
-- safeguards considered
-- action justified now
+Report something only if all of these hold:
 
-Hypotheses guide investigation, not findings. Omit unsupported speculation, nits, and low-impact noise from the report; don’t hide them in caveats.
+- There is a concrete way it fails or causes harm.
+- That can realistically happen.
+- The impact on users, data, security, or maintenance is real.
+- Fixing it removes more risk or complexity than the fix adds.
 
-## Loads
+Never report niche edge cases, hypothetical scale, style preferences, duplication that hurts nothing, the number of helpers or files, or ideas for making things "more flexible".
 
-| When | Read |
-|---|---|
-| Before resolving authority/output | [ADR conventions](../create-plan/references/adr-conventions.md): shared paths, lifecycle, and relevant accepted decisions |
-| Broad or deep dimension review, or explicit test/validation review | [`references/review-dimensions.md`](references/review-dimensions.md) first |
-| Vs plan/tracker/design/acceptance | [`references/plan-backed-review.md`](references/plan-backed-review.md) first |
-| Standalone report | [`assets/review-report-template.md`](assets/review-report-template.md) before write |
+## Where to look
 
-## Flow
+Check what applies to the change:
 
-1. Read ADR conventions; fix scope/authority/output and identify relevant accepted ADRs. Ask only on material unresolved ambiguity.
-2. Load conditional resources.
-3. Inspect targets, callers, tests, config, diffs. Trace material claims through callers, state transitions, and boundaries.
-4. **Delegate** review lanes by default (correctness, security, tests, plan-matrix, …).
-5. Challenge candidate failures against existing safeguards and contrary evidence. Use source proof or safe targeted checks/repros; preserve owner state. Note skips + confidence limits.
-6. Admit → score → cap findings.
-7. Optional `decomplex` only if complexity-focused and report writable; else built-in simplicity. Don’t merge contracts.
-8. Write `adrs/work/<change>-review.md` (unless overridden/chat-only/no-write) or return handoff. Keep full findings separate from the work document; parent owns dispositions/closure.
-9. Cleanup any workflow runtime/process state.
+- **Correctness:** wrong assumptions, error handling, races and async order, state and cleanup, and refactors that lost behavior.
+- **Security:** authentication and authorization, injection, trusting client input, and secrets or personal data in code, logs, or URLs.
+- **Libraries:** check behavior against the installed version's types and docs, not memory.
+- **Tests:** do they protect behavior that matters? Flag missing coverage of real behavior, assertions on implementation details, excessive mocking, and tests that pass without proving anything. Don't ask for tests for their own sake.
+- **Data and APIs:** breaking changes, migrations, and retries of side effects that aren't safe to repeat.
+- **UI:** when practical, exercise the changed screens in a real browser with agent-browser.
+- **Complexity:** unnecessary layers and wrappers, one-use helpers, speculative options or generic APIs, and defensive code for cases that can't happen. Prefer, in order: delete, use directly, local helper, shared abstraction, new abstraction.
+- **Plan and ADR:** if the change implements a plan, report plan tasks that are missing or unverified, and conflicts with an accepted ADR.
 
-## Scores and caps
+## Report
 
-| | |
-|---|---|
-| Severity | `S4` critical · `S3` high · `S2` medium · `S1` low · `S0` optional |
-| Confidence | `C3` confirmed · `C2` supported · `C1` tentative (not a finding yet) |
-
-Per finding: scores · location · evidence · impact · smallest safe fix/validation.
-
-**Caps:** all `S4`; ≤5 other material `S3`/`S2`; no `S1`/`S0` by default. Overflow → one `not review-ready` caveat. Deduplicate root causes.
-
-## Plan-backed
-
-When authority exists: full matrix + four verdicts (baseline · compliance · quality beyond baseline · tests/validation) per plan-backed ref.
-
-## Embedded follow-up
-
-States: `Clear` · `Changes required` · `Human decision required` · `Blocked`
-
-- Preserve finding IDs.
-- Only accepted fixes, disputed dispositions, affected boundaries, fix-caused/exposed issues.
-- Need a material delta between rounds.
-
-## Fixes (only if explicitly requested)
-
-Read callers → smallest fix → update tests → validate → summarize.
+Report findings in chat, most severe first. For each finding, give its severity (high, medium, or low), its `file:line`, what goes wrong and when, and the smallest fix. Skip nits. If there are many minor issues, summarize them in one line instead of listing them.

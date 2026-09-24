@@ -4,8 +4,7 @@ description: >-
   Manages Git worktrees for isolated feature or milestone work. Use this skill
   whenever work should happen in a worktree, a worktree needs syncing with its
   target branch, or a finished worktree branch should be merged or cleaned up.
-  Do not use for ordinary single-checkout branch work or subagent delegation
-  that does not require worktree operations.
+  Do not use for ordinary single-checkout branch work.
 license: MIT
 compatibility: Requires Git and filesystem access outside the repository checkout.
 metadata:
@@ -28,7 +27,6 @@ Never create worktrees inside the repository or scattered elsewhere. `git worktr
 
 - Follow the repository's setup instructions and install dependencies in the worktree; generated or ignored dependency directories are not shared between checkouts.
 - Give deployments from concurrent worktrees a **dedicated stage/environment**. Never let parallel checkouts mutate the same deployment state.
-- For delegated work, also follow `use-subagents`; the parent agent owns all worktree creation, integration, and cleanup.
 
 ## Working in the worktree
 
@@ -51,13 +49,13 @@ Never create worktrees inside the repository or scattered elsewhere. `git worktr
 
 ## Cleanup
 
-After a merge is pushed and verified:
+You own the worktrees you create: don't leave them behind. After a merge is pushed and verified:
 
 ```
 git worktree remove ~/worktrees/<project>/<worktree>
 git branch -d <branch>
 ```
 
-For unmerged cleanup, first inspect uncommitted changes and commits absent from the target. Remove a safe, fully handled workflow-owned worktree with no unique work according to `use-subagents`. Otherwise report the unique work and require explicit user approval; use forced worktree removal or branch deletion only when that approval specifically accepts the identified data loss.
+For unmerged cleanup, first inspect uncommitted changes and commits absent from the target. Remove it if it has no unique work. Otherwise report the unique work and require explicit user approval; use forced worktree removal or branch deletion only when that approval specifically accepts the identified data loss.
 
 `git worktree prune` clears stale registrations if a worktree directory was deleted manually.

@@ -99,10 +99,6 @@ Two things would otherwise wreck the accuracy, and both are handled:
    at `in`, snapping away at `out`) and stretches that pair onto the declared
    duration. The correction factor is printed per clip.
 
-Measured on a real deck: reveals land within one frame (33 ms) of their cue over
-a 29-second clip. Do not "simplify" either mechanism away — a first attempt that
-drove steps from Node and trimmed by wall clock drifted ~4% early.
-
 `npm run audit` checks a timed export against its own `timings.json`. To verify
 one *individual* reveal, measure the region it occupies:
 
@@ -118,8 +114,6 @@ several units into a `--stagger` cascade legitimately appears later.
 
 ## The capture encoder
 
-**This is the part that is not obvious and must not be undone.**
-
 Playwright's recorder hard-codes its ffmpeg invocation:
 
 ```
@@ -128,9 +122,8 @@ Playwright's recorder hard-codes its ffmpeg invocation:
 ```
 
 One megabit at *any* resolution, 25 fps, and grey padding. On a dark deck at
-1440p and above the near-neutral background loses its tint entirely — measured
-`srgb(47,47,47)` against a true `srgb(43,46,51)` — and drifts frame to frame.
-None of it is reachable through the API.
+1440p and above the background loses its tint and drifts frame to frame. None
+of it is reachable through the API.
 
 `installEncoderShim()` in `record.mjs` fixes it: Playwright resolves its
 encoder through `PLAYWRIGHT_BROWSERS_PATH`, so the script writes a minimal
@@ -138,9 +131,6 @@ tree whose "ffmpeg" is a wrapper script that rewrites those arguments to a
 lossless 4:4:4 H.264 intermediate at 30 fps, with padding in the deck's own
 `--color-bg`, and forwards to the **system** ffmpeg. Playwright's bundled
 build is VP8-only, so it cannot be used for this.
-
-Verified end to end: background comes out at exactly the CSS value, through the
-final CRF-18 delivery transcode.
 
 Requires `ffmpeg` on `PATH` for the final MP4 transcode. The high-quality
 capture wrapper is a POSIX shell script, so Windows uses Playwright's encoder;
@@ -150,13 +140,12 @@ keep Windows capture at 1080p.
 
 **The recording starts before your script runs.** Capture begins when the
 browser context is created — before navigation. Whatever paints during page
-load lands at the head of the clip, which showed up as the cover slide leaking
-into unrelated clips. Hide the stage from the first paint with
+load lands at the head of the clip. Hide the stage from the first paint with
 `page.addInitScript`, and reveal it explicitly when the shot starts.
 
-**Every code path must undo that hide.** The run-through does not go through
-the per-slide reveal helper, so it recorded eighty seconds of blank stage. Its
-0.29 MB file size was the only symptom.
+**Every code path must undo that hide**, including the run-through, which does
+not go through the per-slide reveal helper. A blank recording shows up only as
+a suspiciously small file.
 
 **The first compositor frame is white.** Chrome's `--default-background-color`
 does *not* fix it. Trim it in the transcode (`-ss 0.10`), which is inside the
@@ -181,10 +170,8 @@ also held to what it declared: its duration must match the `in`→`out` span
 (within two frames), and it must contain at least as many visible changes as the
 slide has steps. The first catches a capture correction that did not take, which
 puts *every* reveal inside the clip out of place; the second catches a step that
-never fired. Both are cheap and both have been shown to fire on deliberately
-broken clips.
+never fired.
 
-Run it after every recording. Three separate capture bugs in this pipeline's
-history were invisible on casual playback and obvious in the audit — and one of
-them was only visible on a contact sheet, not in any aggregate number. Treat a
-numeric heuristic as a pointer to look, not as the verdict.
+Run it after every recording and look at the contact sheets too: some capture
+bugs show only there. Treat a numeric heuristic as a pointer to look, not as the
+verdict.

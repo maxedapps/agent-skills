@@ -1,67 +1,49 @@
 ---
 name: create-plan
 description: >-
-  Creates, reviews, and improves lean implementation plans through orchestrated
-  research, evidence-backed synthesis, and iterative independent review closure.
-  Use this skill when the user asks to plan a feature or change, create an
-  implementation handoff, or review or improve an unimplemented plan before
-  coding. Do not use to implement a plan, audit completed implementation against
-  a plan, or answer a small conceptual question that needs no implementation handoff.
+  Plans a change as an ADR that records the decision, plus an implementation
+  plan that belongs to it. Use this skill when the user asks to plan a feature
+  or change, or to revise an existing plan or ADR. Do not use for implementing
+  a plan (use implement-plan) or for small changes that involve no real decision.
 license: MIT
-compatibility: >-
-  Requires project file access. Saving requires write access. Current external
-  research requires suitable retrieval access. Delegation and independent review
-  require a safely available subagent capability.
-metadata:
-  short-description: Create lean plans through orchestrated research and review
 ---
 
 # Create Plan
 
-## Hard rules
+Plan only; don't implement.
 
-- **Plan only** — never implement.
-- Before framing, read [ADR conventions](references/adr-conventions.md): shared paths, decision lifecycle, and authority. Write only the work document, relevant ADRs, and supporting reviews.
-- Evidence-backed. Smallest design. No speculative scope.
-- **Ask user** on material ambiguity (scope/behavior/architecture/migration/risk/complexity). No shaky assumptions.
-- **Delegate by default** for research/review when safe; follow `use-subagents`. “Small/easy” alone does not justify skipping.
-- Main agent owns synthesis, plan writes, dispositions, delivery.
-- Child/reviewer output = evidence, never acceptance. Findings never auto-enter the plan.
-- Prefer simpler fixes. Stuck review (2 failed rounds / recurrence / no progress) → ask user.
+## Files
 
-### Load or stop
+Decisions and their plans live together in the project's `adrs/` folder. If the project already uses a different ADR layout, follow it.
 
-- Before draft: read [`assets/implementation-plan-template.md`](assets/implementation-plan-template.md).
-- Before finalize (and after material edits): read [`references/plan-quality-checklist.md`](references/plan-quality-checklist.md).
-- Missing resources → stop. Don’t invent substitutes.
+- `adrs/NNNN-<slug>.md`: the decision. Use the next free number and never renumber.
+- `adrs/NNNN-<slug>.plan.md`: the plan that implements that decision.
 
-### Tasks must have
+Small changes that involve no real decision need neither. Just do them, or agree on the approach in chat.
 
-- Stable IDs
-- **Change** as bullets (one concrete edit/behavior each)
-- Starts-at paths/symbols (non-exhaustive)
-- Exact verify commands + expected signals
-- Each behavior-changing task names an existing/planned test path or suite, the observable behavior, boundary, or regression it protects, and the narrowest credible repository-conventional layer; or justifies omitting automation and gives alternate validation
-- Omit empty optionals
-- Key files table: path · why · plan impact
+## The ADR
 
-## Sequence
+Keep it short, usually under a page:
 
-1. **Frame** — read ADR conventions, relevant accepted ADRs, repository instructions, and existing work → outcome, scope, non-goals, risks, validation.
-2. **Load template.**
-3. **Research** — enumerate questions; **delegate by default** (one question/scope/stop per lane). Inspect relevant existing tests, framework/configuration, and repository commands. External only if decision-relevant. Verify critical claims.
-4. **Resolve gates** — still ambiguous? **ask user** before drafting as fact.
-5. **Synthesize** — smallest approach; map findings → decisions/tasks/checks/non-goals/gates; drop fluff.
-6. **Draft** — adapt the template within `adrs/work/<change>.md`; preserve existing research and task IDs. Link applicable ADRs; draft significant new choices separately. Flat tasks default; phases only for real boundaries.
-7. **Complexity** — structural draft → `decomplex` Prevention if available, else built-in gate. Complexity-increasing accept → triage; doubt → ask user.
-8. **Review** — consequential plans: delegate fresh independent reviewers for adversarial review → disposition (`Accept`/`Validate`/`Reject`/`Ask user`/`Block`) → revise → re-review until `Clear`. Small/unavailable: parent checklist + independence limit.
-   - In independent or parent review, challenge material assumptions, feasibility, and sequencing with realistic counterexamples.
-   - Ask: if implemented exactly and all named checks passed, could the required outcome still fail?
-   - Ground concerns in inspected evidence and realistic consequences; consider safeguards and contrary evidence. Recommend the smallest in-scope correction. `Clear` with no material findings is valid.
-9. **Checklist → deliver** — update the shared work document (or chat when no-write). Report path, ADRs, gates, review closure, fallbacks, and risks.
+- **Status:** Proposed, Accepted, or Superseded by NNNN
+- **Context:** the problem and its constraints
+- **Decision:** what we'll do
+- **Alternatives:** always include the simplest option that could work, and say why it was or wasn't chosen
+- **Consequences:** the trade-offs we accept
 
-## Stop
+Write new ADRs as Proposed. Mark one Accepted only when the user approves it. When a decision changes, write a new ADR that supersedes the old one instead of rewriting accepted history.
 
-- Missing template/checklist → stop
-- Required research/review unsafe/unavailable → block/escalate
-- Persistent disagreement or uncertainty → ask user
+## The plan
+
+- **Status:** Draft, Ready, In progress, or Done
+- **Goal:** what's done when we're done, and what's out of scope
+- **Tasks:** in order. For each task, say what changes and where to start, how to verify it, and whether it's done. Verification means the high-value tests to add or run, plus manual checks where they matter (e.g. agent-browser for UI).
+- **Open questions:** anything the user must decide
+
+## Keep it simple
+
+- Research the code and docs as much as the plan needs, and no more.
+- Pick the simplest design that meets the goal. Add no speculative options, fallbacks, abstractions, or "later" tasks.
+- Before saving, remove every task that doesn't serve the goal.
+- When a choice about scope, behavior, or architecture is genuinely ambiguous, ask the user instead of guessing.
+- Challenge every piece of feedback on a plan: does it fix a real, likely problem, or does it just add complexity? When unsure, ask the user.

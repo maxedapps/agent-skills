@@ -37,8 +37,9 @@ attribute on nodes that opted into stepping, so unstepped nodes take the
 automatic branch and get the head-start delay.
 
 **Reveal model per delivery.** Recorded video: one staggered step per slide.
-Live talk: multi-step to pace narration. B-roll for a script: one step per
-narration beat, because each step is also a cut point.
+Live talk: multi-step to pace narration. Self-paced: little or no stepping.
+B-roll for a script: one step per narration beat, because each step is also a
+cut point.
 
 ## Reveal presets
 
@@ -51,15 +52,16 @@ deck for that node and its descendants:
   <ul class="blocks" data-reveal="zoom">     <!-- this group only -->
 ```
 
-| Preset | Enter | Word reveal |
-|---|---|---|
-| `rise` | fade + 0.75em lift (default) | blur 10px, rise, scale 0.94 |
-| `fade` | opacity only | plain fade |
-| `zoom` | scale 0.96 → 1 | scale 0.9 → 1 |
-| `slide` | from 1.2em left | plain fade |
-| `blur` | 8px defocus + 0.3em lift | blur 14px |
+| Preset | Enter | Word reveal | Good for |
+|---|---|---|---|
+| `rise` | fade + 0.75em lift (default) | blur 10px, rise, scale 0.94 | general use |
+| `fade` | opacity only | plain fade | text-heavy, calm decks |
+| `zoom` | scale 0.96 → 1 | scale 0.9 → 1 | card and icon grids |
+| `slide` | from 1.2em left | plain fade | sequences, timelines |
+| `blur` | 8px defocus + 0.3em lift | blur 14px | statements, covers |
 
-Presets only set custom properties, so adding one costs nothing and every preset
+Presets only set custom properties (`--enter-x/y`, `--enter-scale`,
+`--word-*`), so adding one costs nothing and every preset
 collapses through the same reduced-motion block. Only `blur` applies a `filter`,
 because a filter forces a compositing layer and breaks
 `background-attachment: fixed` for anything inside it — do not extend it to the
@@ -120,8 +122,6 @@ tile to land — an opacity transition with a delay near the end of the move,
 rather than arriving with the slide.
 
 ## Traps
-
-Each of these cost a debugging session.
 
 **Restarting animations also restarts transitions.** `getAnimations()` returns
 `CSSTransition` objects too. Stepped nodes sit mid "revealed → hidden"

@@ -1,7 +1,0 @@
-interface:
-  display_name: "Set Up and Harden VPS"
-  short_description: "Manually harden Ubuntu 24.04/26.04 or AL2023 EC2"
-  default_prompt: "Set up and harden the specified VPS using the supplied context."
-
-policy:
-  allow_implicit_invocation: false

@@ -1,15 +1,13 @@
 ---
 name: awesome-tests
 description: >-
-  Designs, writes, improves, and reviews behavior-focused automated tests and
-  test strategies. Use this skill when adding or repairing tests, creating
-  implementation plans that change runtime or application behavior and must
-  specify tests or validation, assessing test code or coverage quality,
-  diagnosing flaky, brittle, fragile, or false-green tests, or conducting code
-  reviews that materially touch tests or validation. Do not use for unrelated
-  production implementation, plans or reviews with no testing or validation
-  work, running an unchanged test command only, manual exploratory QA alone, or
-  conceptual testing explanations without a concrete target.
+  Writes, fixes, and reviews high-value, behavior-focused automated tests. Use
+  this skill when the task is writing, improving, or repairing tests, reviewing
+  test code or a test strategy, or diagnosing flaky, brittle, or false-green
+  tests. Do not use for implementation plans or code reviews as a whole (even
+  when they mention tests), production changes that involve no test work, just
+  running an existing test command, manual exploratory QA, or general testing
+  explanations.
 license: MIT
 metadata:
   short-description: Behavior-focused test engineering and review
@@ -17,44 +15,25 @@ metadata:
 
 # Awesome Tests
 
-## Critical rules
+Write only high-value tests. Every test should protect behavior that matters to users, callers, or data. A test that exists for its own sake is maintenance cost with no protection. Don't add tests for niche edge cases or to push a coverage number.
 
-- Before any activity, read [`references/test-quality-gates.md`](references/test-quality-gates.md) fully and apply its contextual gates.
-- Optimize meaningful confidence per maintenance cost, not test count or coverage theater.
-- Map every test to an observable behavior or material risk and its intended failure signal.
-- Prefer public or user-visible contracts over implementation details. Assert exact text, order, calls, or snapshots only when they are contractual rather than incidental.
-- Require deterministic, isolated tests. Follow repository conventions and use the cheapest layer with sufficient fidelity.
-- Treat counts, coverage, mocks, snapshots, test IDs, multiple assertions, and smell names as contextual signals, never automatic findings or acceptance gates.
-- Do not edit production code unless the user explicitly requests it. Preserve unrelated code and owner state.
+## What good tests do
 
-## Sensitivity safety
+- Assert observable outcomes through public contracts: return values and errors, persisted state, emitted events, rendered semantics, authorization decisions. Assert exact text, order, calls, or snapshots only when they are part of the contract.
+- Fail on the bad behavior. The oracle must reject what would actually go wrong, not just execute the code or check that something exists.
+- Use the cheapest layer that can really observe the behavior, following the repository's conventions. Move outward only when wiring, serialization, persistence, the browser, or a third party is the risk.
+- Don't mock away the behavior under test. A test through mocks proves wiring, not compatibility with the real database, network, or provider.
+- Stay deterministic and isolated: await all async work, wait on observable state instead of sleeping, control time, randomness, and environment where they matter, and clean up.
+- Read clearly: the name states behavior and condition, and setup shows intent. Some repetition beats an abstraction that hides the expectations.
 
-Prove a test can fail, when safe, in this order:
+Counts, coverage percentages, mocks, snapshots, and test IDs are signals, not verdicts. When reviewing, ask what behavior a test uniquely protects and whether a cheaper, sturdier oracle exists before changing or deleting it.
 
-1. Run it against a known failing version or the pre-fix regression.
-2. Otherwise introduce one bounded temporary behavior break in a disposable copy or safe test seam, then fully revert it and verify restoration.
-3. Otherwise use mutation-tool evidence only when the repository already provides the tool.
-4. Otherwise state why direct sensitivity proof was unsafe or unavailable.
+Don't edit production code unless asked.
 
-Never mutate owner work or production code merely to satisfy this check. Remove temporary state even when a command fails.
+## Prove the test can fail
 
-## Activities and authority
+A test that passes after a fix doesn't prove it protects anything. When safe, show it fails against the pre-fix or known-bad behavior. Otherwise make one small temporary break in a disposable copy or a test seam, then revert it fully. Never break owner work or production code just to prove this; if no safe option exists, say so.
 
-| Activity | Contract |
-|---|---|
-| **Plan** | Produce risk/behavior coverage, test layer and path, fixtures/doubles, failure boundaries, commands and expected signals, plus justified gaps or alternate validation. |
-| **Write/improve** | Make the smallest requested test changes, preserve unrelated code, and verify the claimed failure signal and passing behavior where safe. |
-| **Review** | Stay read-only unless fixes are explicitly requested; assess actual protection, sensitivity, fidelity, determinism, and maintenance cost. |
+## Reference
 
-These activities compose when requested. In embedded use, return test-engineering evidence only; the owning planning or review workflow retains authority over artifacts, findings, severity, matrices, reports, and verdicts. In standalone use, return the requested test plan or scoped review directly without adopting another workflow's schema.
-
-## Common workflow
-
-1. Fix the target, authority, requested activity, and output. Ask only if ambiguity changes the work.
-2. Inspect behavior and contracts, callers, nearby tests, framework/configuration/CI, repository commands, and installed versions relevant to the target.
-3. Before planning, writing, improving, or reviewing, read [`references/test-quality-gates.md`](references/test-quality-gates.md) fully.
-4. Map material behaviors, boundaries, regressions, and risks to observable checks at the narrowest credible layer.
-5. Perform the requested activity; distinguish proven defects from signals and contextual heuristics.
-6. Prove sensitivity with the safe hierarchy above when practical.
-7. Run targeted checks, then affected repository checks. When flake risk warrants it, probe repetition, isolation, order dependence, and parallel execution without hiding failures behind retries.
-8. Report exact commands and results, sensitivity evidence, cleanup, skips, and confidence limits. If a check cannot run or cleanup/restoration is uncertain, stop and report the blocker rather than guessing.
+Read [`references/test-quality-gates.md`](references/test-quality-gates.md) when choosing fixtures or doubles, testing UI or snapshots, or diagnosing flaky or false-green tests.

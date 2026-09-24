@@ -40,15 +40,7 @@ Prefer several focused files over one exhaustive document. Avoid generic introdu
 
 1. **Frame.** Confirm the technology, versions, audience, depth, and requested output. Separate reusable knowledge from project-specific material; route the latter to project documentation, `create-plan`, or another owning workflow.
 2. **Inventory.** Read the existing `wiki/<topic-name>/` files and relevant dependency/configuration evidence. Identify stale claims, gaps, overlap, and established style before choosing filenames.
-3. **Research.** Use `web-research` when available. Investigate official documentation, implementation/source, changelogs, and credible real-world failure evidence. Resolve version conflicts and record uncertainty rather than guessing.
-4. **Design.** Choose focused topic-area files around actual tasks, boundaries, and pain points. Update existing files instead of creating parallel coverage.
+3. **Research.** Investigate official documentation, implementation/source, changelogs, and credible real-world failure evidence. Resolve version conflicts; where sources disagree or version behavior can't be established, label the uncertainty and its practical consequence rather than guessing.
+4. **Design.** Choose focused topic-area files around actual tasks, boundaries, and pain points. Update existing files instead of creating parallel coverage; preserve accurate material, replace superseded guidance explicitly so no files contradict each other, and leave unrelated topics alone.
 5. **Write.** Produce concise, actionable Markdown with examples, pitfalls, version notes, and direct source links. Keep all prose and examples portable to another project using the same technology.
-6. **Validate.** Re-read the complete topic set; remove duplication and project references, verify code/API claims against the targeted version, check links and filenames, and confirm no index or README was introduced.
-7. **Report.** List created or updated files, researched versions, important source limitations, and remaining gaps.
-
-## Updating an existing wiki
-
-- Preserve accurate material and useful source history.
-- Replace superseded guidance explicitly; do not leave contradictory advice across files.
-- Keep unrelated topics unchanged.
-- If authoritative sources disagree or version behavior cannot be established, label the uncertainty and its practical consequence.
+6. **Validate.** Re-read the whole topic set to remove duplication and verify code/API claims against the targeted version.

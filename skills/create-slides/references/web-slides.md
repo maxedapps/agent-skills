@@ -143,21 +143,9 @@ Archetypes shipped by every template — compose these before inventing CSS:
 
 ## Reveals
 
-`data-reveal` on `.stage` sets the deck's motion; the same attribute on any node
-overrides it for that node and its descendants:
+Triggers and the five `data-reveal` presets are in [motion.md](motion.md).
 
-| Preset | Motion | Good for |
-|---|---|---|
-| `rise` | fade + lift (default) | general use |
-| `fade` | opacity only | text-heavy, calm decks |
-| `zoom` | scale 0.96 → 1 | card and icon grids |
-| `slide` | enter from the left | sequences, timelines |
-| `blur` | 8px defocus + fade | statements, covers |
-
-Presets set custom properties only (`--enter-x/y`, `--enter-scale`,
-`--word-*`), so they cost nothing and collapse together under reduced motion.
-
-**One-step staggered reveals** (the default for recorded video): give every body
+**One-step staggered reveals:** give every body
 node `data-enter="1"` and stagger with `--stagger: 0|1|2…`, which core turns into
 a transition delay. The slide still has exactly one step — stagger is visual, and
 never adds a keypress. Reach for `data-enter="2"`+ only when the speaker wants
@@ -177,12 +165,9 @@ another keypress.
 ## Extend vs rebuild
 
 - **Edit freely:** `index.html`, the template's tokens, anything in `deck.css`.
-- **Never rebuild** `core/slides.js` navigation, key handling or the attribute
-  contract; never add libraries, modules or a build step; never set
-  `data-state`/`data-step-state`/`aria-hidden`/`inert` by hand.
-- Layer new behaviour on `SlidesRuntime.controller` from your own listener, the
-  way `core/morph.js` does. If the runtime itself must change, mirror it in
-  `scripts/slides-runtime.test.mjs`.
+- **Never rebuild** `core/slides.js` or add libraries, modules or a build step.
+  Layer new behaviour on `SlidesRuntime.controller` from your own listener, the
+  way `core/morph.js` does.
 - `npm run qa` is the gate: navigation, preset names, title lock, body fit and
   centring, reduced motion, small viewport, console and network. Run it before
   reporting any deck finished.

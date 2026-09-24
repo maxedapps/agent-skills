@@ -7,8 +7,9 @@ import { basename, dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SKILL_DIR = dirname(dirname(fileURLToPath(import.meta.url)));
-const VERSION = "2.0.0";
-const DEFAULT_ENDPOINT = "openai/gpt-image-2";
+export const VERSION = "3.0.0";
+export const DEFAULT_GENERATE_ENDPOINT = "xai/grok-imagine-image/v2.0/text-to-image";
+export const DEFAULT_EDIT_ENDPOINT = "xai/grok-imagine-image/v2.0/edit";
 const DEFAULT_OUTPUT_ROOT = join(tmpdir(), "generate-image");
 const DEFAULT_POLL_MS = 1500;
 const DEFAULT_MAX_POLL_MS = 8000;
@@ -38,33 +39,38 @@ Commands:
   auth-check    Non-secret credential diagnostics
   models        List/search image models
   schema        Show input fields for an endpoint
-  generate      Queue image generation (poll + download)
+  generate      Queue text-to-image generation
+  edit          Queue image editing
   status        Queue request status
   result        Queue request result
   cancel        Cancel queue request
   upload        Upload a local image; print public URL
 
-Default endpoint: ${DEFAULT_ENDPOINT}
+Generate default: ${DEFAULT_GENERATE_ENDPOINT}
+Edit default: ${DEFAULT_EDIT_ENDPOINT}
 Credentials: FAL_KEY in env or ${join(SKILL_DIR, ".env")}
 `;
   }
 
-  const common = `--endpoint <id>   Default: ${DEFAULT_ENDPOINT}
-  --json             Machine-readable JSON`;
+  const submitOptions = `--logs
+  --no-poll
+  --output-dir <path>   Default: temp dir under ${DEFAULT_OUTPUT_ROOT}
+  --no-download
+  --save <path>         Save full JSON response
+  --max-wait-sec <n>    Default: ${DEFAULT_MAX_WAIT_SEC}
+  --json`;
 
   const map: Record<string, string> = {
     "auth-check": `auth-check [--json]`,
     models: `models [--q <text>] [--limit <n>] [--json]`,
     schema: `schema [--endpoint <id>] [--json]
-  ${common}`,
+  --endpoint <id>   Default: ${DEFAULT_GENERATE_ENDPOINT}`,
     generate: `generate (--input <json> | --input-file <path>) [options]
-  ${common}
-  --logs
-  --no-poll
-  --output-dir <path>   Default: temp dir under ${DEFAULT_OUTPUT_ROOT}
-  --no-download
-  --save <path>         Save full JSON response
-  --max-wait-sec <n>    Default: ${DEFAULT_MAX_WAIT_SEC}`,
+  --endpoint <id>   Default: ${DEFAULT_GENERATE_ENDPOINT}
+  ${submitOptions}`,
+    edit: `edit (--input <json> | --input-file <path>) [options]
+  --endpoint <id>   Default: ${DEFAULT_EDIT_ENDPOINT}
+  ${submitOptions}`,
     status: `status --request-id <id> [--endpoint <id>] [--logs] [--json]`,
     result: `result --request-id <id> [--endpoint <id>] [--json]`,
     cancel: `cancel --request-id <id> [--endpoint <id>] [--json]`,
@@ -134,8 +140,15 @@ function num(flags: Flags, name: string, fallback: number): number {
   return value;
 }
 
-function endpoint(flags: Flags): string {
-  return (flag(flags, "endpoint") ?? DEFAULT_ENDPOINT).replace(/^\/+|\/+$/g, "");
+export function resolveEndpoint(flags: Flags, fallback = DEFAULT_GENERATE_ENDPOINT): string {
+  return (flag(flags, "endpoint") ?? fallback).replace(/^\/+|\/+$/g, "");
+}
+
+export function endpointForCommand(command: "generate" | "edit", flags: Flags): string {
+  return resolveEndpoint(
+    flags,
+    command === "edit" ? DEFAULT_EDIT_ENDPOINT : DEFAULT_GENERATE_ENDPOINT,
+  );
 }
 
 function sleep(ms: number) {
@@ -183,7 +196,7 @@ function authHeaders(key: string): Record<string, string> {
   return { Authorization: value };
 }
 
-async function requestJson<T = unknown>(
+export async function requestJson<T = unknown>(
   url: string,
   init: RequestInit,
   retries = 2,
@@ -238,6 +251,9 @@ function printError(error: unknown): never {
     }
     if (http.status === 401) {
       console.error("Check FAL_KEY (auth-check). fal expects Authorization: Key <FAL_KEY>.");
+    }
+    if (http.status === 422) {
+      console.error("Run schema for the selected endpoint, then fix the input payload.");
     }
     process.exit(1);
   }
@@ -294,7 +310,7 @@ function typeOf(schema: any, doc: any): string {
   return "unknown";
 }
 
-function collectImageUrls(value: unknown, out: Set<string>) {
+export function collectImageUrls(value: unknown, out: Set<string>) {
   if (!value) return;
   if (Array.isArray(value)) {
     for (const item of value) collectImageUrls(item, out);
@@ -423,7 +439,7 @@ async function cmdModels(flags: Flags) {
 }
 
 async function cmdSchema(flags: Flags) {
-  const id = endpoint(flags);
+  const id = resolveEndpoint(flags);
   await ensureImageEndpoint(id, falKey(true));
   const doc = await requestJson<any>(
     `https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=${encodeURIComponent(id)}`,
@@ -473,27 +489,79 @@ async function cmdSchema(flags: Flags) {
   }
 }
 
-async function cmdGenerate(flags: Flags) {
-  const id = endpoint(flags);
-  const key = falKey() as string;
+export function validateDefaultEditInput(id: string, input: unknown): void {
+  if (id !== DEFAULT_EDIT_ENDPOINT) return;
+  const record = input && typeof input === "object" && !Array.isArray(input)
+    ? input as Record<string, unknown>
+    : {};
+  const urls = record.image_urls;
+  if (!Array.isArray(urls)) {
+    throw new CliError("Default edit endpoint requires image_urls as an array of 1-3 URLs");
+  }
+  if (urls.length < 1 || urls.length > 3) {
+    throw new CliError("Default edit endpoint requires 1-3 image_urls");
+  }
+  if (urls.some((url) => typeof url !== "string" || url.trim().length === 0)) {
+    throw new CliError("Default edit endpoint requires non-empty strings in image_urls");
+  }
+  if (typeof record.prompt !== "string" || record.prompt.trim().length === 0) {
+    throw new CliError("Default edit endpoint requires a non-empty prompt");
+  }
+}
+
+type QueueSubmit = {
+  request_id: string;
+  status_url?: string;
+  response_url?: string;
+  cancel_url?: string;
+};
+
+export async function submitQueue(id: string, key: string, input: unknown): Promise<QueueSubmit> {
+  try {
+    return await requestJson<QueueSubmit>(`https://queue.fal.run/${id}`, {
+      method: "POST",
+      headers: {
+        ...authHeaders(key),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(input),
+    }, 0);
+  } catch (error) {
+    if (typeof (error as { status?: unknown }).status !== "number") {
+      console.error("[warning] Submit outcome is unknown; check fal history before retrying.");
+    }
+    throw error;
+  }
+}
+
+export function submissionRecoveryDiagnostic(id: string, requestId: string): string {
+  return `[recovery] endpoint=${id} request_id=${requestId}`;
+}
+
+export function noPollPayload(
+  id: string,
+  requestId: string,
+  statusUrl: string,
+  responseUrl: string,
+  cancelUrl: string,
+) {
+  return {
+    endpoint: id,
+    request_id: requestId,
+    status_url: statusUrl,
+    response_url: responseUrl,
+    cancel_url: cancelUrl,
+  };
+}
+
+async function cmdSubmit(flags: Flags, defaultEndpoint: string) {
+  const id = resolveEndpoint(flags, defaultEndpoint);
   const input = await readInput(flags);
+  validateDefaultEditInput(id, input);
+  const key = falKey() as string;
   await ensureImageEndpoint(id, key);
 
-  const headers = {
-    ...authHeaders(key),
-    "Content-Type": "application/json",
-  };
-
-  const submit = await requestJson<{
-    request_id: string;
-    status_url?: string;
-    response_url?: string;
-    cancel_url?: string;
-  }>(`https://queue.fal.run/${id}`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(input),
-  });
+  const submit = await submitQueue(id, key, input);
 
   const requestId = submit.request_id;
   if (!requestId) throw new CliError("Queue submit missing request_id");
@@ -502,10 +570,10 @@ async function cmdGenerate(flags: Flags) {
   const statusUrl = submit.status_url ?? `${base}/status`;
   const responseUrl = submit.response_url ?? base;
   const cancelUrl = submit.cancel_url ?? `${base}/cancel`;
+  console.error(submissionRecoveryDiagnostic(id, requestId));
 
   if (bool(flags, "no-poll")) {
-    const payload = { request_id: requestId, status_url: statusUrl, response_url: responseUrl, cancel_url: cancelUrl };
-    console.log(bool(flags, "json") ? pretty(payload) : pretty(payload));
+    console.log(pretty(noPollPayload(id, requestId, statusUrl, responseUrl, cancelUrl)));
     return;
   }
 
@@ -518,7 +586,9 @@ async function cmdGenerate(flags: Flags) {
 
   while (true) {
     if (Date.now() - started > maxWaitMs) {
-      throw new CliError(`Polling timed out after ${maxWaitMs / 1000}s (${requestId})`);
+      throw new CliError(
+        `Polling timed out after ${maxWaitMs / 1000}s. The job may still finish; resume with result --endpoint ${id} --request-id ${requestId}`,
+      );
     }
 
     statusPayload = await requestJson<any>(pollUrl, { headers: authHeaders(key) });
@@ -590,8 +660,16 @@ async function cmdGenerate(flags: Flags) {
   }
 }
 
+async function cmdGenerate(flags: Flags) {
+  await cmdSubmit(flags, DEFAULT_GENERATE_ENDPOINT);
+}
+
+async function cmdEdit(flags: Flags) {
+  await cmdSubmit(flags, DEFAULT_EDIT_ENDPOINT);
+}
+
 async function cmdStatus(flags: Flags) {
-  const id = endpoint(flags);
+  const id = resolveEndpoint(flags);
   const requestId = requireFlag(flags, "request-id");
   const key = falKey() as string;
   let url = `https://queue.fal.run/${id}/requests/${requestId}/status`;
@@ -601,7 +679,7 @@ async function cmdStatus(flags: Flags) {
 }
 
 async function cmdResult(flags: Flags) {
-  const id = endpoint(flags);
+  const id = resolveEndpoint(flags);
   const requestId = requireFlag(flags, "request-id");
   const key = falKey() as string;
   const result = await requestJson(
@@ -612,7 +690,7 @@ async function cmdResult(flags: Flags) {
 }
 
 async function cmdCancel(flags: Flags) {
-  const id = endpoint(flags);
+  const id = resolveEndpoint(flags);
   const requestId = requireFlag(flags, "request-id");
   const key = falKey() as string;
   const result = await requestJson(
@@ -671,9 +749,8 @@ async function cmdUpload(flags: Flags) {
   else console.log(init.file_url);
 }
 
-async function main() {
-  await loadSkillEnv();
-  const { command, flags } = parseArgs(process.argv.slice(2));
+export async function runCli(argv = process.argv.slice(2)) {
+  const { command, flags } = parseArgs(argv);
 
   if (bool(flags, "version")) {
     console.log(VERSION);
@@ -687,11 +764,14 @@ async function main() {
     return;
   }
 
+  await loadSkillEnv();
+
   const handlers: Record<string, (flags: Flags) => Promise<void>> = {
     "auth-check": cmdAuthCheck,
     models: cmdModels,
     schema: cmdSchema,
     generate: cmdGenerate,
+    edit: cmdEdit,
     status: cmdStatus,
     result: cmdResult,
     cancel: cmdCancel,
@@ -707,4 +787,6 @@ async function main() {
   await handler(flags);
 }
 
-main().catch(printError);
+if (import.meta.main) {
+  runCli().catch(printError);
+}

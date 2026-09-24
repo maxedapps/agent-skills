@@ -24,10 +24,8 @@ carries `look`, `base`, `texture`, `motion`, `best-for`, `avoid-for`, `fonts`.
 
 ## Choosing one
 
-**Ask the user which look they want** when starting a new deck, unless they
-named one or supplied brand direction that settles it. Offer the table above —
-one line each, not a lecture — and say which you would pick for their subject
-and delivery mode. Then copy that template's three files into the deck.
+Offer the table above when asking which look the user wants, and say which you
+would pick for their subject and delivery mode.
 
 If nothing fits, say so and author a new template rather than fighting an
 existing one with overrides. A deck whose `deck.css` outgrows its theme is a

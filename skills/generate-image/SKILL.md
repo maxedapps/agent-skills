@@ -1,63 +1,36 @@
 ---
 name: generate-image
 description: >-
-  Generates AI images through fal.ai HTTP queue workflows from a Bun CLI. Use
-  this skill when a task needs AI image generation, schema inspection, image
-  upload, or queue polling through fal.ai. Do not use for video, audio, 3D, or
-  non-image workflows.
+  Generates and edits images through fal.ai. Use this skill when a task needs
+  text-to-image generation, reference-image editing, image upload, schema
+  inspection, or queued-job recovery. Do not use for video, audio, 3D, local-only image
+  manipulation, or non-image workflows.
 license: MIT
-compatibility: >-
-  Requires Bun, outbound HTTPS, and FAL_KEY in the environment or this skill's
-  .env.
+compatibility: Requires Bun, outbound HTTPS, and FAL_KEY in the environment or this skill's .env.
 metadata:
-  short-description: Generate images with fal.ai (default openai/gpt-image-2)
+  short-description: Generate and edit images with Grok Imagine Image 2.0
 ---
 
 # Generate Image
 
 ## Rules
 
-- Use `scripts/generate-image.ts`.
-- Default endpoint: **`openai/gpt-image-2`**. Change `--endpoint` only if the user asks.
-- Run `schema` before non-trivial payloads.
-- Never read or print `.env` / `FAL_KEY` values.
-- Image-only.
-
-## Setup
-
-```bash
-cp .env.example .env   # from this skill directory
-# set FAL_KEY=...
-```
-
-The script loads this skill's `.env` automatically. Exported env wins.
-
-## Workflow
-
-1. `auth-check` if credentials are uncertain.
-2. `schema` for non-trivial inputs.
-3. `generate` with JSON input.
-4. Inspect downloaded files before using them.
-5. For official logos/marks: generate scene only, composite real assets locally.
+- Use `scripts/generate-image.ts`; check `--help` when needed.
+- Defaults: `generate` → `xai/grok-imagine-image/v2.0/text-to-image`; `edit` → `xai/grok-imagine-image/v2.0/edit`.
+- `edit` requires `prompt` and 1–3 `image_urls`; upload local references first.
+- Override `--endpoint` only when the user requests another model; run `schema` before unfamiliar fields or endpoints.
+- Never read or expose `.env` or `FAL_KEY` values.
+- Generation is billable: clarify ambiguous requests and never blindly resubmit an uncertain request.
+- Inspect outputs; composite official marks from real assets.
 
 ## Commands
 
 ```bash
-bun run scripts/generate-image.ts auth-check
+bun run scripts/generate-image.ts --help
 bun run scripts/generate-image.ts schema
-bun run scripts/generate-image.ts generate \
-  --input '{"prompt":"editorial photo of a red fox in Tokyo at night"}'
-bun run scripts/generate-image.ts generate \
-  --input-file ./input.json \
-  --output-dir ./out
-bun run scripts/generate-image.ts upload --file ./ref.png
+bun run scripts/generate-image.ts generate --input '{"prompt":"editorial photo of a red fox in Tokyo at night"}'
+bun run scripts/generate-image.ts upload --file ./reference.png
+bun run scripts/generate-image.ts edit --input '{"prompt":"make the sky stormy","image_urls":["<uploaded-url>"]}'
 ```
 
-Defaults: queue + poll, download images to a temp dir. Useful flags: `--output-dir`, `--no-download`, `--logs`, `--json`, `--save`.
-
-## Failures
-
-- **401 / missing key** → set `FAL_KEY`, run `auth-check`
-- **422** → run `schema`, fix payload
-- **non-image endpoint** → rejected
-- **COMPLETED + error** → fix input or retry
+`generate` and `edit` queue, poll, and download to a temporary directory by default. Retain the reported endpoint and request ID to resume a job.
