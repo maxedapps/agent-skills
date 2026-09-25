@@ -1,21 +1,36 @@
 ---
 name: implement-plan
 description: >-
-  Implements a saved plan task by task, with tests, verification, and cleanup.
-  Use this skill when the user asks to implement, execute, or continue a plan.
-  Do not use for creating a plan (use create-plan) or for changes without a plan.
+  Implements a saved plan through to a tested pull request, handing it to an
+  agent in its own herdr worktree when possible. Use this skill when the user
+  asks to implement, execute, or continue a plan. Do not use for creating a
+  plan (use create-plan) or for changes without a plan.
 license: MIT
 ---
 
 # Implement Plan
 
-1. Read the plan and its ADR. If something is unclear or looks wrong, ask before building on it. If the user wants the work isolated, use a worktree (see use-worktrees).
-2. Work through the tasks in order. Build the simplest thing that meets each task, with no extra layers, options, or defensive code for cases that can't happen.
-3. Outsource tasks to subagents when working on more complex tasks or parallel tasks.
-4. Add or update tests only where they protect behavior that matters (see awesome-tests). Don't write tests just for the sake of having them.
-5. Verify every task before moving on. Run the checks the plan names, and check anything with a UI in a real browser with agent-browser.
-6. Keep the plan file current: mark tasks done and update the plan's status. If you have to deviate, update the plan, or write a new ADR if the decision changed. Don't diverge silently.
-7. When all tasks are done, review the full diff (see code-review). Question each finding: fix what solves a real, likely problem, skip what adds more complexity than it removes, and ask the user when unsure. Do one review pass, not repeated rounds.
-8. Clean up: stop dev servers, close browsers, and remove the worktrees you created once their work is merged.
+## Hand off
 
-Finish by reporting what changed, how you verified it, and anything left open.
+Inside herdr (`HERDR_ENV=1`), hand the plan to a new agent unless you are the implementer or were told to implement it here (see orchestrate-agents):
+
+1. Create a worktree (see use-worktrees). Copy the plan and ADR into it if they aren't committed.
+2. Start an agent of your kind in the worktree's pane. Give it the plan path, any context the plan lacks, and: "You are the implementer. Use implement-plan in this checkout; don't hand off."
+3. Step in only when it is blocked or asks something.
+4. When it reports its PR, check the branch is fully pushed, quit the agent, remove the worktree (see use-worktrees), and report the PR.
+
+Otherwise, implement it yourself.
+
+## Implement
+
+1. Read the plan and its ADR. If something is unclear or looks wrong, ask before building on it.
+2. Work through the tasks in order. Build the simplest thing that meets each task, with no extra layers, options, or defensive code for cases that can't happen.
+3. Hand complex or parallel tasks to subagents.
+4. Add or update tests only where they protect behavior that matters (see awesome-tests).
+5. Verify every task yourself before moving on: run the checks the plan names, and check anything with a UI in a real browser with agent-browser. If a check needs a running service or test data, set it up; don't leave testing to the user.
+6. Keep the plan file current: mark tasks done and update its status. If you deviate, update the plan, or write a new ADR if the decision changed.
+7. When all tasks are done, review the full diff once (see code-review). Fix what solves a real, likely problem, skip what adds more complexity than it removes, and ask the user when unsure.
+8. Commit, push, and open a pull request that says what changed and how you verified it.
+9. Stop dev servers and close browsers. Leave the worktree to whoever created it.
+
+Report the PR link, how you verified the work, and anything left open.

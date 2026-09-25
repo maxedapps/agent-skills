@@ -3,59 +3,53 @@ name: use-worktrees
 description: >-
   Manages Git worktrees for isolated feature or milestone work. Use this skill
   whenever work should happen in a worktree, a worktree needs syncing with its
-  target branch, or a finished worktree branch should be merged or cleaned up.
-  Do not use for ordinary single-checkout branch work.
+  target branch, or a finished worktree should be turned into a pull request
+  or cleaned up. Do not use for ordinary single-checkout branch work.
 license: MIT
 compatibility: Requires Git and filesystem access outside the repository checkout.
 metadata:
-  short-description: Create, sync, merge, and clean up Git worktrees
+  short-description: Create, sync, finish, and clean up Git worktrees
 ---
 
 # Use git worktrees
 
-## Location
+## Create
 
-All worktrees live in `~/worktrees/<project>/<worktree>`, where `<project>` is the repo's directory name and `<worktree>` matches the branch name:
+Worktrees live only in `~/worktrees/<repo-dir>/<branch-slug>` (branch name with `/` → `-`).
+
+Inside herdr (`HERDR_ENV=1`), create them with herdr, which also opens a workspace and pane for the checkout; read both from the JSON result:
 
 ```
-git worktree add ~/worktrees/course-platform/milestone-4-auth -b milestone-4-auth <target-branch>
+herdr worktree create --cwd <repo> --branch <branch> --no-focus
 ```
 
-Never create worktrees inside the repository or scattered elsewhere. `git worktree list` shows what exists.
+Herdr creates a missing branch from HEAD, so for an existing PR run `git fetch origin <branch>:<branch>` first. Without herdr:
 
-## Setup after creating
+```
+git worktree add ~/worktrees/<repo-dir>/<branch-slug> -b <branch> <target-branch>
+```
 
-- Follow the repository's setup instructions and install dependencies in the worktree; generated or ignored dependency directories are not shared between checkouts.
-- Give deployments from concurrent worktrees a **dedicated stage/environment**. Never let parallel checkouts mutate the same deployment state.
+Then set it up: install dependencies and copy ignored config such as `.env` from the main checkout. Give concurrent worktrees **their own deployment stage**; never let parallel checkouts mutate the same deployment state.
 
-## Working in the worktree
+## Sync
 
-- All work for the feature happens on the worktree's branch, committed incrementally. The main checkout stays untouched and free for parallel work.
-- Sync direction during work is always **target branch → worktree branch** (`git merge <target-branch>` inside the worktree) at natural checkpoints, and mandatorily before touching anything that parallel work may have changed. Never rebase or rewrite shared branches.
-- After every sync, run the repository's full check suite.
-- Sync conflict rules:
-  - **Sequential migrations**: if the target branch took a number this branch also uses, renumber this branch's migration to the next free slot. Check this on every sync even without a textual conflict.
-  - **Lockfile conflicts**: preserve both sides' manifest/workspace changes, then regenerate with the repository's package manager. Never hand-edit a generated lockfile.
-  - Resolve everything else by reading both sides; the combined test suites are the arbiter.
+- Merge the target branch into the worktree branch (`git merge <target-branch>`) at checkpoints and before touching anything parallel work may have changed. Never rebase or rewrite shared branches.
+- Run the full check suite after every sync.
+- **Migrations**: if the target took a migration number this branch also uses, renumber this branch's migration, even without a textual conflict.
+- **Lockfiles**: keep both sides' manifest changes and regenerate the lockfile; never hand-edit it.
 
-## Merging back
+## Finish
 
-**Never merge a worktree branch back into master (or any target branch) automatically.** Review cycles happen in the worktree first; the merge happens only when the user explicitly asks for it. When they do:
-
-1. Final sync target → worktree branch; resolve conflicts and get the full check suite green **in the worktree**.
-2. Merge the worktree branch into the target with `--no-ff` from the main checkout.
-3. Review `git diff <target-before>..<merge-result>` to confirm nothing from the target's side was dropped.
-4. Push. No force-push, no bulk `--theirs`/`--ours` resolutions, ever.
+Do a final sync, get the checks green, push, and open a pull request. **Never merge into the target branch yourself**; that happens on the PR, when the user asks. No force-push, no bulk `--theirs`/`--ours` resolutions.
 
 ## Cleanup
 
-You own the worktrees you create: don't leave them behind. After a merge is pushed and verified:
+Whoever created a worktree removes it; an agent working inside one leaves it alone. Once everything is committed, pushed, and in an open PR, remove it right away; later reviews or fixes use a fresh worktree.
 
 ```
-git worktree remove ~/worktrees/<project>/<worktree>
+herdr worktree remove --workspace <id>     # herdr worktree with its workspace open
+git worktree remove <path>                 # otherwise
 git branch -d <branch>
 ```
 
-For unmerged cleanup, first inspect uncommitted changes and commits absent from the target. Remove it if it has no unique work. Otherwise report the unique work and require explicit user approval; use forced worktree removal or branch deletion only when that approval specifically accepts the identified data loss.
-
-`git worktree prune` clears stale registrations if a worktree directory was deleted manually.
+If it holds uncommitted or unpushed work, report that work and remove it only with the user's explicit approval.
