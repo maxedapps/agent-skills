@@ -15,18 +15,16 @@ metadata:
 
 ## Create
 
-Worktrees live only in `~/worktrees/<repo-dir>/<branch-slug>` (branch name with `/` → `-`).
-
-Inside herdr (`HERDR_ENV=1`), create them with herdr, which also opens a workspace and pane for the checkout; read both from the JSON result:
-
-```
-herdr worktree create --cwd <repo> --branch <branch> --no-focus
-```
-
-Herdr creates a missing branch from HEAD, so for an existing PR run `git fetch origin <branch>:<branch>` first. Without herdr:
+Worktrees live only in `~/worktrees/<repo-dir>/<branch-slug>` (branch name with `/` → `-`). Create them with Git:
 
 ```
 git worktree add ~/worktrees/<repo-dir>/<branch-slug> -b <branch> <target-branch>
+```
+
+For an existing branch, such as an open PR, run `git fetch origin <branch>:<branch>` and drop `-b`. Inside herdr (`HERDR_ENV=1`), don't use `herdr worktree create`: it opens a separate workspace. Open the worktree in a new pane of your current workspace instead:
+
+```
+herdr pane split --current --direction right --cwd <worktree-path> --no-focus
 ```
 
 Then set it up: install dependencies and copy ignored config such as `.env` from the main checkout. Give concurrent worktrees **their own deployment stage**; never let parallel checkouts mutate the same deployment state.
@@ -47,9 +45,10 @@ Do a final sync, get the checks green, push, and open a pull request. **Never me
 Whoever created a worktree removes it; an agent working inside one leaves it alone. Once everything is committed, pushed, and in an open PR, remove it right away; later reviews or fixes use a fresh worktree.
 
 ```
-herdr worktree remove --workspace <id>     # herdr worktree with its workspace open
-git worktree remove <path>                 # otherwise
+git worktree remove <path>
 git branch -d <branch>
 ```
+
+Close any herdr pane you opened for it.
 
 If it holds uncommitted or unpushed work, report that work and remove it only with the user's explicit approval.
