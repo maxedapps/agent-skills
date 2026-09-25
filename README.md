@@ -11,7 +11,7 @@ Short, focused skills that nudge capable agents in the right direction instead o
 - `create-slides`: build, verify, and export templated HTML slide decks (PDF and MP4 at 1080p/2K/4K).
 - `create-wiki`: create and update reusable, source-backed technology knowledge bases.
 - `generate-image`: generate and edit images through fal.ai (Bun CLI; defaults to Grok Imagine Image 2.0).
-- `implement-plan`: hand a plan to an agent in its own worktree (a new herdr pane in the current workspace), or implement it task by task with high-value tests, self-verification (agent-browser for UI), a final review, and a pull request.
+- `implement-plan`: hand a plan to an agent in its own worktree (a new herdr pane in the current workspace), or implement it task by task with high-value tests and self-verification (agent-browser for UI), then an independent review round by a second agent that discusses its findings with the implementer, and a pull request.
 - `use-worktrees`: create (with Git, opened in a herdr pane of the current workspace), sync, finish as a pull request, and clean up Git worktrees.
 
 ## Install
