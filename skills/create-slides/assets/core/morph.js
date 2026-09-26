@@ -14,11 +14,21 @@
   var targets = Array.prototype.slice.call(document.querySelectorAll('[data-morph-to]'));
   if (!targets.length) return;
 
+  // Look up the matching source by comparing attribute values directly
+  // instead of interpolating the (potentially attacker-influenced) name into
+  // a CSS selector string, which would allow selector injection.
+  function findFrom(name) {
+    var candidates = document.querySelectorAll('[data-morph-from]');
+    for (var i = 0; i < candidates.length; i++) {
+      if (candidates[i].getAttribute('data-morph-from') === name) return candidates[i];
+    }
+    return null;
+  }
+
   var pairs = targets.map(function (to) {
-    var name = to.getAttribute('data-morph-to');
     return {
       to: to,
-      from: document.querySelector('[data-morph-from="' + name + '"]')
+      from: findFrom(to.getAttribute('data-morph-to'))
     };
   }).filter(function (pair) {
     return pair.from;
