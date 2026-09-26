@@ -15,9 +15,9 @@ license: MIT
 Inside herdr (`HERDR_ENV=1`), hand the plan to a new agent unless you are the implementer or were told to implement it here (see orchestrate-agents):
 
 1. Create a worktree (see use-worktrees). Copy the plan and ADR into it if they aren't committed.
-2. Open the worktree in a new pane of your current herdr workspace (see use-worktrees) and start an agent of your kind there. Never create a new workspace or tab for it. Give it the plan path, any context the plan lacks, and: "You are the implementer. Use implement-plan in this checkout; don't hand off."
+2. Open the worktree in a new pane of your current herdr workspace, tagged as your worker (see use-worktrees), and start an agent of your kind there. Never create a new workspace or tab for it. Give it the plan path, any context the plan lacks, and: "You are the implementer. Use implement-plan in this checkout; don't hand off."
 3. Step in only when it is blocked or asks something.
-4. When it reports every task implemented and verified, start the reviewer the same way, on the same worktree. Tell it the plan path, the implementer's pane, and: "You are the reviewer. Follow implement-plan's Review round and settle findings directly with the implementer. Don't edit files."
+4. When it reports every task implemented and verified, start the reviewer the same way, in its own tagged pane, on the same worktree. Tell it the plan path, the implementer's pane, and: "You are the reviewer. Follow implement-plan's Review round and settle findings directly with the implementer. Don't edit files."
 5. When the review is settled, quit the reviewer and close its pane. Bring open disagreements to the user.
 6. When the implementer reports its PR, check the branch is fully pushed, quit the agent, close its pane, remove the worktree (see use-worktrees), and report the PR.
 

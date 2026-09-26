@@ -27,6 +27,12 @@ For an existing branch, such as an open PR, run `git fetch origin <branch>:<bran
 herdr pane split --current --direction right --cwd <worktree-path> --no-focus
 ```
 
+Tag the new pane as your worker, with its id from the split's reply (`result.pane.pane_id`), so agentmanager shows it under you:
+
+```
+herdr pane report-metadata <new-pane-id> --source agentmanager --token parent=$HERDR_PANE_ID
+```
+
 Then set it up: install dependencies and copy ignored config such as `.env` from the main checkout. Give concurrent worktrees **their own deployment stage**; never let parallel checkouts mutate the same deployment state.
 
 ## Sync
